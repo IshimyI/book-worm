@@ -1,5 +1,7 @@
 import { Routes, Route } from "react-router";
-// import AuthPage from "./pages/AuthPage";
+
+import AuthPage from "./pages/AuthPage";
+
 import Layout from "./ui/Layout";
 import axiosInstance, { setAccessToken } from "./axiosInstance";
 import { useEffect, useState } from "react";
@@ -59,35 +61,30 @@ function App() {
     if (res.status === 200) {
       setUser(null);
       setAccessToken("");
-      navigate("/login");
+      navigate("/auth");
     }
   };
 
   return (
     <Routes>
       <Route element={<Layout user={user} handleLogout={handleLogout} />}>
+        <Route path="/profile" element={<ProfilePage />}></Route>
         <Route
-          path="/profile"
-          element={<ProfilePage handleSignUp={handleSignUp} />}
-        ></Route>
-        {/* <Route
           path="/auth"
           element={
             <AuthPage handleSignUp={handleSignUp} handleLogin={handleLogin} />
           }
-        ></Route> */}
+        ></Route>
         <Route
           path="*"
           element={<ErrorPage handleLogin={handleLogin} />}
         ></Route>
-        <Route 
-        path="/office" 
-        element={<Office handleLogin={handleLogin} />} />
+        <Route path="/office" element={<Office handleLogin={handleLogin} />} />
       </Route>
       <Route
-          path="/"
-          element={<MainPage handleSignUp={handleSignUp} />}
-        ></Route>
+        path="/"
+        element={<MainPage handleSignUp={handleSignUp} />}
+      ></Route>
     </Routes>
   );
 }
