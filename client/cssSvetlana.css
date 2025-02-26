@@ -1,0 +1,29 @@
+.navbar {
+  background-color: rgb(49, 41, 35);
+  height: 70px;
+  color: white;
+}
+.conteyner {
+  margin-left: 0 auto;
+  margin-right: 0 auto;
+  width: 80vh;
+}
+.logo {
+  background-image: url(./img/logo.png);
+  height: 70px;
+  width: 180px;
+  background-repeat: no-repeat;
+  background-size: cover;
+  margin: 0 auto;
+}
+.btnMain {
+  align-items: center;
+  text-align: center;
+  height: 60px;
+  width: 60px;
+  font-size: 14px;
+}
+.imgMainBTN {
+  height: 30px;
+  width: 30px;
+}
