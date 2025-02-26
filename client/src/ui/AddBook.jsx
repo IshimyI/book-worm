@@ -3,18 +3,16 @@ import { Box, Flex, Input, Text, Center, Button, Textarea, Select } from '@chakr
 import { CloseIcon } from '@chakra-ui/icons';
 
 export default function AddBook() {
-  const [searchBook, setSearchBook] = useState(true);
-  const [addBook, setAddBook] = useState(false);
+  const [addBookFlag, setAddBookFlag] = useState(true);
+  const [searchBookFlag, setSearchBookFlag] = useState(false);
 
   const switchAdder = () => {
-    searchBook ? setSearchBook(false) : setSearchBook(true);
+    addBookFlag ? setAddBookFlag(false) : setAddBookFlag(true);
   };
 
   const switchSearch = () => {
-    searchBook ? setSearchBook(false) : setSearchBook(true);
+    addBookFlag ? setSearchBookFlag(false) : setSearchBookFlag(true);
   };
-
-
 
   return (
     <Center>
@@ -24,7 +22,7 @@ export default function AddBook() {
         </Button>
         <Center m={4}>
           <Flex w="100%" style={{ flexDirection: 'column' }}>
-            {searchBook ? (
+            {addBookFlag ? (
               <>
                 <Text>поиск книги</Text>
                 <Input placeholder="введите название" />
@@ -40,11 +38,11 @@ export default function AddBook() {
                   <Button onClick={switchAdder} mb={4}>
                     Вернуться к поиску
                   </Button>
-                  <Input mb={4} placeholder='название'/>
-                  <Input mb={4} placeholder='автор'/>
-                  <Select mb={4} placeholder='жанр'></Select>
-                  <Input mb={4} placeholder='год'/>
-                  <Input mb={4} placeholder='URL обложки'/>
+                  <Input mb={4} placeholder="название" />
+                  <Input mb={4} placeholder="автор" />
+                  <Select mb={4} placeholder="жанр"></Select>
+                  <Input mb={4} placeholder="год" />
+                  <Input mb={4} placeholder="URL обложки" />
                 </Box>
               </>
             )}
