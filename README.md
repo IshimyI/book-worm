@@ -1,0 +1,2 @@
+Заходим в cd server через терминал прописываем npm i потом npm run dev
+Заходим в cd client через терминал прописываем npm i потом npm run dev
