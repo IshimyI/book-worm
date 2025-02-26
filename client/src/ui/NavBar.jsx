@@ -16,12 +16,14 @@ export default function NavBar({ user, handleLogout }) {
               Главная
             </button>
           </NavLink>
-          <NavLink to="/office">
-            <button className="btnMain" type="button">
-              <img src="./img/ic_Home.png" className="imgMainBTN" />
-              Кабинет
-            </button>
-          </NavLink>
+          {user ? (
+            <NavLink to="/office">
+              <button className="btnMain" type="button">
+                <img src="./img/ic_Home.png" className="imgMainBTN" />
+                Кабинет
+              </button>
+            </NavLink>
+          ) : null}
           {user ? (
             <NavLink to="/auth">
               <button className="btnMain" type="button" onClick={handleLogout}>
