@@ -72,6 +72,8 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
 
           <button type="submit">Войти</button>
 
+          <NavLink to={"/recover"}>Забыли пароль?</NavLink>
+
           <button onClick={() => setBool(true)}>Еще нет аккаунта?</button>
         </form>
       )}

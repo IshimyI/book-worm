@@ -9,14 +9,16 @@ export default function NavBar({ user, handleLogout }) {
       <div className="conteyner">
         <Flex className="navbarFlex" justifyContent="space-between">
           <div className="logo"></div>
-          <div>{user ? `Привет, ${user.name}!` : null}</div>
+          <div>
+            {user && user.isEmailConfirmed ? `Привет, ${user.name}!` : null}
+          </div>
           <NavLink to="/">
             <button className="btnMain" type="button">
               <img src="./img/ic_Main.png" className="imgMainBTN" />
               Главная
             </button>
           </NavLink>
-          {user ? (
+          {user && user.isEmailConfirmed ? (
             <NavLink to="/office">
               <button className="btnMain" type="button">
                 <img src="./img/ic_Home.png" className="imgMainBTN" />
@@ -24,7 +26,7 @@ export default function NavBar({ user, handleLogout }) {
               </button>
             </NavLink>
           ) : null}
-          {user ? (
+          {user && user.isEmailConfirmed ? (
             <NavLink to="/auth">
               <button className="btnMain" type="button" onClick={handleLogout}>
                 <img src="./img/ic_voyti.png" className="imgMainBTN" />
