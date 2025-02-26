@@ -4,6 +4,7 @@ module.exports = {
     password: "123",
     database: "book-worm",
     host: "127.0.0.1",
+    port: "5432",
     dialect: "postgres",
   },
   test: {
@@ -11,6 +12,7 @@ module.exports = {
     password: "123",
     database: "book-worm",
     host: "127.0.0.1",
+    port: "5432",
     dialect: "postgres",
   },
   production: {
