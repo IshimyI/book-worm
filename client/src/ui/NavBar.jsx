@@ -7,9 +7,9 @@ export default function NavBar({ user, handleLogout }) {
   return (
     <div className="navbar">
       <div className="conteyner">
-        <Flex>
+        <Flex className="navbarFlex" justifyContent="space-between">
           <div className="logo"></div>
-          <NavLink to="/profile">{user ? user.name : ""}</NavLink>
+          <div>{user ? `Привет, ${user.name}!` : null}</div>
           <NavLink to="/">
             <button className="btnMain" type="button">
               <img src="./img/ic_Main.png" className="imgMainBTN" />
