@@ -6,7 +6,6 @@ import Layout from "./ui/Layout";
 import axiosInstance, { setAccessToken } from "./axiosInstance";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ProfilePage from "./pages/ProfilePage";
 import ErrorPage from "./pages/ErrorPage";
 import Office from "./pages/Office";
 import MainPage from "./pages/MainPage";
@@ -68,7 +67,6 @@ function App() {
   return (
     <Routes>
       <Route element={<Layout user={user} handleLogout={handleLogout} />}>
-        <Route path="/profile" element={<ProfilePage />}></Route>
         <Route
           path="/auth"
           element={
