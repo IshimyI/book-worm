@@ -1,11 +1,15 @@
 import { Routes, Route } from "react-router";
+
 import AuthPage from "./pages/AuthPage";
+
 import Layout from "./ui/Layout";
 import axiosInstance, { setAccessToken } from "./axiosInstance";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProfilePage from "./pages/ProfilePage";
 import ErrorPage from "./pages/ErrorPage";
+import Office from "./pages/Office";
+import MainPage from "./pages/MainPage";
 
 function App() {
   const [user, setUser] = useState();
@@ -71,8 +75,16 @@ function App() {
             <AuthPage handleSignUp={handleSignUp} handleLogin={handleLogin} />
           }
         ></Route>
-        <Route path="*" element={<ErrorPage />}></Route>
+        <Route
+          path="*"
+          element={<ErrorPage handleLogin={handleLogin} />}
+        ></Route>
+        <Route path="/office" element={<Office handleLogin={handleLogin} />} />
       </Route>
+      <Route
+        path="/"
+        element={<MainPage handleSignUp={handleSignUp} />}
+      ></Route>
     </Routes>
   );
 }
