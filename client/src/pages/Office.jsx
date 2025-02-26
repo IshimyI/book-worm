@@ -4,7 +4,7 @@ import axiosInstance from "../axiosInstance";
 import ReviewProfile from "../ui/ReviewProfile";
 import FavoriteProfile from "../ui/FavoriteProfile";
 
-const ProfilePage = () => {
+const Office = () => {
   const [review, setReview] = useState([
     { id: 1, IMG: "./default.jpg" },
     { id: 2, IMG: "./default.jpg" },
@@ -62,4 +62,4 @@ const ProfilePage = () => {
 };
     
 
-export default ProfilePage;
+export default Office;
