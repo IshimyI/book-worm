@@ -5,16 +5,10 @@
 // import { useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 
-export default function Office() {
-
-  
-    return (
-      <>
-        <div>
-          Главная страница (тут книги всех юзеров)
-        </div>
-        
-      </>
-    );
-  }
-  
+export default function MainPage({ user }) {
+  return (
+    <>
+      <div>Главная страница (тут книги всех юзеров)</div>
+    </>
+  );
+}

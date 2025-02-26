@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 import axiosInstance from "../axiosInstance";
 import ReviewProfile from "../ui/ReviewProfile";
 import FavoriteProfile from "../ui/FavoriteProfile";
+import AddBook from "../ui/AddBook";
 
-const Office = () => {
+const Office = ({ user }) => {
   const [review, setReview] = useState([
     { id: 1, IMG: "./default.jpg" },
     { id: 2, IMG: "./default.jpg" },
@@ -49,8 +50,10 @@ const Office = () => {
   return (
     <Center>
       <Box maxW="1200px" width="100%" padding="20px">
-      <Flex justify="flex-end" align="center" mb="20px">
-          <Button colorScheme="blue" onClick={handleOpen}>Добавить рецензию</Button>
+        <Flex justify="flex-end" align="center" mb="20px">
+          {/* <Button colorScheme="blue" onClick={handleOpen}>Добавить рецензию</Button> */}
+
+          <AddBook user={user} />
         </Flex>
         <ReviewProfile reviewBooks={review} />
         <Box marginTop="100px">
@@ -60,6 +63,5 @@ const Office = () => {
     </Center>
   );
 };
-    
 
 export default Office;

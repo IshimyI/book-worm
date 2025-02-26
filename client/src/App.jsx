@@ -73,16 +73,10 @@ function App() {
             <AuthPage handleSignUp={handleSignUp} handleLogin={handleLogin} />
           }
         ></Route>
-        <Route
-          path="*"
-          element={<ErrorPage handleLogin={handleLogin} />}
-        ></Route>
-        <Route path="/office" element={<Office handleLogin={handleLogin} />} />
+        <Route path="/office" element={<Office user={user} />} />
+        <Route path="/" element={<MainPage user={user} />}></Route>
+        <Route path="*" element={<ErrorPage />}></Route>
       </Route>
-      <Route
-        path="/"
-        element={<MainPage handleSignUp={handleSignUp} />}
-      ></Route>
     </Routes>
   );
 }
