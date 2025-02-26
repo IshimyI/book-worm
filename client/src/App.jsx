@@ -24,7 +24,7 @@ function App() {
       .catch(() => {
         setUser(null);
         setAccessToken("");
-        navigate("/signup");
+        navigate("/auth");
       })
       .finally(() => {
         setLoadingUser(false);
