@@ -1,25 +1,65 @@
 import React, { useState } from 'react';
-import { Box, Flex, Input, Text, Select, Center, Button, Textarea } from '@chakra-ui/react';
+import { Box, Flex, Input, Text, Center, Button, Textarea, Select } from '@chakra-ui/react';
+import { CloseIcon } from '@chakra-ui/icons';
 
 export default function AddBook() {
-    
-  const [searchBook, setSearchBook] = useState(false);
+  const [searchBook, setSearchBook] = useState(true);
+  const [addBook, setAddBook] = useState(false);
+
+  const switchAdder = () => {
+    searchBook ? setSearchBook(false) : setSearchBook(true);
+  };
+
+  const switchSearch = () => {
+    searchBook ? setSearchBook(false) : setSearchBook(true);
+  };
+
+
 
   return (
-    <Center border="1px" borderColor="black" borderRadius="md" m={4}>
-      <Flex w="90%" m={10} style={{ flexDirection: 'column' }}>
-        <Text>поиск по базе книг</Text>
-        <Input></Input>
-        <Box w="100%" minH={20} mt={4} border="1px" borderColor="black" borderRadius="md"></Box>
-        <Flex style={{ justifyContent: 'space-between' }}>
-          <Flex w="50%" mt={4} style={{ flexDirection: 'column', justifyContent: 'space-between' }}>
-            <Textarea w="100%" minH={20} border="1px" borderColor="black" borderRadius="md"></Textarea>
-            <Box mt={10}>RATING</Box>
+    <Center>
+      <Flex w="90%" border="1px" borderColor="black" borderRadius="md" m={4} style={{ flexDirection: 'column' }}>
+        <Button w="40px" h="40px" m={2} rounded={100} alignSelf="flex-end">
+          <CloseIcon />
+        </Button>
+        <Center m={4}>
+          <Flex w="100%" style={{ flexDirection: 'column' }}>
+            {searchBook ? (
+              <>
+                <Text>поиск книги</Text>
+                <Input placeholder="введите название" />
+                <Box w="100%" minH={20} mt={4} border="1px" borderColor="black" borderRadius="md"></Box>
+                <Flex w="30%" mt={5} style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text>Не нашли подходящую книгу?</Text>
+                  <Button onClick={switchAdder}>Добавить свою</Button>
+                </Flex>
+              </>
+            ) : (
+              <>
+                <Box w="100%" minH={20} mt={4}>
+                  <Button onClick={switchAdder} mb={4}>
+                    Вернуться к поиску
+                  </Button>
+                  <Input mb={4} placeholder='название'/>
+                  <Input mb={4} placeholder='автор'/>
+                  <Select mb={4} placeholder='жанр'></Select>
+                  <Input mb={4} placeholder='год'/>
+                  <Input mb={4} placeholder='URL обложки'/>
+                </Box>
+              </>
+            )}
+
+            <Flex style={{ justifyContent: 'space-between' }}>
+              <Flex w="50%" mt={4} style={{ flexDirection: 'column', justifyContent: 'space-between' }}>
+                <Textarea w="100%" minH={20} border="1px" borderColor="black" borderRadius="md" placeholder="добавьте рецензию"></Textarea>
+                <Box mt={10}>RATING STARS</Box>
+              </Flex>
+              <Flex w="50%" minH={20} mt={4} style={{ flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+                <Button>Добавить рецензию</Button>
+              </Flex>
+            </Flex>
           </Flex>
-          <Flex w="50%" minH={20} mt={4} style={{ flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
-            <Button>Добавить рецензию</Button>
-          </Flex>
-        </Flex>
+        </Center>
       </Flex>
     </Center>
   );
