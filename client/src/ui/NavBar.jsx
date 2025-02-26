@@ -6,9 +6,7 @@ export default function NavBar({ user, handleLogout }) {
     <div>
       <NavLink to="/profile">{user ? user.name : "Guest"}</NavLink>
       <span> Тут пробел </span>
-      <NavLink to="/signup">registr</NavLink>
-      <span> Тут пробел </span>
-      <NavLink to="/login">log</NavLink> (
+      <NavLink to="/auth">log</NavLink> (
       <button onClick={handleLogout} type="button">
         Выйти
       </button>
