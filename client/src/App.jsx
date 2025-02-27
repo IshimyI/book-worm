@@ -17,6 +17,28 @@ function App() {
   const [user, setUser] = useState();
   const [loadingUser, setLoadingUser] = useState(true);
   const navigate = useNavigate();
+  const [books, setBooks] = useState([]);
+
+  // useEffect(() => {
+  //   const fetchBooks = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         "https://www.googleapis.com/books/v1/volumes",
+  //         {
+  //           params: {
+  //             q: "Война" , // пример запроса сюда должен с инпута приходить должны первые символа 3 и на каждый последующий (потому что ограничение на количество книг для выдачи)
+  //             key: "AIzaSyClVhHN4OkNbIj8HdeEsm5Zt0b5GxrLyu0",
+  //           },
+  //         }
+  //       );
+  //       setBooks(response.data.items);
+  //     } catch (error) {
+  //       console.error("Ошибка при загрузке книг:", error);
+  //     }
+  //   };
+
+  //   fetchBooks();
+  // }, []);
 
   useEffect(() => {
     axiosInstance("/tokens/refresh")
