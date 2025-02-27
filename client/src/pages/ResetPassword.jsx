@@ -1,6 +1,17 @@
 import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosInstance";
 import { useState } from "react";
+import {
+  Box,
+  Heading,
+  FormControl,
+  Input,
+  Button,
+  Text,
+  Alert,
+  AlertIcon,
+  AlertDescription,
+} from "@chakra-ui/react";
 
 export default function ResetPassword() {
   const { token } = useParams();
@@ -39,36 +50,66 @@ export default function ResetPassword() {
   };
 
   return (
-    <div>
-      <h2>Сброс пароля</h2>
+    <>
+      <Box
+        className="blockAuth"
+        width={"400px"}
+        mx="auto"
+        mt={"60px"}
+        p={"35px"}
+        borderWidth="1px"
+        borderRadius="25px"
+        boxShadow="md"
+      >
+        <Heading as="h2" size="md" textAlign="center" mb={2}>
+          Сброс пароля
+        </Heading>
 
-      {message && <div>{message.text}</div>}
+        {message && (
+          <Alert status={message.type || "info"} mb={4}>
+            <AlertIcon />
+            <AlertDescription>{message.text}</AlertDescription>
+          </Alert>
+        )}
 
-      <form onSubmit={onFinish}>
-        <div>
-          <input
-            type="password"
-            name="password"
-            required
-            placeholder="Новый пароль"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <div>
-          <input
-            type="password"
-            name="confirmPassword"
-            required
-            placeholder="Подтвердите пароль"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-        </div>
-        <button type="submit" disabled={loading}>
-          {loading ? "Сброс..." : "Сбросить пароль"}
-        </button>
-      </form>
-    </div>
+        <form onSubmit={onFinish}>
+          <FormControl mb={10} mt={8}>
+            <Input
+              type="password"
+              name="password"
+              required
+              placeholder="Новый пароль"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </FormControl>
+
+          <FormControl mb={10}>
+            <Input
+              type="password"
+              name="confirmPassword"
+              required
+              placeholder="Подтвердите пароль"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </FormControl>
+
+          <Button
+            sx={{
+              backgroundColor: "#334d00",
+              color: "white",
+            }}
+            width="100%"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Сброс..." : "Сбросить пароль"}
+          </Button>
+        </form>
+      </Box>
+      <div className="fonAuth"> </div>
+      <div className="fonAuth2"> </div>
+    </>
   );
 }
