@@ -109,7 +109,7 @@ export default function MainPage({ user }) {
               <Flex mt={"20px"} justifyContent={"center"} columnGap={"15px"}>
                 <Button
                   sx={{
-                    backgroundColor: "rgba(56, 116, 38, 0.73)",
+                    backgroundColor: "#334d00",
                     color: "white",
                   }}
                   size="sm"
@@ -118,7 +118,7 @@ export default function MainPage({ user }) {
                 </Button>
                 <Button
                   sx={{
-                    backgroundColor: "rgba(56, 116, 38, 0.73)",
+                    backgroundColor: "#334d00",
                     color: "white",
                   }}
                   size="sm"

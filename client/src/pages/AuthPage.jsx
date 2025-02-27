@@ -91,7 +91,7 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
 
             <Button
               sx={{
-                backgroundColor: "rgba(56, 116, 38, 0.73)",
+                backgroundColor: "#334d00",
                 color: "white",
               }}
               width="100%"
@@ -106,7 +106,7 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
               m={"0 auto"}
               variant="link"
               sx={{
-                color: "rgba(56, 116, 38, 0.73)",
+                color: "#334d00",
               }}
               onClick={() => setBool(false)}
               size="sm"
@@ -135,7 +135,7 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
 
             <Button
               sx={{
-                backgroundColor: "rgba(56, 116, 38, 0.73)",
+                backgroundColor: "#334d00",
                 color: "white",
               }}
               width="100%"
@@ -158,7 +158,7 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
                 <Button
                   variant="link"
                   sx={{
-                    color: "rgba(56, 116, 38, 0.73)",
+                    color: "#334d00",
                   }}
                   size="sm"
                 >
@@ -170,7 +170,7 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
                 m={"0 auto"}
                 variant="link"
                 sx={{
-                  color: "rgba(56, 116, 38, 0.73)",
+                  color: "#334d00",
                 }}
                 size="sm"
                 onClick={() => setBool(true)}

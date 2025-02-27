@@ -80,7 +80,7 @@ export default function ConfirmationEmail({ user, setUser }) {
 
             <Button
               sx={{
-                backgroundColor: "rgba(56, 116, 38, 0.73)",
+                backgroundColor: "#334d00",
                 color: "white",
               }}
               onClick={() => navigate("/")}
@@ -108,7 +108,7 @@ export default function ConfirmationEmail({ user, setUser }) {
 
             <Button
               sx={{
-                backgroundColor: "rgba(56, 116, 38, 0.73)",
+                backgroundColor: "#334d00",
                 color: "white",
               }}
               onClick={() => navigate("/")}

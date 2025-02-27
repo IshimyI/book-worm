@@ -5,7 +5,6 @@ import {
   Box,
   Heading,
   FormControl,
-  FormLabel,
   Input,
   Button,
   Text,
@@ -91,7 +90,7 @@ export default function RecoverPassword() {
 
           <Button
             sx={{
-              backgroundColor: "rgba(56, 116, 38, 0.73)",
+              backgroundColor: "#334d00",
               color: "white",
             }}
             width="100%"
@@ -109,7 +108,7 @@ export default function RecoverPassword() {
               to={"/auth"}
               ml={2}
               sx={{
-                color: "rgba(56, 116, 38, 0.73)",
+                color: "#334d00",
               }}
               variant="link"
             >
