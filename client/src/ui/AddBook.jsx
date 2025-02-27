@@ -34,15 +34,14 @@ export default function AddBook({ user }) {
         const booksData = response.data.docs.map((book) => ({
           title: book.title || 'Неизвестно',
           author: book.author_name?.join(', ') || 'Неизвестно',
-          annotation: book.first_sentence?.join(' ') || 'Описание отсутствует',
+          //annotation: book.first_sentence?.join(' '),
           img: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` : null,
-          genre: book.subject ? book.subject.slice(0, 3) : ['Жанр неизвестен'],
+          genre: book.subject ? book.subject.slice(0, 3) : 'Жанр неизвестен',
           year: book.first_publish_year || 'Неизвестно',
         }));
 
         setBooks(booksData);
         console.log('booksData', response.data.docs);
-        
       } catch (error) {
         console.error('Ошибка при загрузке книг:', error);
       }
@@ -53,11 +52,25 @@ export default function AddBook({ user }) {
 
   const [addBookFlag, setAddBookFlag] = useState(true);
   const [searchBookFlag, setSearchBookFlag] = useState(false);
-  //const [books, setBooks] = useState([]);
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
   const [changeBook, setChangeBook] = useState(false);
   const [selectedBook, setSelectedBook] = useState({});
   const [inputs, setInputs] = useState(emptyInputs);
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const handleRating = (value) => {
+    setRating(value);
+    console.log(rating);
+  };
+
+  const handleMouseEnter = (value) => {
+    setHover(value);
+  };
+
+  const handleMouseLeave = () => {
+    setHover(rating);
+  };
 
   const switchAdder = () => {
     addBookFlag ? setAddBookFlag(false) : setAddBookFlag(true);
@@ -70,16 +83,12 @@ export default function AddBook({ user }) {
 
   const handleBookClick = (book) => {
     setSelectedBook(book);
-    //setInputs({...selectedBook});
-    console.log(book);
-
     setSearchBookFlag(false);
     setChangeBook(true);
   };
 
   useEffect(() => {
     setInputs({ ...selectedBook });
-    console.log(inputs);
   }, []);
 
   const handleInputChange = (event) => {
@@ -90,10 +99,17 @@ export default function AddBook({ user }) {
     }));
   };
 
+  // const handleStarChange = (event) => {
+  //   setStars(event.target.checked);
+  // };
+
+  // useEffect(()=>{
+  //   setInputs([inputs.user_rating]: stars)
+  // }, [stars])
+
   const addOwnBookHandler = async (event) => {
     event.preventDefault();
-    console.log('инпуты в хэндле', user.id);
-    console.log('инпуты в хэндле', inputs);
+    console.log('инпуты в хэндлере', inputs);
     if (!(inputs.title && inputs.author && inputs.img)) {
       console.log('Поля * должны быть заполнены');
     } else {
@@ -103,14 +119,16 @@ export default function AddBook({ user }) {
           title: inputs.title,
           author: inputs.author,
           genre: inputs.genre,
-          annotation: inputs.annotation,
-          year: inputs.annotation,
+          //annotation: inputs.annotation,
+          year: inputs.year,
           img: inputs.img,
           body: inputs.body,
-          user_rating: inputs.user_rating,
+          user_rating: rating,
         });
-        if (res.status === 201) {
+        if (res.status === 200) {
           setInputs(emptyInputs);
+          setRating(0);
+          setHover(0);
         }
       } catch (error) {
         console.log(error, 'что-то c add не так');
@@ -118,21 +136,10 @@ export default function AddBook({ user }) {
     }
   };
 
-  //временное решение для тестов
-  // useEffect(() => {
-  //   async function loadBooks() {
-  //     await fetch('http://localhost:3000/api/listAllBooks')
-  //       .then((res) => res.json())
-  //       .then((data) => setBooks(data))
-  //       .catch((err) => console.error('Ошибка при загрузке книг:', err));
-  //   }
-  //   loadBooks();
-  // }, []);
-  //
-useEffect(()=>{
-  setInputs
-}, [inputs])
-  
+  const click = (score) => {
+    console.log(`clack${score}`);
+  };
+
   return (
     <>
       <Button
@@ -234,10 +241,23 @@ useEffect(()=>{
                         justifyContent: 'space-between',
                       }}
                     >
-                      <Textarea name="body" value={inputs.body} onChange={handleInputChange}></Textarea>
+                      <Textarea type="text" name="body" value={inputs.body} onChange={handleInputChange}></Textarea>
+
                       <Box mt="40px" h="40px">
-                        {rating.map((score) => {
-                          return <StarIcon key={score} color="grey" _hover={{ color: 'gold' }} />;
+                        {[...Array(5)].map((_, index) => {
+                          const ratingValue = index + 1;
+                          return (
+                            <StarIcon
+                              key={index}
+                              aria-label={`Рейтинг ${ratingValue}`}
+                              fontSize="40px"
+                              variant="ghost"
+                              color={ratingValue <= (hover || rating) ? 'gold' : 'gray.300'}
+                              onClick={() => handleRating(ratingValue)}
+                              onMouseEnter={() => handleMouseEnter(ratingValue)}
+                              onMouseLeave={handleMouseLeave}
+                            />
+                          );
                         })}
                       </Box>
                     </Flex>
