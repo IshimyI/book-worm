@@ -52,6 +52,10 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
     }
   };
 
+  const handleFavorites = () => {
+    console.log("Книга добавлена в избранное");
+  };
+
   if (!book) {
     return null;
   }
@@ -87,6 +91,17 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                 <Text fontSize="lg">Год: {book.year}</Text>
                 <Text fontSize="lg">Рейтинг: {book.rating}</Text>
                 <Text fontSize="lg">Оценили: {book.quantity_rate}</Text>
+              </Box>
+              <Box mt="6">
+                <Button
+                  backgroundColor="#334d00"
+                  color="white"
+                  _hover={{ backgroundColor: "#334d00" }}
+                  onClick={handleFavorites}
+                  width="80%"
+                >
+                  Добавить в избранное
+                </Button>
               </Box>
             </Box>
 
@@ -131,26 +146,34 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                   <Text color="gray.500">Нет рецензий на эту книгу.</Text>
                 )}
               </Box>
-
-              {/* Форма добавления рецензии */}
               <Box mt="4">
                 <Input
                   value={newReview}
                   onChange={(e) => setNewReview(e.target.value)}
                   placeholder="Напиши свою рецензию"
                 />
-                <ButtonGroup variant="outline" spacing="6" mt="4">
-                  <Button colorScheme="blue" onClick={handleReview}>
-                    Добавить
+                <ButtonGroup
+                  variant="outline"
+                  spacing="6"
+                  mt="4"
+                  position="absolute"
+                  bottom="30px"
+                  right="50px"
+                  width="auto"
+                >
+                  <Button
+                    backgroundColor="#334d00"
+                    color="white"
+                    _hover={{ backgroundColor: "#334d00" }}
+                    onClick={handleReview}
+                  >
+                    Добавить рецензию
                   </Button>
                 </ButtonGroup>
               </Box>
             </Box>
           </Flex>
         </ModalBody>
-        <ModalFooter>
-          <Button onClick={onClose}>Закрыть</Button>
-        </ModalFooter>
       </ModalContent>
     </Modal>
   );

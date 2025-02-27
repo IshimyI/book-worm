@@ -163,8 +163,6 @@ const Office = ({ user }) => {
       <Center>
         <Box maxW="1200px" width="100%" padding="20px">
           <Flex justify="flex-end" align="center" mb="20px">
-            {/* <Button colorScheme="blue" onClick={handleOpen}>Добавить рецензию</Button> */}
-
             <AddBook user={user} />
           </Flex>
           <ReviewProfile
