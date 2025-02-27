@@ -1,22 +1,25 @@
 .navbar {
-  background-color: rgb(49, 41, 35);
+  background-color: rgb(51, 41, 28);
   height: 70px;
   color: white;
 }
 .conteyner {
-  margin-left: 0 auto;
-  margin-right: 0 auto;
-  width: 80vh;
+  margin: 0 auto;
+  width: 120vh;
+  /* background-color: rgba(255, 185, 94, 0.336); */
 }
 .logo {
   background-image: url(./img/logo.png);
   height: 70px;
-  width: 180px;
+  width: 150px;
   background-repeat: no-repeat;
   background-size: cover;
   margin: 0 auto;
 }
 .btnMain {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
   text-align: center;
   height: 60px;
@@ -24,6 +27,33 @@
   font-size: 14px;
 }
 .imgMainBTN {
-  height: 30px;
-  width: 30px;
+  height: 20px;
+  width: 20px;
+}
+.navbarFlex{
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.blockMainCenter{
+  align-items: center;
+  text-align: center;
+  padding-top: 50px;
+}
+.lineInputSort{
+  display: flex;
+  column-gap: 20px;
+  width: 100%;
+  justify-content: flex-end;
+  padding-bottom: 30px;
+}
+.lineTwo{
+  display: flex;
+  column-gap: 20px;
+}
+.blockFillter{
+  width: 28vh;
+  height: 320px;
+}
+*{
+  font-family: "Lato", sans-serif;
 }
