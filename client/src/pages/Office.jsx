@@ -4,11 +4,28 @@ import axiosInstance from "../axiosInstance";
 import ReviewProfile from "../ui/ReviewProfile";
 import FavoriteProfile from "../ui/FavoriteProfile";
 import AddBook from "../ui/AddBook";
+import BookModal from "../ui/BookModal";
 
 const Office = ({ user }) => {
   const [review, setReview] = useState([
-    { id: 1, IMG: "./default.jpg" },
-    { id: 2, IMG: "./default.jpg" },
+    {
+      id: 1,
+      author: "Лев Толстой",
+      genre: "Роман",
+      year: 1869,
+      rating: "7.8",
+      description: "Эпопея о войне, любви и жизни русского народа.",
+      IMG: "./default.jpg",
+    },
+    {
+      id: 2,
+      author: "Другой автор",
+      genre: "ужасы",
+      year: 1700,
+      rating: "8.0",
+      description: "Тут другая книга.",
+      IMG: "./default.jpg",
+    },
     { id: 3, IMG: "./default.jpg" },
     { id: 4, IMG: "./default.jpg" },
     { id: 5, IMG: "./default.jpg" },
@@ -25,6 +42,8 @@ const Office = ({ user }) => {
     { id: 4, IMG: "./default.jpg" },
     { id: 5, IMG: "./default.jpg" },
   ]);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     // (async function () {
@@ -43,8 +62,9 @@ const Office = ({ user }) => {
     // })();
   }, []);
 
-  const handleOpen = () => {
-    console.log("Открывается окно с созданием книги");
+  const handleBookClick = (book) => {
+    setSelectedBook(book);
+    setIsModalOpen(true);
   };
 
   return (
@@ -55,11 +75,16 @@ const Office = ({ user }) => {
 
           <AddBook user={user} />
         </Flex>
-        <ReviewProfile reviewBooks={review} />
+        <ReviewProfile reviewBooks={review} handleBookClick={handleBookClick} />
         <Box marginTop="100px">
-          <FavoriteProfile favoriteBooks={favorite} />
+          <FavoriteProfile favoriteBooks={favorite} handleBookClick={handleBookClick} />
         </Box>
       </Box>
+      <BookModal
+        book={selectedBook}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </Center>
   );
 };
