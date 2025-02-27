@@ -35,7 +35,7 @@ router.post("/book/new", async (req, res) => {
     user_rating,
   } = req.body;
 
-  if (!(title && author && img && user_id)) {
+  if (!(title && author && user_id)) {
     return res.status(400).json({ message: "Поля должны быть заполнены" });
   }
 
