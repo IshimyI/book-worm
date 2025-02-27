@@ -1,6 +1,6 @@
 module.exports = {
   development: {
-    username: "admin2",
+    username: "admin",
     password: "123",
     database: "book-worm",
     host: "127.0.0.1",

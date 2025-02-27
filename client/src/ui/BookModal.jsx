@@ -13,37 +13,56 @@ import {
   Box,
   Divider,
   Stack,
-  Avatar
+  Avatar,
+  Input,
+  ButtonGroup,
 } from "@chakra-ui/react";
+import { useState } from "react";
 
-const BookModal = ({ book, isOpen, onClose }) => {
-  if (!book) {
-    return null;
-  }
+const BookModal = ({ book, isOpen, onClose, user }) => {
+  const [newReview, setNewReview] = useState("");
 
-  const testReviews = [
+  const [reviews, setReviews] = useState([
     {
       user: "Иван Петров",
       text: "Отличная книга! Очень понравилась глубина персонажей.",
-      avatarUrl: "https://bit.ly/broken-link"
+      avatarUrl: "https://bit.ly/broken-link",
     },
     {
       user: "Мария Сидорова",
       text: "Интересный сюжет, но мне не хватило динамики в развитии событий.",
-      avatarUrl: "https://bit.ly/broken-link"
+      avatarUrl: "https://bit.ly/broken-link",
     },
     {
       user: "Александр Иванов",
       text: "Читал давно, но до сих пор под впечатлением. Рекомендую!",
-      avatarUrl: "https://bit.ly/broken-link"
+      avatarUrl: "https://bit.ly/broken-link",
     },
-  ];
+  ]);
+
+  const handleReview = () => {
+    if (newReview.trim()) {
+      const newRev = {
+        user: user.name,
+        text: newReview,
+        avatarUrl: "https://bit.ly/broken-link",
+      };
+      setReviews([...reviews, newRev]);
+      setNewReview("");
+    }
+  };
+
+  if (!book) {
+    return null;
+  }
+
   const OverlayOne = () => (
     <ModalOverlay
       bg="blackAlpha.300"
       backdropFilter="blur(10px) hue-rotate(90deg)"
     />
   );
+
   return (
     <Modal isCentered isOpen={isOpen} onClose={onClose} size="xl">
       <OverlayOne />
@@ -68,7 +87,6 @@ const BookModal = ({ book, isOpen, onClose }) => {
                 <Text fontSize="lg">Год: {book.year}</Text>
                 <Text fontSize="lg">Рейтинг: {book.rating}</Text>
                 <Text fontSize="lg">Оценили: {book.quantity_rate}</Text>
-                {/* <Text mt="4">{book.annotation}</Text> */}
               </Box>
             </Box>
 
@@ -90,7 +108,7 @@ const BookModal = ({ book, isOpen, onClose }) => {
               >
                 {(book.reviews && book.reviews.length > 0
                   ? book.reviews
-                  : testReviews
+                  : reviews
                 ).map((review, index) => (
                   <Box
                     key={index}
@@ -100,18 +118,32 @@ const BookModal = ({ book, isOpen, onClose }) => {
                     mb="4"
                   >
                     <Stack direction="row" spacing="4" align="center">
-                    <Avatar name={review.user} src={review.avatarUrl} />
-                    <Box>
-                    <Text fontWeight="bold">{review.user}</Text>
-                    <Divider my="2" />
-                    <Text>{review.text}</Text>
-                  </Box>
-                  </Stack>
+                      <Avatar name={review.user} src={review.avatarUrl} />
+                      <Box>
+                        <Text fontWeight="bold">{review.user}</Text>
+                        <Divider my="2" />
+                        <Text>{review.text}</Text>
+                      </Box>
+                    </Stack>
                   </Box>
                 ))}
-                {book.reviews && book.reviews.length === 0 && (
+                {reviews.length === 0 && (
                   <Text color="gray.500">Нет рецензий на эту книгу.</Text>
                 )}
+              </Box>
+
+              {/* Форма добавления рецензии */}
+              <Box mt="4">
+                <Input
+                  value={newReview}
+                  onChange={(e) => setNewReview(e.target.value)}
+                  placeholder="Напиши свою рецензию"
+                />
+                <ButtonGroup variant="outline" spacing="6" mt="4">
+                  <Button colorScheme="blue" onClick={handleReview}>
+                    Добавить
+                  </Button>
+                </ButtonGroup>
               </Box>
             </Box>
           </Flex>
