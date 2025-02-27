@@ -5,7 +5,6 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalFooter,
   ModalCloseButton,
   Text,
   Image,
@@ -17,6 +16,7 @@ import {
   Input,
   ButtonGroup,
 } from "@chakra-ui/react";
+import { StarIcon } from '@chakra-ui/icons';
 import { useState } from "react";
 
 const BookModal = ({ book, isOpen, onClose, user }) => {
