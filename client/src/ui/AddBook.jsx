@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StarIcon } from '@chakra-ui/icons';
 import { Box, Flex, Input, Text, Center, Button, Textarea, Select, ModalOverlay, Modal, ModalContent, useDisclosure, FormControl, Heading } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
+import SelectedBook from './SelectedBook';
 
 const emptyInputs = {
   title: '',
@@ -20,6 +21,7 @@ const genres = ['классическая литература', 'детекти
 export default function AddBook({ user }) {
   const [addBookFlag, setAddBookFlag] = useState(true);
   //const [searchBookFlag, setSearchBookFlag] = useState(false);
+  const [books, setBooks] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [inputs, setInputs] = useState(emptyInputs);
 
@@ -83,6 +85,23 @@ export default function AddBook({ user }) {
     }
   };
 
+  //временное решение для тестов
+  useEffect(() => {
+    async function loadBooks() {
+      try {
+        const response = await fetch('/books.json'); // Путь к файлу в папке public
+        if (!response.ok) {
+          console.error('Ошибка при загрузке книг:');
+        }
+        const data = await response.json();
+        setBooks(data);
+      } catch (error) {
+        console.error('Ошибка при загрузке книг:', error);
+      }
+    }
+    loadBooks();
+  }, []);
+
   return (
     <>
       <Button onClick={onOpen}>Open Modal</Button>
@@ -96,9 +115,13 @@ export default function AddBook({ user }) {
                 <Heading>Выбор книги</Heading>
                 {addBookFlag ? (
                   <>
-                    <Text>поиск</Text>
+                    <Text>глобальный поиск</Text>
                     <Input placeholder="введите название" />
-                    <Box w="100%" minH={20} mt={4} border="1px" borderColor="black" borderRadius="md"></Box>
+                    <Box w="100%" overflowY="auto" maxHeight="50vh" minH={20} mt={4} border="1px" borderColor="black" borderRadius="md">
+                      {books.map((book) => {
+                        return <SelectedBook key={book.title} book={book} />
+                      })}
+                    </Box>
                     <Flex
                       w="40%"
                       mt={5}
@@ -145,12 +168,11 @@ export default function AddBook({ user }) {
                       }}
                     >
                       <Textarea name="body" value={inputs.body} onChange={handleInputChange} w="100%" minH={20} border="1px" borderColor="black" borderRadius="md" placeholder="добавьте рецензию"></Textarea>
-                      <Box mt={10} h={10} >
+                      <Box mt={10} h={10}>
                         {rating.map((score) => {
-                          return <StarIcon key={score} color='grey' _hover={{color: 'gold'}}/>;
+                          return <StarIcon key={score} color="grey" _hover={{ color: 'gold' }} />;
                         })}
                       </Box>
-                      
                     </Flex>
                     <Flex
                       w="30%"
