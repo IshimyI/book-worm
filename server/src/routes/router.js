@@ -25,14 +25,14 @@ router.get("/listAllBooks", async (req, res) => {
 router.post("/book/new", async (req, res) => {
   const {
     user_id,
-    title,
-    author,
-    genre,
-    year,
-    annotation,
-    img,
+    title= "",
+    author= "",
+    genre = "",
+    year= 1,
+    annotation= "Описание отсутствует",
+    img = "https://cdn1.ozone.ru/s3/multimedia-x/6597669093.jpg",
     body = "",
-    user_rating,
+    user_rating= 1,
   } = req.body;
 
   if (!(title && author && user_id)) {
