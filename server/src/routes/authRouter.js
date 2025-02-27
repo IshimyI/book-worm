@@ -129,7 +129,7 @@ authRouter.post("/forgot-password", async (req, res) => {
       { where: { email } }
     );
 
-    const confirmationLink = `http://localhost:5173/recover/${resetToken}`;
+    const confirmationLink = `http://localhost:5173/reset/${resetToken}`;
     await sendEmail({
       to: email,
       subject: "Восстановление пароля",

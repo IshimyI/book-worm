@@ -9,17 +9,27 @@ export default function NavBar({ user, handleLogout }) {
   return (
     <div className="navbar">
       <div className="conteyner">
-        <Flex className="navbarFlex" alignItems="center" justifyContent="space-between">
+        <Flex
+          className="navbarFlex"
+          alignItems="center"
+          justifyContent="space-between"
+        >
           <NavLink to="/">
             <div className="logo"></div>
           </NavLink>
           <div>
             {user && user.isEmailConfirmed ? `Привет, ${user.name}!` : null}
           </div>
+          <NavLink to="/">
+            <button className="btnMain" type="button">
+              <img src="/img/ic_Main.png" className="imgMainBTN" />
+              Главная
+            </button>
+          </NavLink>
           {user && user.isEmailConfirmed ? (
             <NavLink to="/office">
               <button className="btnMain" type="button">
-                <img src="./img/ic_Home.png" className="imgMainBTN"/>
+                <img src="/img/ic_Home.png" className="imgMainBTN" />
                 Кабинет
               </button>
             </NavLink>
@@ -27,14 +37,14 @@ export default function NavBar({ user, handleLogout }) {
           {user && user.isEmailConfirmed ? (
             <NavLink to="/auth">
               <button className="btnMain" type="button" onClick={handleLogout}>
-                <img src="./img/ic_voyti.png" className="imgMainBTN" />
+                <img src="/img/ic_voyti.png" className="imgMainBTN" />
                 Выйти
               </button>
             </NavLink>
           ) : (
             <NavLink to="/auth">
               <button className="btnMain" type="button">
-                <img src="./img/ic_voyti.png" className="imgMainBTN" />
+                <img src="/img/ic_voyti.png" className="imgMainBTN" />
                 Войти
               </button>
             </NavLink>
