@@ -1,7 +1,7 @@
 import { Box, Image, Text } from "@chakra-ui/react";
 import Slider from "react-slick";
 
-const FavoriteProfile = ({ favoriteBooks }) => {
+const FavoriteProfile = ({ favoriteBooks, handleBookClick }) => {
   const settings = {
     dots: true,
     infinite: true,
@@ -18,7 +18,7 @@ const FavoriteProfile = ({ favoriteBooks }) => {
       </Text>
       <Slider {...settings}>
           {favoriteBooks.map((book) => (
-            <Box key={book.id} position="relative">
+            <Box key={book.id} position="relative" onClick={() => handleBookClick(book)}>
               <Image
                 src={book.IMG}
                 width="120px"

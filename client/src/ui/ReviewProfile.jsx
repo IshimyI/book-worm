@@ -1,7 +1,7 @@
 import { Box, Image, Text } from "@chakra-ui/react";
 import Slider from "react-slick";
 
-const ReviewProfile = ({ reviewBooks }) => {
+const ReviewProfile = ({ reviewBooks, handleBookClick }) => {
   const settings = {
     dots: true,
     infinite: true,
@@ -17,16 +17,16 @@ const ReviewProfile = ({ reviewBooks }) => {
         Мои рецензии на книги
       </Text>
       <Slider {...settings}>
-        {reviewBooks.map((book) => (
-          <Box key={book.id} position="relative">
-            <Image
-              src={book.IMG}
-              width="120px"
-              height="200px"
-              objectFit="cover"
-            />
-          </Box>
-        ))}
+          {reviewBooks.map((book) => (
+            <Box key={book.id} position="relative" onClick={() => handleBookClick(book)}>
+              <Image
+                src={book.IMG}
+                width="120px"
+                height="200px"
+                objectFit="cover"
+              />
+            </Box>
+          ))}
       </Slider>
     </Box>
   );
