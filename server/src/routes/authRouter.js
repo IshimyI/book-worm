@@ -25,7 +25,12 @@ authRouter.post("/signup", async (req, res) => {
     }
 
     const hashpass = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ name, email, password: hashpass });
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashpass,
+      isEmailConfirmed: false,
+    });
 
     const emailConfirmationToken = jwt.sign(
       { userId: newUser.id },
@@ -75,12 +80,25 @@ authRouter.get("/confirm-email", async (req, res) => {
     user.isEmailConfirmed = true;
     await user.save();
 
+    console.log("Обновленный пользователь:", await User.findByPk(user.id));
+
+    const updatedUser = user.get({ plain: true });
+    const { accessToken, refreshToken } = generateTokens({ user: updatedUser });
+
     res
       .status(200)
-      .json({ message: "Email успешно подтверждён!", isEmailConfirmed: true });
+      .cookie("refreshToken", refreshToken, cookieConfig)
+      .json({
+        message: "Email успешно подтверждён!",
+        accessToken,
+        user: updatedUser,
+      });
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ message: "Токен истёк" });
+      return res.status(401).json({
+        message:
+          "Токен истёк. Пожалуйста, запросите новый токен для подтверждения.",
+      });
     }
     if (error.name === "JsonWebTokenError") {
       return res.status(400).json({ message: "Некорректный токен" });
@@ -94,7 +112,7 @@ authRouter.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   console.log(email);
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
 
     if (!user) {
       return res
@@ -166,7 +184,9 @@ authRouter.post(`/reset-password/:token`, async (req, res) => {
 
 authRouter.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.sendStatus(400);
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email и пароль обязательны" });
+  }
   const foundUser = await User.findOne({ where: { email } });
   if (!foundUser) return res.sendStatus(400);
 

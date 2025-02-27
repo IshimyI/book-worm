@@ -9,7 +9,8 @@ export default function ConfirmationEmail({ user, setUser }) {
   const navigate = useNavigate();
 
   console.log("Получен токен:", token);
-  
+  console.log("user:", user);
+
   useEffect(() => {
     if (!token) {
       setRes("токен");
@@ -51,7 +52,7 @@ export default function ConfirmationEmail({ user, setUser }) {
   return (
     <div>
       <div>
-        {res === "успех" || res === "email" || user.isEmailConfirmed ? (
+        {res === "успех" || res === "email" ? (
           <div>
             <span>✔</span>
             <h2>Почта успешно подтверждена!</h2>
