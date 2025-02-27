@@ -1,6 +1,18 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosInstance";
 import { useState } from "react";
+import {
+  Box,
+  Heading,
+  FormControl,
+  FormLabel,
+  Input,
+  Button,
+  Text,
+  Alert,
+  AlertIcon,
+  AlertDescription,
+} from "@chakra-ui/react";
 
 export default function RecoverPassword() {
   const navigate = useNavigate();
@@ -44,27 +56,65 @@ export default function RecoverPassword() {
   };
 
   return (
-    <div>
-      <div>
-        <h2>Восстановление пароля</h2>
+    <Box
+      width={"400px"}
+      mx="auto"
+      mt={"60px"}
+      p={"35px"}
+      borderWidth="1px"
+      borderRadius="25px"
+      boxShadow="md"
+    >
+      <Heading as="h2" size="md" textAlign="center" mb={2}>
+        Восстановление пароля
+      </Heading>
 
-        {message && <div>{message.text}</div>}
+      {message && (
+        <Alert status={message.status || "info"} mb={4}>
+          <AlertIcon />
+          <AlertDescription>{message.text}</AlertDescription>
+        </Alert>
+      )}
 
-        <form onSubmit={onFinish}>
-          <div>
-            <input type="email" name="email" required placeholder="Email" />
-          </div>
+      <form onSubmit={onFinish}>
+        <FormControl mb={10} mt={8}>
+          <Input
+            placeholder="Email"
+            type="email"
+            name="email"
+            id="email"
+            required
+          />
+        </FormControl>
 
-          <button type="submit">Отправить</button>
-        </form>
+        <Button
+          sx={{
+            backgroundColor: "rgba(56, 116, 38, 0.73)",
+            color: "white",
+          }}
+          width="100%"
+          type="submit"
+        >
+          Отправить
+        </Button>
+      </form>
 
-        <div>
-          <span>Вспомнили пароль?</span>
-          <button>
-            <NavLink to={"/auth"}>Войти</NavLink>
-          </button>
-        </div>
-      </div>
-    </div>
+      <Box mt={4} textAlign="center">
+        <Text>
+          Вспомнили пароль?
+          <Button
+            as={NavLink}
+            to={"/auth"}
+            ml={2}
+            sx={{
+              color: "rgba(56, 116, 38, 0.73)",
+            }}
+            variant="link"
+          >
+            Войти
+          </Button>
+        </Text>
+      </Box>
+    </Box>
   );
 }

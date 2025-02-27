@@ -1,3 +1,12 @@
+import {
+  Box,
+  Heading,
+  FormControl,
+  Input,
+  Button,
+  Link,
+  Flex,
+} from "@chakra-ui/react";
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router";
 
@@ -18,67 +27,157 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
   };
 
   return (
-    <div>
+    <Box
+      width={"400px"}
+      mx="auto"
+      mt={"60px"}
+      p={"35px"}
+      borderWidth="1px"
+      borderRadius="25px"
+      boxShadow="md"
+    >
       {bool ? (
         <form onSubmit={handleCorrect}>
-          <h2>Регистрация</h2>
+          <Heading as="h2" size="md" textAlign="center" mb={2}>
+            Регистрация
+          </Heading>
 
-          <div>
-            <label htmlFor="name1">Логин</label>
-            <input name="name" type="text" id="name1" />
-          </div>
+          <FormControl mb={2}>
+            <Input
+              mt={12}
+              mb={4}
+              placeholder="Name"
+              name="name"
+              type="text"
+              id="name1"
+            />
+          </FormControl>
 
-          <div>
-            <label htmlFor="em1">Почта</label>
-            <input name="email" type="email" id="em1" />
-          </div>
+          <FormControl mb={2}>
+            <Input
+              mb={4}
+              placeholder="Email"
+              name="email"
+              type="email"
+              id="em1"
+            />
+          </FormControl>
 
-          <div>
-            <label htmlFor="pass1">Пароль</label>
-            <input
+          <FormControl mb={2}>
+            <Input
+              mb={4}
+              placeholder="Пароль"
               name="password"
               type="password"
               id="pass1"
               value={firstPassword}
               onChange={(e) => setFirstPassword(e.target.value)}
             />
-          </div>
+          </FormControl>
 
-          <div>
-            <label htmlFor="pass2">Подтвердите пароль</label>
-            <input
+          <FormControl mb={2}>
+            <Input
+              mb={10}
+              placeholder="Подтвердите пароль"
               name="password"
               type="password"
               id="pass2"
               value={secondPassword}
               onChange={(e) => setSecondPassword(e.target.value)}
             />
-          </div>
-          <button type="submit">Зарегистрироваться</button>
+          </FormControl>
 
-          <button onClick={() => setBool(false)}>Уже есть аккаунт?</button>
+          <Button
+            sx={{
+              backgroundColor: "rgba(56, 116, 38, 0.73)",
+              color: "white",
+            }}
+            width="100%"
+            mb={1}
+            type="submit"
+            size="sm"
+          >
+            Зарегистрироваться
+          </Button>
+
+          <Button
+            m={"0 auto"}
+            variant="link"
+            sx={{
+              color: "rgba(56, 116, 38, 0.73)",
+            }}
+            onClick={() => setBool(false)}
+            size="sm"
+          >
+            Уже есть аккаунт?
+          </Button>
         </form>
       ) : (
         <form onSubmit={handleLogin}>
-          <h2>Вход</h2>
+          <Heading as="h2" size="md" textAlign="center" mb={6}>
+            Вход
+          </Heading>
 
-          <div>
-            <label htmlFor="em1">Почта</label>
-            <input name="email" type="email" id="em1" />
-          </div>
+          <FormControl mb={6}>
+            <Input placeholder="Email" name="email" type="email" id="em1" />
+          </FormControl>
 
-          <div>
-            <label htmlFor="pass1">Пароль</label>
-            <input name="password" type="password" id="pass1" />
-          </div>
+          <FormControl mb={10}>
+            <Input
+              name="password"
+              type="password"
+              id="pass1"
+              placeholder="Пароль"
+            />
+          </FormControl>
 
-          <button type="submit">Войти</button>
+          <Button
+            sx={{
+              backgroundColor: "rgba(56, 116, 38, 0.73)",
+              color: "white",
+            }}
+            width="100%"
+            mb={1}
+            type="submit"
+            size="sm"
+          >
+            Войти
+          </Button>
+          <Flex columnGap={"20px"} mt={"20px"}>
+            <Link
+              m={"0 auto"}
+              as={NavLink}
+              to={"/recover"}
+              display="block"
+              textAlign="center"
+              mb={1}
+              fontSize="sm"
+            >
+              <Button
+                variant="link"
+                sx={{
+                  color: "rgba(56, 116, 38, 0.73)",
+                }}
+                size="sm"
+              >
+                Забыли пароль?
+              </Button>
+            </Link>
 
-          <NavLink to={"/recover"}>Забыли пароль?</NavLink>
-
-          <button onClick={() => setBool(true)}>Еще нет аккаунта?</button>
+            <Button
+              m={"0 auto"}
+              variant="link"
+              sx={{
+                color: "rgba(56, 116, 38, 0.73)",
+              }}
+              size="sm"
+              onClick={() => setBool(true)}
+            >
+              Еще нет аккаунта?
+            </Button>
+          </Flex>
         </form>
       )}
-    </div>
+    </Box>
   );
 }

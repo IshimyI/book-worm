@@ -57,3 +57,7 @@
 *{
   font-family: "Lato", sans-serif;
 }
+.navFlexBlock2{
+  display: flex;
+  column-gap: 20px;
+}
