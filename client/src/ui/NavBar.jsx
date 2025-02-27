@@ -20,12 +20,6 @@ export default function NavBar({ user, handleLogout }) {
           <div>
             {user && user.isEmailConfirmed ? `Привет, ${user.name}!` : null}
           </div>
-          <NavLink to="/">
-            <button className="btnMain" type="button">
-              <img src="/img/ic_Main.png" className="imgMainBTN" />
-              Главная
-            </button>
-          </NavLink>
           {user && user.isEmailConfirmed ? (
             <NavLink to="/office">
               <button className="btnMain" type="button">
