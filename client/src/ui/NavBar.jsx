@@ -8,7 +8,7 @@ export default function NavBar({ user, handleLogout }) {
 
   return (
     <div className="navbar">
-      <div className="conteyner">
+      <div className="conteynerNav">
         <Flex
           className="navbarFlex"
           alignItems="center"

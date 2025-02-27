@@ -41,143 +41,155 @@ export default function MainPage({ user }) {
   }, [booksData]);
 
   return (
-    <div className="conteyner">
-      <div className="blockMainCenter">
-        {user ? null : (
-          <Alert status="warning" borderRadius={"5px"} mb={"20px"} mt={"-15px"}>
-            <AlertIcon />
-            Хотите читать рецензии и пользоваться личным кабинетом?
-            Авторизуйтесь прямо сейчас!
-          </Alert>
-        )}
-        <div className="lineTwo">
-          <Box
-            className="blockFillter"
-            bg={bgColor}
-            borderWidth="1px"
-            borderRadius="lg"
-            overflow="hidden"
-            boxShadow="md"
-            mb={"20px"}
-            p={"7px"}
-          >
-            <Heading
-              sx={{ fontFamily: "Lato, sans-serif" }}
-              as="h2"
-              size="md"
-              mb={4}
-              textAlign="left"
-              p={"20px"}
+    <>
+      <div className="conteyner">
+        <div className="blockMainCenter">
+          {user ? null : (
+            <Alert
+              status="warning"
+              borderRadius={"5px"}
+              mb={"20px"}
+              mt={"-15px"}
             >
-              Фильтры
-            </Heading>
-
-            <Select placeholder="Жанр" w={"90%"} m={"0 auto"}>
-              {uniqueGenres.map((genre) => (
-                <option key={genre} value={genre}>
-                  {genre}
-                </option>
-              ))}
-            </Select>
-
-            <Select placeholder="Автор" w={"90%"} m={"0 auto"} mt={"20px"}>
-              {uniqueAuthors.map((author) => (
-                <option key={author} value={author}>
-                  {author}
-                </option>
-              ))}
-            </Select>
-
-            <Select
-              placeholder="Год издания"
-              w={"90%"}
-              m={"0 auto"}
-              mt={"20px"}
+              <AlertIcon />
+              Хотите читать рецензии и пользоваться личным кабинетом?
+              Авторизуйтесь прямо сейчас!
+            </Alert>
+          )}
+          <div className="lineTwo">
+            <Box
+              className="blockFillter"
+              borderWidth="1px"
+              borderRadius="lg"
+              overflow="hidden"
+              boxShadow="md"
+              mb={"20px"}
+              p={"7px"}
             >
-              {uniqueYears.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </Select>
-
-            <Flex mt={"20px"} justifyContent={"center"} columnGap={"15px"}>
-              <Button
-                sx={{
-                  backgroundColor: "rgba(56, 116, 38, 0.73)",
-                  color: "white",
-                }}
-                size="sm"
+              <Heading
+                sx={{ fontFamily: "Lato, sans-serif" }}
+                as="h2"
+                size="md"
+                mb={4}
+                textAlign="left"
+                p={"20px"}
               >
-                Искать
-              </Button>
-              <Button
-                sx={{
-                  backgroundColor: "rgba(56, 116, 38, 0.73)",
-                  color: "white",
-                }}
-                size="sm"
-              >
-                Сброс
-              </Button>
-            </Flex>
-          </Box>
+                Фильтры
+              </Heading>
 
-          <div className="blockAllBooks">
-            <div className="lineInputSort">
-              <Input w={"100%"} placeholder="Поиск по названию" />
-              <Select placeholder="Сортировать" w={200}>
-                <option value="option1">По рейтингу</option>
-                <option value="option2">По названию</option>
-                <option value="option3">По году издания</option>
+              <Select placeholder="Жанр" w={"90%"} m={"0 auto"}>
+                {uniqueGenres.map((genre) => (
+                  <option key={genre} value={genre}>
+                    {genre}
+                  </option>
+                ))}
               </Select>
-            </div>
-            {booksData.map((book) => (
-              <Box
-                key={book.id}
-                bg={bgColor}
-                borderWidth="1px"
-                borderRadius="lg"
-                overflow="hidden"
-                boxShadow="md"
-                mb={"20px"}
-                h={250}
-                w={"90vh"}
+
+              <Select placeholder="Автор" w={"90%"} m={"0 auto"} mt={"20px"}>
+                {uniqueAuthors.map((author) => (
+                  <option key={author} value={author}>
+                    {author}
+                  </option>
+                ))}
+              </Select>
+
+              <Select
+                placeholder="Год издания"
+                w={"90%"}
+                m={"0 auto"}
+                mt={"20px"}
               >
-                <Flex align="start">
-                  <Image
-                    src="https://images.wallpaperscraft.com/image/single/question_marks_figures_3d_112755_1080x1920.jpg" // Используем статичный URL из примера, но не меняем его
-                    alt={book.title}
-                    width="180px"
-                    height="100%"
-                    objectFit="cover"
-                    mr={4}
-                  />
-                  <Box textAlign="left" p="4" mt={"10px"}>
-                    <Heading as="h3" size="md" mb={2}>
-                      {book.title}
-                    </Heading>
-                    <Text color="gray.500" fontSize="sm" mb={2}>
-                      {book.author}
-                    </Text>
-                    <Text fontSize="xs" color="gray.600" mb={2}>
-                      {book.genre}
-                    </Text>
-                    <Flex alignItems="center" mt={"60px"}>
-                      <Text fontWeight="bold" mr={2}>
-                        {book.rating} ⭐
+                {uniqueYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </Select>
+
+              <Flex mt={"20px"} justifyContent={"center"} columnGap={"15px"}>
+                <Button
+                  sx={{
+                    backgroundColor: "rgba(56, 116, 38, 0.73)",
+                    color: "white",
+                  }}
+                  size="sm"
+                >
+                  Искать
+                </Button>
+                <Button
+                  sx={{
+                    backgroundColor: "rgba(56, 116, 38, 0.73)",
+                    color: "white",
+                  }}
+                  size="sm"
+                >
+                  Сброс
+                </Button>
+              </Flex>
+            </Box>
+
+            <div className="blockAllBooks">
+              <div className="lineInputSort">
+                <Input
+                  w={"100%"}
+                  placeholder="Поиск по названию"
+                  bg={"white"}
+                />
+                <Select placeholder="Сортировать" w={200} bg={"white"}>
+                  <option value="option1">По рейтингу</option>
+                  <option value="option2">По названию</option>
+                  <option value="option3">По году издания</option>
+                </Select>
+              </div>
+              {booksData.map((book) => (
+                <Box
+                  bg={"white"}
+                  key={book.id}
+                  borderWidth="1px"
+                  borderRadius="lg"
+                  overflow="hidden"
+                  boxShadow="md"
+                  mb={"20px"}
+                  h={250}
+                  w={"90vh"}
+                >
+                  <Flex align="start">
+                    <Image
+                      src="https://images.wallpaperscraft.com/image/single/question_marks_figures_3d_112755_1080x1920.jpg" // Используем статичный URL из примера, но не меняем его
+                      alt={book.title}
+                      width="180px"
+                      height="100%"
+                      objectFit="cover"
+                      mr={4}
+                    />
+                    <Box textAlign="left" p="4" mt={"10px"}>
+                      <Heading as="h3" size="md" mb={2}>
+                        {book.title}
+                      </Heading>
+                      <Text color="gray.500" fontSize="sm" mb={2}>
+                        {book.author}
                       </Text>
-                      <Text fontSize="xs" color="gray.600">
-                        ({book.quantity_rate} отзывов)
+                      <Text fontSize="xs" color="gray.600" mb={2}>
+                        {book.genre}
                       </Text>
-                    </Flex>
-                  </Box>
-                </Flex>
-              </Box>
-            ))}
+                      <Flex alignItems="center" mt={"60px"}>
+                        <Text fontWeight="bold" mr={2}>
+                          {book.rating} ⭐
+                        </Text>
+                        <Text fontSize="xs" color="gray.600">
+                          ({book.quantity_rate} отзывов)
+                        </Text>
+                      </Flex>
+                    </Box>
+                  </Flex>
+                </Box>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <div className="fonMBLOCK"> </div>
+      
+    </>
   );
 }

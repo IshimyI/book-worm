@@ -56,65 +56,70 @@ export default function RecoverPassword() {
   };
 
   return (
-    <Box
-      width={"400px"}
-      mx="auto"
-      mt={"60px"}
-      p={"35px"}
-      borderWidth="1px"
-      borderRadius="25px"
-      boxShadow="md"
-    >
-      <Heading as="h2" size="md" textAlign="center" mb={2}>
-        Восстановление пароля
-      </Heading>
+    <>
+      <Box
+        className="blockAuth"
+        width={"400px"}
+        mx="auto"
+        mt={"60px"}
+        p={"35px"}
+        borderWidth="1px"
+        borderRadius="25px"
+        boxShadow="md"
+      >
+        <Heading as="h2" size="md" textAlign="center" mb={2}>
+          Восстановление пароля
+        </Heading>
 
-      {message && (
-        <Alert status={message.status || "info"} mb={4}>
-          <AlertIcon />
-          <AlertDescription>{message.text}</AlertDescription>
-        </Alert>
-      )}
+        {message && (
+          <Alert status={message.status || "info"} mb={4}>
+            <AlertIcon />
+            <AlertDescription>{message.text}</AlertDescription>
+          </Alert>
+        )}
 
-      <form onSubmit={onFinish}>
-        <FormControl mb={10} mt={8}>
-          <Input
-            placeholder="Email"
-            type="email"
-            name="email"
-            id="email"
-            required
-          />
-        </FormControl>
+        <form onSubmit={onFinish}>
+          <FormControl mb={10} mt={8}>
+            <Input
+              placeholder="Email"
+              type="email"
+              name="email"
+              id="email"
+              required
+            />
+          </FormControl>
 
-        <Button
-          sx={{
-            backgroundColor: "rgba(56, 116, 38, 0.73)",
-            color: "white",
-          }}
-          width="100%"
-          type="submit"
-        >
-          Отправить
-        </Button>
-      </form>
-
-      <Box mt={4} textAlign="center">
-        <Text>
-          Вспомнили пароль?
           <Button
-            as={NavLink}
-            to={"/auth"}
-            ml={2}
             sx={{
-              color: "rgba(56, 116, 38, 0.73)",
+              backgroundColor: "rgba(56, 116, 38, 0.73)",
+              color: "white",
             }}
-            variant="link"
+            width="100%"
+            type="submit"
           >
-            Войти
+            Отправить
           </Button>
-        </Text>
+        </form>
+
+        <Box mt={4} textAlign="center">
+          <Text>
+            Вспомнили пароль?
+            <Button
+              as={NavLink}
+              to={"/auth"}
+              ml={2}
+              sx={{
+                color: "rgba(56, 116, 38, 0.73)",
+              }}
+              variant="link"
+            >
+              Войти
+            </Button>
+          </Text>
+        </Box>
       </Box>
-    </Box>
+      <div className="fonAuth"> </div>
+      <div className="fonAuth2"> </div>
+    </>
   );
 }
