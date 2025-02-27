@@ -31,11 +31,11 @@ router.post("/book/new", async (req, res) => {
     year,
     annotation,
     img,
-    body = '',
+    body = "",
     user_rating,
   } = req.body;
 
-  if (!(title && author && img && user_id)) {
+  if (!(title && author && user_id)) {
     return res.status(400).json({ message: "Поля должны быть заполнены" });
   }
 
@@ -62,6 +62,27 @@ router.post("/book/new", async (req, res) => {
     await transaction.rollback();
     console.error(error);
     res.status(500).send("Ошибка при добавлении книги или отзыва");
+  }
+});
+
+router.get("/favourites/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findByPk(id);
+    if (user) {
+      const books = user.favourites.split(" ");
+
+      const result = await Promise.all(
+        books.map(async (book_id) => await Book.findByPk(book_id))
+      );
+
+      res.status(200).send(result);
+    } else {
+      res.status(404).send("Пользователь не найден.");
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
   }
 });
 
