@@ -106,7 +106,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
             </Box>
 
             <Box flex="2" maxW="400px">
-              <Text fontSize="md" noOfLines={10} overflow="hidden">
+              <Text fontSize="md" overflow="hidden">
                 {book.annotation}
               </Text>
             </Box>
