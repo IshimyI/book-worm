@@ -70,14 +70,14 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
   return (
     <Modal isCentered isOpen={isOpen} onClose={onClose} size="xl">
       <OverlayOne />
-      <ModalContent maxW="1400px" minH="700px" p="6">
+      <ModalContent maxW="80%" minH="700px" p="6" overflow="hidden">
         <ModalCloseButton />
         <ModalHeader fontSize="2xl" fontWeight="bold">
           {book.title}
         </ModalHeader>
-        <ModalBody>
-          <Flex direction={{ base: "column", md: "row" }} gap="6">
-            <Box flexShrink={0}>
+        <ModalBody overflow="auto">
+          <Flex direction={{ base: "column", md: "row" }} gap="6" minH="500px" overflow="hidden">
+            <Box flexShrink={0} maxWidth="250px">
               <Image
                 src={book.IMG || "./default.jpg"}
                 width="250px"
@@ -85,68 +85,51 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                 objectFit="cover"
                 borderRadius="md"
               />
-              <Box mt="4">
-                <Text fontSize="lg">Автор: {book.author}</Text>
-                <Text fontSize="lg">Жанр: {book.genre}</Text>
-                <Text fontSize="lg">Год: {book.year}</Text>
-                <Text fontSize="lg">Рейтинг: {book.rating}</Text>
-                <Text fontSize="lg">Оценили: {book.quantity_rate}</Text>
-              </Box>
-              <Box mt="6">
-                <Button
-                  backgroundColor="#334d00"
-                  color="white"
-                  _hover={{ backgroundColor: "#334d00" }}
-                  onClick={handleFavorites}
-                  width="80%"
-                >
-                  Добавить в избранное
-                </Button>
-              </Box>
             </Box>
-
             <Box flex="2" maxW="400px">
-              <Text fontSize="md" overflow="hidden">
-                {book.annotation}
-              </Text>
+              <Text fontSize="lg">Автор: {book.author}</Text>
+              <Text fontSize="lg">Жанр: {book.genre}</Text>
+              <Text fontSize="lg">Год: {book.year}</Text>
+              <Text fontSize="lg">Рейтинг: {book.rating}</Text>
+              <Text fontSize="lg">Оценили: {book.quantity_rate}</Text>
             </Box>
-            <Box flex="1">
-              <Text fontSize="xl" fontWeight="bold" mb="4">
-                Рецензии
-              </Text>
-              <Box
-                maxH="400px"
-                overflowY="auto"
-                p="2"
-                border="1px solid #ccc"
-                borderRadius="md"
-              >
-                {(book.reviews && book.reviews.length > 0
-                  ? book.reviews
-                  : reviews
-                ).map((review, index) => (
-                  <Box
-                    key={index}
-                    p="4"
-                    border="1px solid #ddd"
-                    borderRadius="md"
-                    mb="4"
-                  >
-                    <Stack direction="row" spacing="4" align="center">
-                      <Avatar name={review.user} src={review.avatarUrl} />
-                      <Box>
-                        <Text fontWeight="bold">{review.user}</Text>
-                        <Divider my="2" />
-                        <Text>{review.text}</Text>
-                      </Box>
-                    </Stack>
-                  </Box>
-                ))}
-                {reviews.length === 0 && (
-                  <Text color="gray.500">Нет рецензий на эту книгу.</Text>
-                )}
-              </Box>
-              <Box mt="4">
+            <Box mt="1" maxW="600px">
+            <Text fontSize="xl" fontWeight="bold" mb="4">
+              Рецензии
+            </Text>
+            <Box
+              maxH="300px"
+              overflowY="auto"
+              p="2"
+              border="1px solid #ccc"
+              borderRadius="md"
+            >
+              {(book.reviews && book.reviews.length > 0
+                ? book.reviews
+                : reviews
+              ).map((review, index) => (
+                <Box
+                  key={index}
+                  p="3"
+                  border="1px solid #ddd"
+                  borderRadius="md"
+                  mb="3"
+                >
+                  <Stack direction="row" spacing="4" align="center">
+                    <Avatar name={review.user} src={review.avatarUrl} />
+                    <Box>
+                      <Text fontWeight="bold">{review.user}</Text>
+                      <Divider my="2" />
+                      <Text>{review.text}</Text>
+                    </Box>
+                  </Stack>
+                </Box>
+              ))}
+              {reviews.length === 0 && (
+                <Text color="gray.500">Нет рецензий на эту книгу.</Text>
+              )}
+            </Box>
+            <Box mt="4">
                 <Input
                   value={newReview}
                   onChange={(e) => setNewReview(e.target.value)}
@@ -171,12 +154,32 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                   </Button>
                 </ButtonGroup>
               </Box>
-            </Box>
+          </Box>
           </Flex>
+          <Box mt="-20" maxW="calc(90% - 500px)">
+            <Text fontSize="md">
+              {book.annotation}
+            </Text>
+          </Box>
+          <Box mt="9">
+            <Button
+              backgroundColor="#334d00"
+              color="white"
+              _hover={{ backgroundColor: "#334d00" }}
+              onClick={handleFavorites}
+              width="20%"
+            >
+              Добавить в избранное
+            </Button>
+            
+          </Box>
+          
         </ModalBody>
       </ModalContent>
     </Modal>
   );
 };
 
+
 export default BookModal;
+
