@@ -17,7 +17,6 @@ const ReviewProfile = ({ reviewBooks, handleBookClick }) => {
         Мои рецензии на книги
       </Text>
       <Slider {...settings}>
-<<<<<<< HEAD
           {reviewBooks.map((book) => (
             <Box key={book.id} position="relative" onClick={() => handleBookClick(book)}>
               <Image
@@ -28,18 +27,6 @@ const ReviewProfile = ({ reviewBooks, handleBookClick }) => {
               />
             </Box>
           ))}
-=======
-        {reviewBooks.map((book) => (
-          <Box key={book.id} position="relative">
-            <Image
-              src={book.IMG}
-              width="120px"
-              height="200px"
-              objectFit="cover"
-            />
-          </Box>
-        ))}
->>>>>>> c34977daa4b0a3970f75de5bd137244f0e7e6288
       </Slider>
     </Box>
   );
