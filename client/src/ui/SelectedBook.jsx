@@ -11,7 +11,7 @@ export default function SelectedBook({ book, changeBook, handleBookClick, setSel
 
   return (
     <Card onClick={selectBook} direction={{ base: 'column', sm: 'row' }} overflow="hidden" variant="outline" m={2} _hover={{ border: '1px', borderColor: 'blue' }}>
-      <Image objectFit="cover" w="200px" src={book.img} alt="Обложка" />
+      <Image objectFit="cover" w="150px" src={book.img} alt="Обложка" />
 
       <Stack>
         <CardBody>

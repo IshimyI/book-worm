@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StarIcon } from '@chakra-ui/icons';
+import { ArrowBackIcon, StarIcon } from '@chakra-ui/icons';
 import { Box, Flex, Input, Text, Center, Button, Textarea, Select, ModalOverlay, Modal, ModalContent, useDisclosure, FormControl, Heading } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
 import SelectedBook from './SelectedBook';
@@ -57,11 +57,16 @@ export default function AddBook({ user }) {
     } else {
       try {
         const res = await axiosInstance.post(`/book/new`, {
+          user_id: user.id,
           title: inputs.title,
           author: inputs.author,
           genre: inputs.genre,
+          annotation: inputs.annotation,
           year: inputs.annotation,
           img: inputs.img,
+          body: inputs.body,
+          user_rating: inputs.user_rating,
+          
         });
         if (res.status === 201) {
           const newBookData = res.data;
@@ -74,26 +79,26 @@ export default function AddBook({ user }) {
     }
   };
 
-  const addReviewHandler = async (event) => {
-    event.preventDefault();
-    if (!(inputs.body && inputs.user_rating)) {
-      console.log('Поля должны быть заполнены');
-    } else {
-      try {
-        const res = await axiosInstance.post(`/review/new`, {
-          body: inputs.body,
-          user_rating: inputs.user_rating,
-          book_id: book.id,
-          user_id: user.id,
-        });
-        if (res.status === 201) {
-          setInputs(emptyInputs);
-        }
-      } catch (error) {
-        console.log(error, 'что-то c add не так');
-      }
-    }
-  };
+  // const addReviewHandler = async (event) => {
+  //   event.preventDefault();
+  //   if (!(inputs.body && inputs.user_rating)) {
+  //     console.log('Поля должны быть заполнены');
+  //   } else {
+  //     try {
+  //       const res = await axiosInstance.post(`/review/new`, {
+  //         body: inputs.body,
+  //         user_rating: inputs.user_rating,
+  //         book_id: book.id,
+  //         user_id: user.id,
+  //       });
+  //       if (res.status === 201) {
+  //         setInputs(emptyInputs);
+  //       }
+  //     } catch (error) {
+  //       console.log(error, 'что-то c add не так');
+  //     }
+  //   }
+  // };
 
   //временное решение для тестов
   useEffect(() => {
@@ -105,13 +110,13 @@ export default function AddBook({ user }) {
     }
     loadBooks();
   }, []);
-//
+  //
   return (
     <>
       <Button
         onClick={onOpen}
         sx={{
-          backgroundColor: 'rgba(56, 116, 38, 0.73)',
+          backgroundColor: '#334d00',
           color: 'white',
         }}
       >
@@ -131,7 +136,7 @@ export default function AddBook({ user }) {
 
                     {searchBookFlag && (
                       <>
-                        <Box w="100%" overflowY="auto" maxHeight="50vh" minH={20} mt="20px" mb="20px" borderColor="black" borderRadius="md">
+                        <Box w="100%" overflowY="auto" maxHeight="40vh" minH={20} mt="20px" mb="20px" borderColor="black" borderRadius="md">
                           {books.map((book) => {
                             return <SelectedBook setSelectedBook={setSelectedBook} handleBookClick={handleBookClick} key={book.title} book={book} />;
                           })}
@@ -140,7 +145,7 @@ export default function AddBook({ user }) {
                     )}
                     {changeBook ? (
                       <>
-                        <SelectedBook book={selectedBook} changeBook={changeBook}/>
+                        <SelectedBook book={selectedBook} changeBook={changeBook} />
                       </>
                     ) : (
                       <>
@@ -157,7 +162,7 @@ export default function AddBook({ user }) {
                           <Button
                             onClick={switchAdder}
                             sx={{
-                              backgroundColor: 'rgba(56, 116, 38, 0.73)',
+                              backgroundColor: '#334d00',
                               color: 'white',
                             }}
                           >
@@ -171,21 +176,22 @@ export default function AddBook({ user }) {
                   <>
                     <Box w="100%" minH="100px" mt="20px">
                       <Button
+                      
                         onClick={switchAdder}
-                        mb="20px"
+                        mb="40px"
+                        variant="link"
                         sx={{
-                          backgroundColor: 'rgba(56, 116, 38, 0.73)',
-                          color: 'white',
+                          color: '#334d00',
                         }}
-                      >
+                      ><ArrowBackIcon/>
                         Вернуться к поиску
                       </Button>
                       <form onSubmit={addOwnBookHandler}>
-                        <Input name="title" value={inputs.title} onChange={handleInputChange} placeholder="*название" mb="20px" />
-                        <Input name="author" value={inputs.author} onChange={handleInputChange} placeholder="*автор" mb="20px" />
-                        <Input name="year" value={inputs.year} onChange={handleInputChange} placeholder="год" mb="20px" />
-                        <Input name="img" value={inputs.img} onChange={handleInputChange} placeholder="*URL обложки" mb="20px" />
-                        <Select name="genre" onChange={handleInputChange} placeholder="жанр" mb="20px">
+                        <Input name="title" value={inputs.title} onChange={handleInputChange} placeholder="Название" mb="20px" />
+                        <Input name="author" value={inputs.author} onChange={handleInputChange} placeholder="Автор" mb="20px" />
+                        <Input name="year" value={inputs.year} onChange={handleInputChange} placeholder="Год" mb="20px" />
+                        <Input name="img" value={inputs.img} onChange={handleInputChange} placeholder="URL обложки" mb="20px" />
+                        <Select name="genre" onChange={handleInputChange} placeholder="Жанр" mb="20px">
                           {genres.map((genre) => (
                             <option key={genre} value={genre}>
                               {genre}
@@ -195,7 +201,7 @@ export default function AddBook({ user }) {
                         <Button
                           type="submit"
                           sx={{
-                            backgroundColor: 'rgba(56, 116, 38, 0.73)',
+                            backgroundColor: '#334d00',
                             color: 'white',
                           }}
                         >
@@ -235,7 +241,7 @@ export default function AddBook({ user }) {
                       <Button
                         type="submit"
                         sx={{
-                          backgroundColor: 'rgba(56, 116, 38, 0.73)',
+                          backgroundColor: '#334d00',
                           color: 'white',
                         }}
                       >
