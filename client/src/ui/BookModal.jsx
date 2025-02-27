@@ -24,11 +24,13 @@ const BookModal = ({ book, isOpen, onClose }) => {
             borderRadius="md"
             mb="4"
           />
+          <Text>{book.title}</Text>
           <Text>Автор: {book.author}</Text>
           <Text>Жанр: {book.genre}</Text>
           <Text>Год: {book.year}</Text>
           <Text>Рейтинг: {book.rating}</Text>
-          <Text>{book.description}</Text>
+          <Text>Оценили: {book.quantity_rate}</Text>
+          <Text>{book.annotation}</Text>
         </ModalBody>
         <ModalFooter>
           <Button onClick={onClose}>Закрыть</Button>
