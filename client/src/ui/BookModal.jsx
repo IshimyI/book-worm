@@ -147,7 +147,6 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                   <Button
                     backgroundColor="#334d00"
                     color="white"
-                    _hover={{ backgroundColor: "#334d00" }}
                     onClick={handleReview}
                   >
                     Добавить рецензию
@@ -165,7 +164,6 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
             <Button
               backgroundColor="#334d00"
               color="white"
-              _hover={{ backgroundColor: "#334d00" }}
               onClick={handleFavorites}
               width="20%"
             >
