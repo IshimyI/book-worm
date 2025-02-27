@@ -12,14 +12,14 @@ module.exports = {
       body: {
         type: Sequelize.STRING,
       },
-      book_id: {
+      bookId: {
         type: Sequelize.INTEGER,
         references: {
           model: "Books",
           key: "id",
         },
       },
-      user_id: {
+      userId: {
         type: Sequelize.INTEGER,
         references: {
           model: "Users",

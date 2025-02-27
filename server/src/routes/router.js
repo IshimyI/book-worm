@@ -46,7 +46,7 @@ router.post("/book/new", async (req, res) => {
     });
 
     const [review, reviewCreated] = await Review.findOrCreate({
-      where: { book_id: newBook.id, user_id },
+      where: { bookId: newBook.id, userId: user_id },
       defaults: { body, user_rating },
     });
 
@@ -71,7 +71,7 @@ router.get("/favourites/:id", async (req, res) => {
       const books = user.favourites.split(" ");
 
       const result = await Promise.all(
-        books.map(async (book_id) => await Book.findByPk(book_id))
+        books.map(async (bookId) => await Book.findByPk(bookId))
       );
 
       res.status(200).send(result);
