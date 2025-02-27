@@ -1,37 +1,61 @@
-import React, { useEffect, useState } from 'react';
-import { StarIcon } from '@chakra-ui/icons';
-import { Box, Flex, Input, Text, Center, Button, Textarea, Select, ModalOverlay, Modal, ModalContent, useDisclosure, FormControl, Heading } from '@chakra-ui/react';
-import axiosInstance from '../axiosInstance';
-import SelectedBook from './SelectedBook';
+import React, { useEffect, useState } from "react";
+import { ArrowBackIcon, StarIcon } from "@chakra-ui/icons";
+import {
+  Box,
+  Flex,
+  Input,
+  Text,
+  Center,
+  Button,
+  Textarea,
+  Select,
+  ModalOverlay,
+  Modal,
+  ModalContent,
+  useDisclosure,
+  FormControl,
+  Heading,
+} from "@chakra-ui/react";
+import axiosInstance from "../axiosInstance";
+import SelectedBook from "./SelectedBook";
 
 const emptyInputs = {
-  title: '',
-  author: '',
-  genre: '',
-  year: '',
-  img: '',
-  body: '',
-  user_rating: '',
+  title: "",
+  author: "",
+  genre: "",
+  year: "",
+  img: "",
+  body: "",
+  user_rating: "",
 };
 
-const rating = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const rating = [1, 2, 3, 4, 5];
 
-const genres = ['классическая литература', 'детектив', 'фантастика', 'современная литература'];
+const genres = ["Классика", "Научная фантастика", "Фэнтези", "Антиутопия"];
 
 export default function AddBook({ user }) {
-  const [addBookFlag, setAddBookFlag] = useState(true);
-  //const [searchBookFlag, setSearchBookFlag] = useState(false);
-  const [books, setBooks] = useState([]);
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [inputs, setInputs] = useState(emptyInputs);
+  const [addBookFlag, setAddBookFlag] = useState(true);
+  const [searchBookFlag, setSearchBookFlag] = useState(false);
+  const [books, setBooks] = useState([]);
+  const [changeBook, setChangeBook] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const switchAdder = () => {
     addBookFlag ? setAddBookFlag(false) : setAddBookFlag(true);
   };
 
-  // const switchSearch = () => {
-  //   addBookFlag ? setSearchBookFlag(false) : setSearchBookFlag(true);
-  // };
+  const switchSearch = () => {
+    searchBookFlag ? setSearchBookFlag(false) : setSearchBookFlag(true);
+    setChangeBook(false);
+  };
+
+  const handleBookClick = () => {
+    console.log(selectedBook);
+    setSearchBookFlag(false);
+    setChangeBook(true);
+  };
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -44,147 +68,267 @@ export default function AddBook({ user }) {
   const addOwnBookHandler = async (event) => {
     event.preventDefault();
     if (!(inputs.title && inputs.author && inputs.img)) {
-      console.log('Поля * должны быть заполнены');
+      console.log("Поля * должны быть заполнены");
     } else {
       try {
         const res = await axiosInstance.post(`/book/new`, {
+          user_id: user.id,
           title: inputs.title,
           author: inputs.author,
           genre: inputs.genre,
+          annotation: inputs.annotation,
           year: inputs.annotation,
           img: inputs.img,
+          body: inputs.body,
+          user_rating: inputs.user_rating,
         });
         if (res.status === 201) {
-          //тут бы желательно получить как минимум ID книги
+          const newBookData = res.data;
+          console.log(newBookData);
           setInputs(emptyInputs);
         }
       } catch (error) {
-        console.log(error, 'что-то c add не так');
+        console.log(error, "что-то c add не так");
       }
     }
   };
 
-  const addReviewHandler = async (event) => {
-    event.preventDefault();
-    if (!(inputs.body && inputs.user_rating)) {
-      console.log('Поля должны быть заполнены');
-    } else {
-      try {
-        const res = await axiosInstance.post(`/api/review/new`, {
-          body: inputs.body,
-          user_rating: inputs.user_rating,
-          book_id: book.id, //который мы получим из предыдущей функции
-          user_id: user.id,
-        });
-        if (res.status === 201) {
-          setInputs(emptyInputs);
-        }
-      } catch (error) {
-        console.log(error, 'что-то c add не так');
-      }
-    }
-  };
+  // const addReviewHandler = async (event) => {
+  //   event.preventDefault();
+  //   if (!(inputs.body && inputs.user_rating)) {
+  //     console.log('Поля должны быть заполнены');
+  //   } else {
+  //     try {
+  //       const res = await axiosInstance.post(`/review/new`, {
+  //         body: inputs.body,
+  //         user_rating: inputs.user_rating,
+  //         book_id: book.id,
+  //         user_id: user.id,
+  //       });
+  //       if (res.status === 201) {
+  //         setInputs(emptyInputs);
+  //       }
+  //     } catch (error) {
+  //       console.log(error, 'что-то c add не так');
+  //     }
+  //   }
+  // };
 
   //временное решение для тестов
   useEffect(() => {
     async function loadBooks() {
-      try {
-        const response = await fetch('/books.json'); // Путь к файлу в папке public
-        if (!response.ok) {
-          console.error('Ошибка при загрузке книг:');
-        }
-        const data = await response.json();
-        setBooks(data);
-      } catch (error) {
-        console.error('Ошибка при загрузке книг:', error);
-      }
+      await fetch("http://localhost:3000/api/listAllBooks")
+        .then((res) => res.json())
+        .then((data) => setBooks(data))
+        .catch((err) => console.error("Ошибка при загрузке книг:", err));
     }
     loadBooks();
   }, []);
-
+  //
   return (
     <>
-      <Button onClick={onOpen}>Open Modal</Button>
+      <Button
+        onClick={onOpen}
+        sx={{
+          backgroundColor: "#334d00",
+          color: "white",
+        }}
+      >
+        Добавить книгу
+      </Button>
 
       <Modal isOpen={isOpen} onClose={onClose} size="5xl">
         <ModalOverlay />
         <ModalContent>
-          <Flex borderColor="#272018" borderRadius="md" m={4} style={{ flexDirection: 'column' }}>
-            <Center m={4}>
-              <Flex w="100%" style={{ flexDirection: 'column' }}>
-                <Heading mb='20px'>Выбор книги</Heading>
+          <Flex m="40px" style={{ flexDirection: "column" }}>
+            <Center>
+              <Flex w="100%" style={{ flexDirection: "column" }}>
+                <Heading mb="20px">Выбор книги</Heading>
                 {addBookFlag ? (
                   <>
-                    
-                    <Input placeholder="Поиск в глобальной базе по названию" />
-                    <Box w="100%" overflowY="auto" maxHeight="50vh" minH={20} mt='20px' mb='20px' borderColor="black" borderRadius="md">
-                      {books.map((book) => {
-                        return <SelectedBook key={book.title} book={book} />
-                      })}
-                    </Box>
-                    <Flex
-                      w="40%"
-                      mt={5}
-                      style={{
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Text>Не нашли подходящую книгу?</Text>
-                      <Button onClick={switchAdder}>Добавить свою</Button>
-                    </Flex>
+                    <Input
+                      onClick={switchSearch}
+                      placeholder="Поиск в глобальной базе по названию"
+                    />
+
+                    {searchBookFlag && (
+                      <>
+                        <Box
+                          w="100%"
+                          overflowY="auto"
+                          maxHeight="40vh"
+                          minH={20}
+                          mt="20px"
+                          mb="20px"
+                          borderColor="black"
+                          borderRadius="md"
+                        >
+                          {books.map((book) => {
+                            return (
+                              <SelectedBook
+                                setSelectedBook={setSelectedBook}
+                                handleBookClick={handleBookClick}
+                                key={book.title}
+                                book={book}
+                              />
+                            );
+                          })}
+                        </Box>
+                      </>
+                    )}
+                    {changeBook ? (
+                      <>
+                        <SelectedBook
+                          book={selectedBook}
+                          changeBook={changeBook}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <Flex
+                          w="40%"
+                          mt="20px"
+                          mb="20px"
+                          style={{
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text>Не нашли подходящую книгу?</Text>
+                          <Button
+                            onClick={switchAdder}
+                            sx={{
+                              backgroundColor: "#334d00",
+                              color: "white",
+                            }}
+                          >
+                            Добавить свою
+                          </Button>
+                        </Flex>
+                      </>
+                    )}
                   </>
                 ) : (
                   <>
-                    <Box w="100%" minH={20} mt={4}>
-                      <Button onClick={switchAdder} mb={4}>
+                    <Box w="100%" minH="100px" mt="20px">
+                      <Button
+                        onClick={switchAdder}
+                        mb="40px"
+                        variant="link"
+                        sx={{
+                          color: "#334d00",
+                        }}
+                      >
+                        <ArrowBackIcon />
                         Вернуться к поиску
                       </Button>
                       <form onSubmit={addOwnBookHandler}>
-                        <Input name="title" value={inputs.title} onChange={handleInputChange} placeholder="*название" mb={4} />
-                        <Input name="author" value={inputs.author} onChange={handleInputChange} placeholder="*автор" mb={4} />
-                        <Input name="year" value={inputs.year} onChange={handleInputChange} placeholder="год" mb={4} />
-                        <Input name="img" value={inputs.img} onChange={handleInputChange} placeholder="*URL обложки" mb={4} />
-                        <Select name="genre" onChange={handleInputChange} placeholder="жанр" mb={4}>
+                        <Input
+                          name="title"
+                          value={inputs.title}
+                          onChange={handleInputChange}
+                          placeholder="Название"
+                          mb="20px"
+                        />
+                        <Input
+                          name="author"
+                          value={inputs.author}
+                          onChange={handleInputChange}
+                          placeholder="Автор"
+                          mb="20px"
+                        />
+                        <Input
+                          name="year"
+                          value={inputs.year}
+                          onChange={handleInputChange}
+                          placeholder="Год"
+                          mb="20px"
+                        />
+                        <Input
+                          name="img"
+                          value={inputs.img}
+                          onChange={handleInputChange}
+                          placeholder="URL обложки"
+                          mb="20px"
+                        />
+                        <Select
+                          name="genre"
+                          onChange={handleInputChange}
+                          placeholder="Жанр"
+                          mb="20px"
+                        >
                           {genres.map((genre) => (
                             <option key={genre} value={genre}>
                               {genre}
                             </option>
                           ))}
                         </Select>
-                        <Button type="submit">Добавить</Button>
+                        <Button
+                          type="submit"
+                          sx={{
+                            backgroundColor: "#334d00",
+                            color: "white",
+                          }}
+                        >
+                          Добавить
+                        </Button>
                       </form>
                     </Box>
                   </>
                 )}
-                <form onSubmit={addReviewHandler}>
-                  <Flex style={{ justifyContent: 'space-between' }}>
+                {/* <form onSubmit={addReviewHandler}> */}
+                <form>
+                  <Flex style={{ justifyContent: "space-between" }}>
                     <Flex
                       w="70%"
                       mt={4}
                       style={{
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
+                        flexDirection: "column",
+                        justifyContent: "space-between",
                       }}
                     >
-                      <Textarea name="body" value={inputs.body} onChange={handleInputChange} w="100%" minH={20} border="1px" borderColor="black" borderRadius="md" placeholder="Добавить рецензию"></Textarea>
-                      <Box mt={10} h={10}>
+                      <Textarea
+                        name="body"
+                        value={inputs.body}
+                        onChange={handleInputChange}
+                        w="100%"
+                        minH={20}
+                        border="1px"
+                        borderColor="black"
+                        borderRadius="md"
+                        placeholder="Добавить рецензию"
+                      ></Textarea>
+                      <Box mt="40px" h="40px">
                         {rating.map((score) => {
-                          return <StarIcon key={score} color="grey" _hover={{ color: 'gold' }} />;
+                          return (
+                            <StarIcon
+                              key={score}
+                              color="grey"
+                              _hover={{ color: "gold" }}
+                            />
+                          );
                         })}
                       </Box>
                     </Flex>
                     <Flex
                       w="30%"
-                      minH={20}
-                      mt={4}
+                      minH="80px"
+                      mt="20px"
                       style={{
-                        flexDirection: 'column',
-                        justifyContent: 'flex-end',
-                        alignItems: 'flex-end',
+                        flexDirection: "column",
+                        justifyContent: "flex-end",
+                        alignItems: "flex-end",
                       }}
                     >
-                      <Button type="submit">Добавить рецензию</Button>
+                      <Button
+                        type="submit"
+                        sx={{
+                          backgroundColor: "#334d00",
+                          color: "white",
+                        }}
+                      >
+                        Добавить рецензию
+                      </Button>
                     </Flex>
                   </Flex>
                 </form>

@@ -1,10 +1,17 @@
-import { Button, Card, CardBody, CardFooter, Heading, Image, Stack, Text } from '@chakra-ui/react';
-import React from 'react';
+import { Button, Card, CardBody, CardFooter, Flex, Heading, Image, Stack, Text } from '@chakra-ui/react';
+import React, { useState } from 'react';
 
-export default function SelectedBook({book}) {
+export default function SelectedBook({ book, changeBook, handleBookClick, setSelectedBook }) {
+  function selectBook() {
+    if (!changeBook) {
+      setSelectedBook(book);
+      handleBookClick();
+    }
+  }
+
   return (
-    <Card direction={{ base: 'column', sm: 'row' }} overflow="hidden" variant="outline" m={2} _hover={{border: '1px', borderColor: 'blue'}}>
-      <Image objectFit="cover" w='200px' src={book.img} alt="Обложка" />
+    <Card onClick={selectBook} direction={{ base: 'column', sm: 'row' }} overflow="hidden" variant="outline" m={2} _hover={{ border: '1px', borderColor: 'blue' }}>
+      <Image objectFit="cover" w="150px" src={book.img} alt="Обложка" />
 
       <Stack>
         <CardBody>
@@ -14,7 +21,10 @@ export default function SelectedBook({book}) {
         </CardBody>
 
         <CardFooter>
-          {book.year}
+          <Flex flexDirection="column">
+            <Text>{book.genre}</Text>
+            <Text>{book.year}</Text>
+          </Flex>
         </CardFooter>
       </Stack>
     </Card>
