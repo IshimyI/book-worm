@@ -14,7 +14,7 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
   const navigate = useNavigate();
   const [firstPassword, setFirstPassword] = useState("");
   const [secondPassword, setSecondPassword] = useState("");
-  const [bool, setBool] = useState(true);
+  const [bool, setBool] = useState(false);
 
   const handleCorrect = (e) => {
     e.preventDefault();

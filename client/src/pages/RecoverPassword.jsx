@@ -28,7 +28,6 @@ export default function RecoverPassword() {
         type: "success",
         text: "Письмо с инструкциями по восстановлению пароля отправлено на ваш email.",
       });
-      navigate("/reset");
     } catch (error) {
       console.error("Ошибка при восстановлении пароля:", error);
 
