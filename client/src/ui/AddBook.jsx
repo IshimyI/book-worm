@@ -109,15 +109,15 @@ export default function AddBook({ user }) {
       <Modal isOpen={isOpen} onClose={onClose} size="5xl">
         <ModalOverlay />
         <ModalContent>
-          <Flex border="1px" borderColor="#272018" borderRadius="md" m={4} style={{ flexDirection: 'column' }}>
+          <Flex borderColor="#272018" borderRadius="md" m={4} style={{ flexDirection: 'column' }}>
             <Center m={4}>
               <Flex w="100%" style={{ flexDirection: 'column' }}>
-                <Heading>Выбор книги</Heading>
+                <Heading mb='20px'>Выбор книги</Heading>
                 {addBookFlag ? (
                   <>
-                    <Text>глобальный поиск</Text>
-                    <Input placeholder="введите название" />
-                    <Box w="100%" overflowY="auto" maxHeight="50vh" minH={20} mt={4} border="1px" borderColor="black" borderRadius="md">
+                    
+                    <Input placeholder="Поиск в глобальной базе по названию" />
+                    <Box w="100%" overflowY="auto" maxHeight="50vh" minH={20} mt='20px' mb='20px' borderColor="black" borderRadius="md">
                       {books.map((book) => {
                         return <SelectedBook key={book.title} book={book} />
                       })}
@@ -167,7 +167,7 @@ export default function AddBook({ user }) {
                         justifyContent: 'space-between',
                       }}
                     >
-                      <Textarea name="body" value={inputs.body} onChange={handleInputChange} w="100%" minH={20} border="1px" borderColor="black" borderRadius="md" placeholder="добавьте рецензию"></Textarea>
+                      <Textarea name="body" value={inputs.body} onChange={handleInputChange} w="100%" minH={20} border="1px" borderColor="black" borderRadius="md" placeholder="Добавить рецензию"></Textarea>
                       <Box mt={10} h={10}>
                         {rating.map((score) => {
                           return <StarIcon key={score} color="grey" _hover={{ color: 'gold' }} />;

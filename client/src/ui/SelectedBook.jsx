@@ -3,7 +3,7 @@ import React from 'react';
 
 export default function SelectedBook({book}) {
   return (
-    <Card direction={{ base: 'column', sm: 'row' }} overflow="hidden" variant="outline" m={2}>
+    <Card direction={{ base: 'column', sm: 'row' }} overflow="hidden" variant="outline" m={2} _hover={{border: '1px', borderColor: 'blue'}}>
       <Image objectFit="cover" w='200px' src={book.img} alt="Обложка" />
 
       <Stack>

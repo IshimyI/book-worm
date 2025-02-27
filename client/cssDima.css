@@ -1,0 +1,35 @@
+/* Общий стиль полосы прокрутки */
+::-webkit-scrollbar {
+    width: 12px; /* Ширина вертикальной полосы прокрутки */
+    height: 12px; /* Высота горизонтальной полосы прокрутки */
+  }
+  
+  /* Стиль для "бегунка" полосы прокрутки */
+  ::-webkit-scrollbar-thumb {
+    background-color: #888; /* Цвет "бегунка" */
+    border-radius: 6px; /* Закругление углов "бегунка" */
+    border: 2px solid transparent; /*  Добавляет отступ между "бегунком" и краем полосы прокрутки */
+    background-clip: padding-box; /* Учитывает padding при отрисовке фона */
+  }
+  
+  /* Стиль для "бегунка" при наведении */
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* Цвет "бегунка" при наведении */
+  }
+  
+  /* Стиль для трека полосы прокрутки */
+  ::-webkit-scrollbar-track {
+    background-color: #f1f1f1; /* Цвет трека полосы прокрутки */
+    border-radius: 6px;
+  }
+  
+  /* Стиль для трека полосы прокрутки при наведении */
+  ::-webkit-scrollbar-track:hover {
+    background-color: #ddd;
+  }
+  
+  /* Стиль для кнопок (стрелок) полосы прокрутки */
+  ::-webkit-scrollbar-button {
+    display: none; /* Скрыть кнопки (стрелки) */
+  }
+  
