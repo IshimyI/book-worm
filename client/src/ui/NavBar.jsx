@@ -8,7 +8,9 @@ export default function NavBar({ user, handleLogout }) {
 
   return (
     <div className="navbar">
-      <div className="conteyner">
+
+      <div className="conteynerNav">
+
         <Flex
           className="navbarFlex"
           alignItems="center"
@@ -17,32 +19,38 @@ export default function NavBar({ user, handleLogout }) {
           <NavLink to="/">
             <div className="logo"></div>
           </NavLink>
-          <div>
-            {user && user.isEmailConfirmed ? `Привет, ${user.name}!` : null}
+          <div className="navFlexBlock2">
+            {/* <div>
+              {user && user.isEmailConfirmed ? `Привет, ${user.name}` : null}
+            </div> */}
+            {user && user.isEmailConfirmed ? (
+              <NavLink to="/office">
+                <button className="btnMain" type="button">
+                  <img src="/img/ic_Home.png" className="imgMainBTN" />
+                  Кабинет
+                </button>
+              </NavLink>
+            ) : null}
+            {user && user.isEmailConfirmed ? (
+              <NavLink to="/auth">
+                <button
+                  className="btnMain"
+                  type="button"
+                  onClick={handleLogout}
+                >
+                  <img src="/img/ic_voyti.png" className="imgMainBTN" />
+                  Выйти
+                </button>
+              </NavLink>
+            ) : (
+              <NavLink to="/auth">
+                <button className="btnMain" type="button">
+                  <img src="/img/ic_voyti.png" className="imgMainBTN" />
+                  Войти
+                </button>
+              </NavLink>
+            )}
           </div>
-          {user && user.isEmailConfirmed ? (
-            <NavLink to="/office">
-              <button className="btnMain" type="button">
-                <img src="/img/ic_Home.png" className="imgMainBTN" />
-                Кабинет
-              </button>
-            </NavLink>
-          ) : null}
-          {user && user.isEmailConfirmed ? (
-            <NavLink to="/auth">
-              <button className="btnMain" type="button" onClick={handleLogout}>
-                <img src="/img/ic_voyti.png" className="imgMainBTN" />
-                Выйти
-              </button>
-            </NavLink>
-          ) : (
-            <NavLink to="/auth">
-              <button className="btnMain" type="button">
-                <img src="/img/ic_voyti.png" className="imgMainBTN" />
-                Войти
-              </button>
-            </NavLink>
-          )}
         </Flex>
       </div>
     </div>

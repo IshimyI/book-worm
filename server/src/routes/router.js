@@ -23,50 +23,62 @@ router.get("/listAllBooks", async (req, res) => {
 });
 
 router.post("/book/new", async (req, res) => {
-  const { title, author, genre, year, annotation, img } = req.body;
-  if (!(title && author && img)) {
+  const {
+    user_id,
+    title,
+    author,
+    genre,
+    year,
+    annotation,
+    img,
+    body = "",
+    user_rating,
+  } = req.body;
+
+  if (!(title && author && user_id)) {
     return res.status(400).json({ message: "Поля должны быть заполнены" });
   }
 
+  const transaction = await Sequelize.transaction();
+
   try {
-    const [newBook, created] = await Book.findOrCreate({
+    const [newBook] = await Book.findOrCreate({
       where: { title, author },
       defaults: { genre, year, annotation, img },
+      transaction,
     });
-    if (created) {
-      res.status(201).json(newBook);
-    } else {
-      res.status(201).json({ message: "Книга уже существует" }, newBook);
-    }
-    res.status(201).json(newBook);
-  } catch (error) {
-    console.log(error);
-    res.status(500).send(error.message);
-  }
-});
 
-router.post("/review/new", async (req, res) => {
-  const { body, user_rating, book_id, user_id } = req.body;
-  try {
-    if (!(body && user_rating && book_id && user_id)) {
-      return res.status(400).json({
-        message: "Поля должны быть заполнены",
+    if (user_rating) {
+      await Review.findOrCreate({
+        where: { book_id: newBook.id, user_id },
+        defaults: { body, user_rating },
+        transaction,
       });
     }
 
-    const [newReview, created] = await Review.findOrCreate({
-      where: { book_id, user_id },
-      defaults: { body, user_rating },
-    });
+    await transaction.commit();
+    res.status(201).json(newBook);
+  } catch (error) {
+    await transaction.rollback();
+    console.error(error);
+    res.status(500).send("Ошибка при добавлении книги или отзыва");
+  }
+});
 
-    if (created) {
-      res.status(201).json(newReview);
+router.get("/favourites/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findByPk(id);
+    if (user) {
+      const books = user.favourites.split(" ");
+
+      const result = await Promise.all(
+        books.map(async (book_id) => await Book.findByPk(book_id))
+      );
+
+      res.status(200).send(result);
     } else {
-      newReview.body = body;
-      newReview.user_rating = user_rating;
-      await newReview.save();
-
-      res.status(201).json({ message: "Отзыв отредактирован" }, newReview);
+      res.status(404).send("Пользователь не найден.");
     }
   } catch (error) {
     console.log(error);

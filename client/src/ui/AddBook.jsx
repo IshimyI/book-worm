@@ -1,8 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { ArrowBackIcon, StarIcon } from '@chakra-ui/icons';
-import { Box, Flex, Input, Text, Center, Button, Textarea, Select, ModalOverlay, Modal, ModalContent, useDisclosure, FormControl, Heading } from '@chakra-ui/react';
-import axiosInstance from '../axiosInstance';
-import SelectedBook from './SelectedBook';
+import React, { useEffect, useState } from "react";
+import { ArrowBackIcon, StarIcon } from "@chakra-ui/icons";
+import {
+  Box,
+  Flex,
+  Input,
+  Text,
+  Center,
+  Button,
+  Textarea,
+  Select,
+  ModalOverlay,
+  Modal,
+  ModalContent,
+  useDisclosure,
+  FormControl,
+  Heading,
+} from "@chakra-ui/react";
+import axiosInstance from "../axiosInstance";
+import SelectedBook from "./SelectedBook";
 
 const emptyInputs = {
   title: '',
@@ -17,7 +32,7 @@ const emptyInputs = {
 
 const rating = [1, 2, 3, 4, 5];
 
-const genres = ['Классика', 'Научная фантастика', 'Фэнтези', 'Антиутопия'];
+const genres = ["Классика", "Научная фантастика", "Фэнтези", "Антиутопия"];
 
 export default function AddBook({ user }) {
   const [addBookFlag, setAddBookFlag] = useState(true);
@@ -63,7 +78,7 @@ export default function AddBook({ user }) {
     event.preventDefault();
     console.log('инпуты в хэндле', inputs);
     if (!(inputs.title && inputs.author && inputs.img)) {
-      console.log('Поля * должны быть заполнены');
+      console.log("Поля * должны быть заполнены");
     } else {
       try {
         const res = await axiosInstance.post(`/book/new`, {
@@ -81,7 +96,7 @@ export default function AddBook({ user }) {
           setInputs(emptyInputs);
         }
       } catch (error) {
-        console.log(error, 'что-то c add не так');
+        console.log(error, "что-то c add не так");
       }
     }
   };
@@ -89,10 +104,10 @@ export default function AddBook({ user }) {
   //временное решение для тестов
   useEffect(() => {
     async function loadBooks() {
-      await fetch('http://localhost:3000/api/listAllBooks')
+      await fetch("http://localhost:3000/api/listAllBooks")
         .then((res) => res.json())
         .then((data) => setBooks(data))
-        .catch((err) => console.error('Ошибка при загрузке книг:', err));
+        .catch((err) => console.error("Ошибка при загрузке книг:", err));
     }
     loadBooks();
   }, []);
@@ -102,8 +117,8 @@ export default function AddBook({ user }) {
       <Button
         onClick={onOpen}
         sx={{
-          backgroundColor: '#334d00',
-          color: 'white',
+          backgroundColor: "#334d00",
+          color: "white",
         }}
       >
         Добавить книгу
@@ -112,9 +127,9 @@ export default function AddBook({ user }) {
       <Modal isOpen={isOpen} onClose={onClose} size="5xl">
         <ModalOverlay />
         <ModalContent>
-          <Flex m="40px" style={{ flexDirection: 'column' }}>
+          <Flex m="40px" style={{ flexDirection: "column" }}>
             <Center>
-              <Flex w="100%" style={{ flexDirection: 'column' }}>
+              <Flex w="100%" style={{ flexDirection: "column" }}>
                 <Heading mb="20px">Выбор книги</Heading>
                 <form onSubmit={addOwnBookHandler}>
                   {addBookFlag ? (
@@ -194,14 +209,20 @@ export default function AddBook({ user }) {
                       w="70%"
                       mt={4}
                       style={{
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
+                        flexDirection: "column",
+                        justifyContent: "space-between",
                       }}
                     >
                       <Textarea name="body" value={inputs.body} onChange={handleInputChange}></Textarea>
                       <Box mt="40px" h="40px">
                         {rating.map((score) => {
-                          return <StarIcon key={score} color="grey" _hover={{ color: 'gold' }} />;
+                          return (
+                            <StarIcon
+                              key={score}
+                              color="grey"
+                              _hover={{ color: "gold" }}
+                            />
+                          );
                         })}
                       </Box>
                     </Flex>
@@ -210,16 +231,16 @@ export default function AddBook({ user }) {
                       minH="80px"
                       mt="20px"
                       style={{
-                        flexDirection: 'column',
-                        justifyContent: 'flex-end',
-                        alignItems: 'flex-end',
+                        flexDirection: "column",
+                        justifyContent: "flex-end",
+                        alignItems: "flex-end",
                       }}
                     >
                       <Button
                         type="submit"
                         sx={{
-                          backgroundColor: '#334d00',
-                          color: 'white',
+                          backgroundColor: "#334d00",
+                          color: "white",
                         }}
                       >
                         Добавить рецензию
