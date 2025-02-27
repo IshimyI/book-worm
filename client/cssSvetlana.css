@@ -1,12 +1,23 @@
 .navbar {
-  background-color: rgb(51, 41, 28);
+  background-color: #272018ec;
   height: 70px;
   color: white;
+  position: sticky;
+  top: 0;
+  z-index: 1000
 }
 .conteyner {
   margin: 0 auto;
   width: 120vh;
-  /* background-color: rgba(255, 185, 94, 0.336); */
+  background-color: rgb(255, 255, 255);
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.conteynerNav {
+  margin: 0 auto;
+  width: 120vh;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 .logo {
   background-image: url(./img/logo.png);
@@ -53,7 +64,49 @@
 .blockFillter{
   width: 28vh;
   height: 320px;
+  background-color: white;
 }
 *{
   font-family: "Lato", sans-serif;
+}
+.navFlexBlock2{
+  display: flex;
+  column-gap: 20px;
+}
+.blockAuth{
+  text-align: center;
+  background-color: white;
+}
+.fonAuth {
+  position: fixed;
+  background-image: url(./img/pngtree-monster-and-book-ghost-icon-vector-png-image_6848636.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  right: 0;
+  z-index: -1;
+  bottom: 0;
+  width: 900px;
+  height: 900px;
+  filter: blur(5px); 
+}
+.fonAuth2 {
+  position: fixed;
+  background-image: url(./img/pngtree-monster-and-book-ghost-icon-vector-png-image_6848636.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  left: 0;
+  z-index: -1;
+  bottom: 0;
+  width: 900px;
+  height: 900px;
+  filter: blur(5px); 
+  transform: scaleX(-1);
+}
+.fonMBLOCK{
+  position: fixed;
+  background-color: #919e186c;
+  z-index: -1;
+  bottom: 0;
+  width: 2200px;
+  height: 900px;
 }

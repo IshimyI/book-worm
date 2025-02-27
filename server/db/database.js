@@ -1,6 +1,6 @@
 module.exports = {
   development: {
-    username: "admin",
+    username: "admin2",
     password: "123",
     database: "book-worm",
     host: "127.0.0.1",
@@ -8,7 +8,7 @@ module.exports = {
     dialect: "postgres",
   },
   test: {
-    username: "admin",
+    username: "admin2",
     password: "123",
     database: "book-worm",
     host: "127.0.0.1",
