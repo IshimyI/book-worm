@@ -1,4 +1,4 @@
-import { Button, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, Text, useDisclosure } from "@chakra-ui/react";
+import { Button, Modal, ModalOverlay, ModalContent, ModalBody, ModalFooter, ModalCloseButton, Text, Image } from "@chakra-ui/react";
 
 
 const BookModal = ({ book, isOpen, onClose }) => {
@@ -15,9 +15,15 @@ const BookModal = ({ book, isOpen, onClose }) => {
     <Modal isCentered isOpen={isOpen} onClose={onClose}>
       <OverlayOne />
       <ModalContent>
-        <ModalHeader>{book.title}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
+        <Image 
+            src={"./default.jpg"} 
+            boxSize="200px" 
+            objectFit="cover"
+            borderRadius="md"
+            mb="4"
+          />
           <Text>Автор: {book.author}</Text>
           <Text>Жанр: {book.genre}</Text>
           <Text>Год: {book.year}</Text>
