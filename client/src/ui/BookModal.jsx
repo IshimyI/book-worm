@@ -3,7 +3,7 @@ import { Button, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, Moda
 
 const BookModal = ({ book, isOpen, onClose }) => {
   if (!book) {
-    return null; // Возвращаем null, если book == null
+    return null; 
   }
   const OverlayOne = () => (
     <ModalOverlay

@@ -4,32 +4,164 @@ const bcrypt = require("bcrypt");
 const cookieConfig = require("../configs/cookieConfig");
 const jwt = require("jsonwebtoken");
 const generateTokens = require("../utils/generateTokens");
-
+const sendEmail = require("../utils/emailService");
 const authRouter = express.Router();
 
 authRouter.post("/signup", async (req, res) => {
-  const { email, name, password } = req.body;
-  if (!email || !name || !password) return res.sendStatus(401);
+  try {
+    const { email, name, password } = req.body;
 
-  const hashpass = await bcrypt.hash(password, 10);
-  const [newUser, created] = await User.findOrCreate({
-    where: { email },
-    defaults: {
-      name,
-      password: hashpass,
-      coins: 0,
-    },
-  });
+    if (!name || !email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Все поля должны быть заполнены" });
+    }
 
-  if (!created) return res.sendStatus(402);
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({
+        message: `Пользователь с почтой "${email}" уже зарегистрирован`,
+      });
+    }
 
-  const user = newUser.get();
-  delete user.password;
+    const hashpass = await bcrypt.hash(password, 10);
+    const newUser = await User.create({ name, email, password: hashpass });
 
-  const { accessToken, refreshToken } = generateTokens({ user });
-  res
-    .cookie("refreshToken", refreshToken, cookieConfig)
-    .json({ accessToken, user });
+    const emailConfirmationToken = jwt.sign(
+      { userId: newUser.id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    const confirmationLink = `http://localhost:5173/confirm-email?token=${emailConfirmationToken}`;
+    await sendEmail({
+      to: email,
+      subject: "Подтверждение email",
+      text: `Пожалуйста, подтвердите ваш email, перейдя по ссылке: ${confirmationLink}`,
+    });
+
+    const plainUser = newUser.get({ plain: true });
+    delete plainUser.password;
+
+    const { accessToken, refreshToken } = generateTokens({ user: plainUser });
+    res
+      .cookie("refreshToken", refreshToken, cookieConfig)
+      .json({ user: plainUser, accessToken });
+  } catch (error) {
+    console.error("Ошибка при регистрации:", error);
+    res.sendStatus(500);
+  }
+});
+
+authRouter.get("/confirm-email", async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).json({ message: "Токен не предоставлен" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByPk(decoded.userId);
+
+    if (!user) {
+      return res.status(400).json({ message: "Пользователь не найден" });
+    }
+
+    if (user.isEmailConfirmed) {
+      return res.status(400).json({ message: "Email уже подтверждён" });
+    }
+
+    user.isEmailConfirmed = true;
+    await user.save();
+
+    res
+      .status(200)
+      .json({ message: "Email успешно подтверждён!", isEmailConfirmed: true });
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Токен истёк" });
+    }
+    if (error.name === "JsonWebTokenError") {
+      return res.status(400).json({ message: "Некорректный токен" });
+    }
+    console.error("Ошибка подтверждения email:", error);
+    res.sendStatus(500);
+  }
+});
+
+authRouter.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  console.log(email);
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Пользователь с таким email не найден." });
+    }
+
+    const resetToken = jwt.sign({ userId: user.id }, process.env.JWT_PASS, {
+      expiresIn: "1h",
+    });
+
+    await User.update(
+      {
+        resetPasswordToken: resetToken,
+        resetPasswordExpires: Date.now() + 3600000,
+      },
+      { where: { email } }
+    );
+
+    const confirmationLink = `http://localhost:5173/recover/${resetToken}`;
+    await sendEmail({
+      to: email,
+      subject: "Восстановление пароля",
+      text: `Для восстановления пароля перейдите по ссылке: ${confirmationLink}`,
+    });
+
+    res.status(200).json({
+      message:
+        "Письмо с инструкциями по восстановлению пароля отправлено на ваш email.",
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Ошибка на сервере. Пожалуйста, попробуйте позже." });
+  }
+  return "done";
+});
+
+authRouter.post(`/reset-password/:token`, async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  try {
+    const user = await User.findOne({
+      where: { resetPasswordToken: token },
+    });
+
+    if (!user || user.resetPasswordExpires < Date.now()) {
+      return res
+        .status(400)
+        .json({ message: "Недействительный или просроченный токен." });
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Пароль успешно изменен." });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Ошибка на сервере. Пожалуйста, попробуйте позже." });
+  }
+  return "done";
 });
 
 authRouter.post("/login", async (req, res) => {
