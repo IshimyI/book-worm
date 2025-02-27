@@ -1,12 +1,9 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable react/prop-types */
 import {
   Box,
   Heading,
   Text,
   Image,
   Flex,
-  useColorModeValue,
   Input,
   Select,
   Button,
@@ -15,9 +12,9 @@ import {
 } from "@chakra-ui/react";
 import booksData from "../testJSON/books.json";
 import { useState, useEffect } from "react";
+import ModalMain from "../ui/ModalMain";
 
 export default function MainPage({ user }) {
-  const bgColor = useColorModeValue("gray.50", "gray.800");
   const [uniqueGenres, setUniqueGenres] = useState([]);
   const [uniqueAuthors, setUniqueAuthors] = useState([]);
   const [uniqueYears, setUniqueYears] = useState([]);
@@ -179,6 +176,7 @@ export default function MainPage({ user }) {
                         <Text fontSize="xs" color="gray.600">
                           ({book.quantity_rate} отзывов)
                         </Text>
+                        {user ? <ModalMain user={user} book={book} /> : null}
                       </Flex>
                     </Box>
                   </Flex>
@@ -189,7 +187,6 @@ export default function MainPage({ user }) {
         </div>
       </div>
       <div className="fonMBLOCK"> </div>
-      
     </>
   );
 }
