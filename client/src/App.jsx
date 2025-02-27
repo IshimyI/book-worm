@@ -9,6 +9,9 @@ import { useNavigate } from "react-router-dom";
 import ErrorPage from "./pages/ErrorPage";
 import Office from "./pages/Office";
 import MainPage from "./pages/MainPage";
+import ConfirmationEmail from "./pages/ConfirmationEmail";
+import RecoverPassword from "./pages/RecoverPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   const [user, setUser] = useState();
@@ -75,6 +78,12 @@ function App() {
         ></Route>
         <Route path="/office" element={<Office user={user} />} />
         <Route path="/" element={<MainPage user={user} />}></Route>
+        <Route
+          path="/confirm-email"
+          element={<ConfirmationEmail user={user} setUser={setUser} />}
+        />
+        <Route path="/recover" element={<RecoverPassword />}></Route>
+        <Route path="/reset" element={<ResetPassword />}></Route>
         <Route path="*" element={<ErrorPage />}></Route>
       </Route>
     </Routes>
