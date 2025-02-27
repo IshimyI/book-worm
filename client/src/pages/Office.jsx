@@ -6,6 +6,8 @@ import FavoriteProfile from "../ui/FavoriteProfile";
 import AddBook from "../ui/AddBook";
 
 const Office = ({ user }) => {
+  console.log(user);
+
   const [review, setReview] = useState([
     { id: 1, IMG: "./default.jpg" },
     { id: 2, IMG: "./default.jpg" },

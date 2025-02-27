@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 
 export default function SignUpPage({ handleSignUp, handleLogin }) {
+  const navigate = useNavigate();
   const [firstPassword, setFirstPassword] = useState("");
   const [secondPassword, setSecondPassword] = useState("");
   const [bool, setBool] = useState(true);
@@ -13,6 +14,7 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
       return;
     }
     handleSignUp(e);
+    navigate("/confirm-email");
   };
 
   return (

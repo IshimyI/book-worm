@@ -25,7 +25,6 @@ module.exports = {
         type: Sequelize.STRING,
       },
       isEmailConfirmed: {
-        defaultValue: false,
         type: Sequelize.BOOLEAN,
       },
       createdAt: {
