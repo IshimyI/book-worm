@@ -59,11 +59,15 @@ function App() {
   };
 
   const handleLogout = async () => {
-    const res = await axiosInstance.post("/auth/logout");
-    if (res.status === 200) {
-      setUser(null);
-      setAccessToken("");
-      navigate("/auth");
+    try {
+      const res = await axiosInstance.post("/auth/logout");
+      if (res.status === 200) {
+        setUser(null);
+        setAccessToken("");
+        navigate("/auth");
+      }
+    } catch (error) {
+      console.error("Ошибка выхода:", error);
     }
   };
 

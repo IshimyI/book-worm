@@ -85,14 +85,11 @@ authRouter.get("/confirm-email", async (req, res) => {
     const updatedUser = user.get({ plain: true });
     const { accessToken, refreshToken } = generateTokens({ user: updatedUser });
 
-    res
-      .status(200)
-      .cookie("refreshToken", refreshToken, cookieConfig)
-      .json({
-        message: "Email успешно подтверждён!",
-        accessToken,
-        user: updatedUser,
-      });
+    res.status(200).cookie("refreshToken", refreshToken, cookieConfig).json({
+      message: "Email успешно подтверждён!",
+      accessToken,
+      user: updatedUser,
+    });
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({
