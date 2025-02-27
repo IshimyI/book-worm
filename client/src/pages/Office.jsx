@@ -7,6 +7,8 @@ import AddBook from "../ui/AddBook";
 import BookModal from "../ui/BookModal";
 
 const Office = ({ user }) => {
+  console.log(user);
+
   const [review, setReview] = useState([
     {
       id: 1,
