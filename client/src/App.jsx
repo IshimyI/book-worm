@@ -12,6 +12,7 @@ import MainPage from "./pages/MainPage";
 import ConfirmationEmail from "./pages/ConfirmationEmail";
 import RecoverPassword from "./pages/RecoverPassword";
 import ResetPassword from "./pages/ResetPassword";
+import axios from "axios";
 
 function App() {
   const [user, setUser] = useState();
@@ -19,26 +20,37 @@ function App() {
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
 
-  // useEffect(() => {
-  //   const fetchBooks = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         "https://www.googleapis.com/books/v1/volumes",
-  //         {
-  //           params: {
-  //             q: "Война" , // пример запроса сюда должен с инпута приходить должны первые символа 3 и на каждый последующий (потому что ограничение на количество книг для выдачи)
-  //             key: "AIzaSyClVhHN4OkNbIj8HdeEsm5Zt0b5GxrLyu0",
-  //           },
-  //         }
-  //       );
-  //       setBooks(response.data.items);
-  //     } catch (error) {
-  //       console.error("Ошибка при загрузке книг:", error);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await axios.get(
+          "https://openlibrary.org/search.json",
+          {
+            params: { q: "война", limit: 25 },
+          }
+        );
 
-  //   fetchBooks();
-  // }, []);
+        const booksData = response.data.docs.map((book) => ({
+          title: book.title || "Неизвестно",
+          author: book.author_name?.join(", ") || "Неизвестно",
+          annotation: book.first_sentence?.join(" ") || "Описание отсутствует",
+          img: book.cover_i
+            ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
+            : null,
+          genre: book.subject ? book.subject.slice(0, 3) : ["Жанр неизвестен"],
+          year: book.first_publish_year || "Неизвестно",
+        }));
+
+        setBooks(booksData);
+      } catch (error) {
+        console.error("Ошибка при загрузке книг:", error);
+      }
+    };
+
+    fetchBooks();
+  }, []);
+
+  console.log(books);
 
   useEffect(() => {
     axiosInstance("/tokens/refresh")
