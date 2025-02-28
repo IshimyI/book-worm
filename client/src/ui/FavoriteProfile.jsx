@@ -40,7 +40,7 @@ const FavoriteProfile = ({
             onClick={() => handleBookClick(book)}
           >
             <Image
-              src="./default.jpg"
+              src={book.img || "./default.jpg"}
               width="150px"
               height="200px"
               objectFit="cover"
