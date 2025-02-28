@@ -17,11 +17,13 @@ import {
   Textarea,
   Heading,
 } from "@chakra-ui/react";
-// import { StarIcon } from "@chakra-ui/icons";
+import { StarIcon } from "@chakra-ui/icons";
 import { useState } from "react";
 
 const BookModal = ({ book, isOpen, onClose, user }) => {
   const [newReview, setNewReview] = useState("");
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
 
   const [reviews, setReviews] = useState([
     {
@@ -52,9 +54,51 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
       setNewReview("");
     }
   };
+  const handleRating = (value) => {
+    setRating(value);
+    console.log(rating);
+  };
+
+  const handleMouseEnter = (value) => {
+    setHover(value);
+  };
+
+  const handleMouseLeave = () => {
+    setHover(rating);
+  };
 
   const handleFavorites = () => {
     console.log("Книга добавлена в избранное");
+  };
+  
+
+  const addOwnBookHandler = async (event) => {
+    event.preventDefault();
+    console.log('инпуты в хэндлере', inputs);
+    if (!(inputs.title && inputs.author && inputs.img)) {
+      console.log('Поля * должны быть заполнены');
+    } else {
+      try {
+        const res = await axiosInstance.post(`/book/new`, {
+          user_id: user.id,
+          title: inputs.title,
+          author: inputs.author,
+          genre: inputs.genre,
+          //annotation: inputs.annotation,
+          year: inputs.year,
+          img: inputs.img,
+          body: inputs.body,
+          user_rating: rating,
+        });
+        if (res.status === 200) {
+          setInputs(emptyInputs);
+          setRating(0);
+          setHover(0);
+        }
+      } catch (error) {
+        console.log(error, 'что-то c add не так');
+      }
+    }
   };
 
   if (!book) {
@@ -188,7 +232,27 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                     placeholder="Напиши свою рецензию"
                   />
 
-                  <Box>{/* ТУТ ЗВЁЗДЫ */}</Box>
+                  <Box mt="15vh" h="1vh">
+                    {[...Array(5)].map((_, index) => {
+                      const ratingValue = index + 1;
+                      return (
+                        <StarIcon
+                          key={index}
+                          aria-label={`Рейтинг ${ratingValue}`}
+                          fontSize="25px"
+                          variant="ghost"
+                          color={
+                            ratingValue <= (hover || rating)
+                              ? "gold"
+                              : "gray.300"
+                          }
+                          onClick={() => handleRating(ratingValue)}
+                          onMouseEnter={() => handleMouseEnter(ratingValue)}
+                          onMouseLeave={handleMouseLeave}
+                        />
+                      );
+                    })}
+                  </Box>
                 </Box>
               </Box>
             </Box>

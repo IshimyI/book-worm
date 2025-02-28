@@ -1,7 +1,14 @@
 import { Box, Image, Text } from "@chakra-ui/react";
+import { SmallCloseIcon, Icon } from "@chakra-ui/icons";
 import Slider from "react-slick";
+import axiosInstance from "../axiosInstance";
 
-const FavoriteProfile = ({ favoriteBooks, handleBookClick }) => {
+const FavoriteProfile = ({
+  favoriteBooks,
+  handleBookClick,
+  setFavoriteBooks,
+}) => {
+  // const [favorite, setFavorite] = useState([]);
   const settings = {
     dots: true,
     infinite: true,
@@ -11,23 +18,49 @@ const FavoriteProfile = ({ favoriteBooks, handleBookClick }) => {
     arrows: true,
   };
 
+  async function handleDelete(id) {
+    try {
+      await axiosInstance.delete(`http://localhost:3000/api/favourites/${id}`);
+      setFavoriteBooks(favoriteBooks.filter((book) => book.id !== id));
+    } catch (error) {
+      console.error("Ошибка при удалении книги из избранного", error);
+    }
+  }
+
   return (
     <Box>
       <Text fontSize="20px" marginBottom="20px">
         Мои избранные книги
       </Text>
       <Slider {...settings}>
-          {favoriteBooks.map((book) => (
-            <Box key={book.id} position="relative" onClick={() => handleBookClick(book)}>
-              <Image
-                src='./default.jpg'
-                width="150px"
-                height="200px"
-                objectFit="cover"
-                borderRadius="10px"
-              />
-            </Box>
-          ))}
+        {favoriteBooks.map((book) => (
+          <Box
+            key={book.id}
+            position="relative"
+            onClick={() => handleBookClick(book)}
+          >
+            <Image
+              src="./default.jpg"
+              width="150px"
+              height="200px"
+              objectFit="cover"
+              borderRadius="10px"
+            />
+            <Icon
+              as={SmallCloseIcon}
+              position="absolute"
+              top="1vh"
+              right="4vh"
+              color="white"
+              boxSize={5}
+              filter="drop-shadow(0px 0px 3px rgba(0, 0, 0, 0.8))"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(book.id);
+              }}
+            />
+          </Box>
+        ))}
       </Slider>
     </Box>
   );
