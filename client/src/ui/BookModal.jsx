@@ -5,30 +5,11 @@ import { useState } from 'react';
 import axiosInstance from '../axiosInstance';
 
 const BookModal = ({ book, isOpen, onClose, user }) => {
-  //const [newReview, setNewReview] = useState("");
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [textInput, setTextInput] = useState('');
   const [click, setClick] = useState(false);
   const [inputBody, setInputBody] = useState('');
-
-  // const [reviews, setReviews] = useState([
-  // {
-  //   user: "Иван Петров",
-  //   text: "Отличная книга! Очень понравилась глубина персонажей.",
-  //   avatarUrl: "https://bit.ly/broken-link",
-  // },
-  // {
-  //   user: "Мария Сидорова",
-  //   text: "Интересный сюжет, но мне не хватило динамики в развитии событий.",
-  //   avatarUrl: "https://bit.ly/broken-link",
-  // },
-  // {
-  //   user: "Александр Иванов",
-  //   text: "Читал давно, но до сих пор под впечатлением. Рекомендую!",
-  //   avatarUrl: "https://bit.ly/broken-link",
-  // },
-  // ]);
 
   const handleReview = () => {
     if (newReview.trim()) {

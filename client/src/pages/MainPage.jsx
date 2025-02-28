@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import {
   Box,
   Heading,
@@ -10,32 +11,104 @@ import {
   Alert,
   AlertIcon,
 } from "@chakra-ui/react";
-import booksData from "../testJSON/books.json";
+// import booksData from "../testJSON/books.json";
 import { useState, useEffect } from "react";
 import ModalMain from "../ui/ModalMain";
+import axios from "axios";
 
 export default function MainPage({ user }) {
   const [uniqueGenres, setUniqueGenres] = useState([]);
   const [uniqueAuthors, setUniqueAuthors] = useState([]);
   const [uniqueYears, setUniqueYears] = useState([]);
+  const [booksData, setBooksData] = useState([]);
+  const [fillterBooksData, setFillterBooksData] = useState([]);
+
+  useEffect(() => {
+    const fetchAllSms = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/listAllBooks"
+        );
+        setBooksData(response.data);
+        setFillterBooksData(response.data);
+        console.log(response.data);
+      } catch (error) {
+        console.error("Ошибка при получении всех books:", error);
+      }
+    };
+
+    fetchAllSms();
+  }, []);
+
+  const sbros = () => {
+    setBooksData(fillterBooksData);
+  };
 
   useEffect(() => {
     const yearsSet = new Set();
-    booksData.forEach((book) => yearsSet.add(book.year));
+    fillterBooksData.forEach((book) => yearsSet.add(book.year));
     setUniqueYears(Array.from(yearsSet).sort());
   }, [booksData]);
 
   useEffect(() => {
     const authorsSet = new Set();
-    booksData.forEach((book) => authorsSet.add(book.author));
+    fillterBooksData.forEach((book) => authorsSet.add(book.author));
     setUniqueAuthors(Array.from(authorsSet));
   }, [booksData]);
 
   useEffect(() => {
     const genresSet = new Set();
-    booksData.forEach((book) => genresSet.add(book.genre));
+    fillterBooksData.forEach((book) => genresSet.add(book.genre));
     setUniqueGenres(Array.from(genresSet));
   }, [booksData]);
+
+  const helperSort = (value) => {
+    if (value.target.value === "option1") {
+      const newData = [...booksData].sort((a, b) =>
+        a.rating > b.rating ? 1 : -1
+      );
+      setBooksData(newData);
+    }
+    if (value.target.value === "option2") {
+      const newData2 = [...booksData].sort((a, b) =>
+        a.title > b.title ? 1 : -1
+      );
+      setBooksData(newData2);
+    }
+    if (value.target.value === "option3") {
+      const newData3 = [...booksData].sort((a, b) =>
+        a.year > b.year ? 1 : -1
+      );
+      setBooksData(newData3);
+    }
+  };
+
+  const fillHelper1 = (value) => {
+    const newData = [...fillterBooksData].filter(
+      (el) => el.genre === value.target.value
+    );
+    setBooksData(newData);
+  };
+
+  const fillHelper2 = (value) => {
+    const newData = [...fillterBooksData].filter(
+      (el) => el.author === value.target.value
+    );
+    setBooksData(newData);
+  };
+  const fillHelper3 = (value) => {
+    const newData = [...fillterBooksData].filter(
+      (el) => String(el.year) === String(value.target.value)
+    );
+    setBooksData(newData);
+  };
+
+  const inputHand = (value) => {
+    const newData = [...fillterBooksData].filter(
+      (el) => el.title.toLowerCase().includes(value.target.value.toLowerCase())
+    );
+    setBooksData(newData);
+  }
 
   return (
     <>
@@ -74,7 +147,12 @@ export default function MainPage({ user }) {
                 Фильтры
               </Heading>
 
-              <Select placeholder="Жанр" w={"90%"} m={"0 auto"}>
+              <Select
+                placeholder="Жанр"
+                w={"90%"}
+                m={"0 auto"}
+                onChange={fillHelper1}
+              >
                 {uniqueGenres.map((genre) => (
                   <option key={genre} value={genre}>
                     {genre}
@@ -82,7 +160,13 @@ export default function MainPage({ user }) {
                 ))}
               </Select>
 
-              <Select placeholder="Автор" w={"90%"} m={"0 auto"} mt={"20px"}>
+              <Select
+                placeholder="Автор"
+                w={"90%"}
+                m={"0 auto"}
+                mt={"20px"}
+                onChange={fillHelper2}
+              >
                 {uniqueAuthors.map((author) => (
                   <option key={author} value={author}>
                     {author}
@@ -95,6 +179,7 @@ export default function MainPage({ user }) {
                 w={"90%"}
                 m={"0 auto"}
                 mt={"20px"}
+                onChange={fillHelper3}
               >
                 {uniqueYears.map((year) => (
                   <option key={year} value={year}>
@@ -104,7 +189,7 @@ export default function MainPage({ user }) {
               </Select>
 
               <Flex mt={"20px"} justifyContent={"center"} columnGap={"15px"}>
-                <Button
+                {/* <Button
                   sx={{
                     backgroundColor: "#334d00",
                     color: "white",
@@ -112,13 +197,14 @@ export default function MainPage({ user }) {
                   size="sm"
                 >
                   Искать
-                </Button>
+                </Button> */}
                 <Button
                   sx={{
                     backgroundColor: "#334d00",
                     color: "white",
                   }}
                   size="sm"
+                  onClick={sbros}
                 >
                   Сброс
                 </Button>
@@ -131,8 +217,14 @@ export default function MainPage({ user }) {
                   w={"100%"}
                   placeholder="Поиск по названию"
                   bg={"white"}
+                  onChange={inputHand}
                 />
-                <Select placeholder="Сортировать" w={200} bg={"white"}>
+                <Select
+                  placeholder="Сортировать"
+                  w={200}
+                  bg={"white"}
+                  onChange={helperSort}
+                >
                   <option value="option1">По рейтингу</option>
                   <option value="option2">По названию</option>
                   <option value="option3">По году издания</option>
@@ -152,7 +244,7 @@ export default function MainPage({ user }) {
                 >
                   <Flex align="start">
                     <Image
-                      src="https://images.wallpaperscraft.com/image/single/question_marks_figures_3d_112755_1080x1920.jpg" // Используем статичный URL из примера, но не меняем его
+                      src={book.img}
                       alt={book.title}
                       width="180px"
                       height="100%"
@@ -169,12 +261,16 @@ export default function MainPage({ user }) {
                       <Text fontSize="xs" color="gray.600" mb={2}>
                         {book.genre}
                       </Text>
+                      <Text fontSize="xs" color="gray.600" mb={2}>
+                        {book.year}
+                      </Text>
                       <Flex alignItems="center" mt={"60px"}>
                         <Text fontWeight="bold" mr={2}>
-                          {book.rating} ⭐
+                          {book.rating == null ? 0 : book.rating} ⭐
                         </Text>
                         <Text fontSize="xs" color="gray.600">
-                          ({book.quantity_rate} отзывов)
+                          ({book.quantity_rate == null ? 0 : book.quantity_rate}{" "}
+                          отзывов)
                         </Text>
                         {user ? <ModalMain user={user} book={book} /> : null}
                       </Flex>

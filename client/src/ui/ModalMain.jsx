@@ -1,9 +1,10 @@
+/* eslint-disable react/prop-types */
 import {
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
+  Stack,
   ModalBody,
   ModalCloseButton,
   Button,
@@ -12,15 +13,125 @@ import {
   Image,
   Flex,
   Box,
-  Divider,
-  Stack,
+  Heading,
   Avatar,
+  Divider,
+  Textarea,
 } from "@chakra-ui/react";
+import { StarIcon } from "@chakra-ui/icons";
+import { useState } from "react";
+import axiosInstance from '../axiosInstance';
 
 useDisclosure;
 
-export default function BasicUsage({ user, book }) {
+export default function ModalMain({ user, book }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
+  const [textInput, setTextInput] = useState('');
+  const [click, setClick] = useState(false);
+  const [inputBody, setInputBody] = useState('');
+
+  const handleReview = () => {
+    if (newReview.trim()) {
+      const newRev = {
+        user: user.name,
+        text: newReview,
+        avatarUrl: 'https://bit.ly/broken-link',
+      };
+      setReviews([...reviews, newRev]);
+      setNewReview('');
+    }
+  };
+  const handleRating = (value) => {
+    setRating(value);
+    console.log(rating);
+  };
+
+  const handleMouseEnter = (value) => {
+    setHover(value);
+  };
+
+  const handleMouseLeave = () => {
+    setHover(rating);
+  };
+
+  const handleFavorites = async () => {
+    console.log('Данные на сервер:', {
+      user_id: user.id,
+      book_id: book.id,
+    });
+    try {
+      const res = await axiosInstance.post(`http://localhost:3000/api/updateFavourites/${user.id}`, {
+        bookId: book.id,
+      });
+      console.log('Ответ от сервера:', res.data);
+      if (res.status === 200) {
+        console.log('Книга добавлена в избранное');
+      } else {
+        console.log('Что-то пошло не так');
+      }
+    } catch (error) {
+      console.log('Ошибка при добавлении книги в избранное:', error);
+    }
+  };
+
+  const addReviewHandler = async (event) => {
+    event.preventDefault();
+    console.log('инпут боди', inputBody);
+    if (!inputBody) {
+      console.log('Поля должны быть заполнены');
+    } else {
+      try {
+        const res = await axiosInstance.post(`/book/new`, {
+          user_id: user.id,
+          body: inputBody,
+          title: book.title,
+          author: book.author,
+          user_rating: rating,
+        });
+        if (res.status === 200) {
+          setInputBody('');
+          setRating(0);
+          setHover(0);
+        }
+      } catch (error) {
+        console.log(error, 'что-то c add не так');
+      }
+    }
+  };
+
+  if (!book) {
+    return null;
+  }
+
+  // const OverlayOne = () => <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px) hue-rotate(90deg)" />;
+
+  // const changeHandler = (event) => {
+  //   event.preventDefault();
+  //   setInputBody(() => event.target.value);
+  //   setRating(() => event.target.value);
+  // };
+
+  // const switchClick = () => {
+  //   setClick(true);
+  // };
+
+  async function remakeHandler(event) {
+    console.log('put отработал');
+    event.preventDefault();
+    try {
+      await axiosInstance.put(`/api/review/${review.id}`, {
+        body: textInput,
+      });
+      setClick(true);
+      setTextInput('');
+    } catch (error) {
+      console.log(error, 'что-то c del не так');
+      setClick(false);
+    }
+  }
+
   return (
     <>
       <Button
@@ -37,77 +148,123 @@ export default function BasicUsage({ user, book }) {
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
-        <ModalContent maxW="1400px" minH="700px" p="6">
-          <ModalCloseButton />
-          <ModalHeader fontSize="2xl" fontWeight="bold">
-            {book.title}
-          </ModalHeader>
-          <ModalBody>
-            <Flex direction={{ base: "column", md: "row" }} gap="6">
-              <Box flexShrink={0}>
-                <Image
-                  src={book.IMG || "./default.jpg"}
-                  width="250px"
-                  height="350px"
-                  objectFit="cover"
-                  borderRadius="md"
-                />
-                <Box mt="4">
-                  <Text fontSize="lg">Автор: {book.author}</Text>
-                  <Text fontSize="lg">Жанр: {book.genre}</Text>
-                  <Text fontSize="lg">Год: {book.year}</Text>
-                  <Text fontSize="lg">Рейтинг: {book.rating}</Text>
-                  <Text fontSize="lg">Оценили: {book.quantity_rate}</Text>
-                  {/* <Text mt="4">{book.annotation}</Text> */}
+        <ModalContent maxW="70%" minH="700px" p="6" overflow="hidden">
+        <ModalCloseButton />
+        <ModalHeader fontSize="2xl" fontWeight="bold">
+          {book.title}
+        </ModalHeader>
+        <ModalBody overflow="auto">
+          <Flex>
+            <Box>
+              <Flex className="this12">
+                <Box maxWidth="250px">
+                  <Image src={book.img || './default.jpg'} width="250px" height="350px" objectFit="cover" borderRadius="md" />
                 </Box>
-              </Box>
-
-              <Box flex="2" maxW="400px">
-                <Text fontSize="md" noOfLines={10} overflow="hidden">
-                  {book.annotation}
-                </Text>
-              </Box>
-              <Box flex="1">
+                <Box w="65%" mr={'20px'} p={4} borderWidth="1px" borderRadius="md" boxShadow="sm" bg="white">
+                  <Stack spacing={3}>
+                    <Heading as="h3" size="md" fontWeight="semibold" color="gray.700">
+                      Информация о книге:
+                    </Heading>
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                        Автор:
+                      </Text>
+                      <Text fontSize="md">{book.author}</Text>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                        Жанр:
+                      </Text>
+                      <Text fontSize="md">{book.genre}</Text>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                        Год:
+                      </Text>
+                      <Text fontSize="md">{book.year}</Text>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                        Рейтинг:
+                      </Text>
+                      <Text fontSize="md">{book.rating} ⭐</Text>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                        Оценили:
+                      </Text>
+                      <Text fontSize="md">{book.quantity_rate}</Text>
+                    </Box>
+                  </Stack>
+                </Box>
+              </Flex>
+              <Box mt="20px" pr={'25px'} mb={'25px'}>
+                <Text fontSize="md">{book.annotation}</Text>
+              </Box>{' '}
+            </Box>
+            <Box>
+              <Box w={'60vh'}>
                 <Text fontSize="xl" fontWeight="bold" mb="4">
                   Рецензии
                 </Text>
-                <Box
-                  maxH="400px"
-                  overflowY="auto"
-                  p="2"
-                  border="1px solid #ccc"
-                  borderRadius="md"
-                >
-                  {/* {(book.reviews && book.reviews.length > 0
-                    ? book.reviews
-                    : testReviews
-                  ).map((review, index) => (
-                    <Box
-                      key={index}
-                      p="4"
-                      border="1px solid #ddd"
-                      borderRadius="md"
-                      mb="4"
-                    >
-                      <Stack direction="row" spacing="4" align="center">
-                        <Avatar name={review.user} src={review.avatarUrl} />
-                        <Box>
-                          <Text fontWeight="bold">{review.user}</Text>
-                          <Divider my="2" />
-                          <Text>{review.text}</Text>
-                        </Box>
-                      </Stack>
-                    </Box>
-                  ))} */}
-                  {book.reviews && book.reviews.length === 0 && (
+                <Box maxH="300px" overflowY="auto" p="2" border="1px solid #ccc" borderRadius="md">
+                  {(book.reviews && book.reviews.length > 0 ? book.reviews : []).map((review, index) => {
+                    return (
+                      <Box key={index} p="3" border="1px solid #ddd" borderRadius="md" mb="3">
+                        <Stack direction="row" spacing="4" align="center">
+                          <Avatar name={review.userName} src={`https://bit.ly/broken-link`} />
+
+                          <Box>
+                            <Flex justifyContent="space-between">
+                              <Text fontWeight="bold">{review.userName}</Text>
+                            </Flex>
+                            <Divider my="2" />
+                            <Text>{review.user_rev}</Text>
+                            <Text>{review.user_raeting} ⭐</Text>
+                          </Box>
+                        </Stack>
+                      </Box>
+                    );
+                  })}
+                  {/* {reviews.length === 0 && (
                     <Text color="gray.500">Нет рецензий на эту книгу.</Text>
-                  )}
+                  )} */}
+                </Box>
+                <Box mt="4">
+                  <Textarea value={inputBody} onChange={(e) => setInputBody(e.target.value)} placeholder="Напиши свою рецензию" />
+
+                  <Box mt="15px">
+                    {[...Array(5)].map((_, index) => {
+                      const ratingValue = index + 1;
+                      return (
+                        <StarIcon
+                          key={index}
+                          aria-label={`Рейтинг ${ratingValue}`}
+                          fontSize="25px"
+                          variant="ghost"
+                          color={ratingValue <= (hover || rating) ? 'gold' : 'gray.300'}
+                          onClick={() => handleRating(ratingValue)}
+                          onMouseEnter={() => handleMouseEnter(ratingValue)}
+                          onMouseLeave={handleMouseLeave}
+                        />
+                      );
+                    })}
+                  </Box>
                 </Box>
               </Box>
-            </Flex>
-          </ModalBody>
-          <ModalFooter></ModalFooter>
-        </ModalContent>
+            </Box>
+          </Flex>
+
+          <Flex className="this123" mt={'30px'}>
+            <Button backgroundColor="#909e18" color="white" onClick={handleFavorites}>
+              Добавить в избранное
+            </Button>
+            <Button backgroundColor="#334d00" color="white" onClick={addReviewHandler}>
+              Добавить рецензию
+            </Button>
+          </Flex>
+        </ModalBody>
+      </ModalContent>
       </Modal>
     </>
   );
