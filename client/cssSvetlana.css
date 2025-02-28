@@ -110,3 +110,9 @@
   width: 2200px;
   height: 900px;
 }
+.this12{
+  column-gap: 20px;
+}
+.this123{
+  justify-content: space-between;
+}
