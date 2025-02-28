@@ -18,6 +18,7 @@ import {
   Divider,
   Textarea,
 } from "@chakra-ui/react";
+import { StarIcon } from "@chakra-ui/icons";
 import { useState } from "react";
 
 useDisclosure;
@@ -25,6 +26,9 @@ useDisclosure;
 export default function ModalMain({ user, book }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [newReview, setNewReview] = useState("");
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
+
   const [reviews, setReviews] = useState([
     {
       user: "Иван Петров",
@@ -54,10 +58,53 @@ export default function ModalMain({ user, book }) {
       setNewReview("");
     }
   };
+  const handleRating = (value) => {
+    setRating(value);
+    console.log(rating);
+  };
+
+  const handleMouseEnter = (value) => {
+    setHover(value);
+  };
+
+  const handleMouseLeave = () => {
+    setHover(rating);
+  };
 
   const handleFavorites = () => {
     console.log("Книга добавлена в избранное");
   };
+  
+
+  const addOwnBookHandler = async (event) => {
+    event.preventDefault();
+    console.log('инпуты в хэндлере', inputs);
+    if (!(inputs.title && inputs.author && inputs.img)) {
+      console.log('Поля * должны быть заполнены');
+    } else {
+      try {
+        const res = await axiosInstance.post(`/book/new`, {
+          user_id: user.id,
+          title: inputs.title,
+          author: inputs.author,
+          genre: inputs.genre,
+          //annotation: inputs.annotation,
+          year: inputs.year,
+          img: inputs.img,
+          body: inputs.body,
+          user_rating: rating,
+        });
+        if (res.status === 200) {
+          setInputs(emptyInputs);
+          setRating(0);
+          setHover(0);
+        }
+      } catch (error) {
+        console.log(error, 'что-то c add не так');
+      }
+    }
+  };
+
   if (!book) {
     return null;
   }
@@ -89,7 +136,7 @@ export default function ModalMain({ user, book }) {
                 <Flex className="this12">
                   <Box maxWidth="250px">
                     <Image
-                      src={book.IMG || "./default.jpg"}
+                      src={book.img || "./default.jpg"}
                       width="250px"
                       height="350px"
                       objectFit="cover"
@@ -152,7 +199,7 @@ export default function ModalMain({ user, book }) {
                         >
                           Рейтинг:
                         </Text>
-                        <Text fontSize="md">{book.rating} ⭐</Text>
+                        <Text fontSize="md">{book.rating == null? 0:book.rating} ⭐</Text>
                       </Box>
                       <Box>
                         <Text
@@ -162,7 +209,7 @@ export default function ModalMain({ user, book }) {
                         >
                           Оценили:
                         </Text>
-                        <Text fontSize="md">{book.quantity_rate}</Text>
+                        <Text fontSize="md">{book.quantity_rate == null? 0:book.quantity_rate}</Text>
                       </Box>
                     </Stack>
                   </Box>
@@ -215,7 +262,27 @@ export default function ModalMain({ user, book }) {
                       placeholder="Напиши свою рецензию"
                     />
 
-                    <Box>{/* ТУТ ЗВЁЗДЫ */}</Box>
+                    <Box mt="15px">
+                                        {[...Array(5)].map((_, index) => {
+                                          const ratingValue = index + 1;
+                                          return (
+                                            <StarIcon
+                                              key={index}
+                                              aria-label={`Рейтинг ${ratingValue}`}
+                                              fontSize="25px"
+                                              variant="ghost"
+                                              color={
+                                                ratingValue <= (hover || rating)
+                                                  ? "gold"
+                                                  : "gray.300"
+                                              }
+                                              onClick={() => handleRating(ratingValue)}
+                                              onMouseEnter={() => handleMouseEnter(ratingValue)}
+                                              onMouseLeave={handleMouseLeave}
+                                            />
+                                          );
+                                        })}
+                                      </Box>
                   </Box>
                 </Box>
               </Box>

@@ -12,7 +12,7 @@ import MainPage from "./pages/MainPage";
 import ConfirmationEmail from "./pages/ConfirmationEmail";
 import RecoverPassword from "./pages/RecoverPassword";
 import ResetPassword from "./pages/ResetPassword";
-import axios from "axios";
+// import axios from "axios";
 
 function App() {
   const [user, setUser] = useState();

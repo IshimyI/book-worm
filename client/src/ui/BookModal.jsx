@@ -232,7 +232,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                     placeholder="Напиши свою рецензию"
                   />
 
-                  <Box mt="15vh" h="1vh">
+                  <Box mt="15px">
                     {[...Array(5)].map((_, index) => {
                       const ratingValue = index + 1;
                       return (
