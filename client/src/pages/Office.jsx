@@ -183,6 +183,9 @@ const Office = ({ user }) => {
           user={user}
         />
       </Center>
+      {/* ниже два div это фон зеленый и подкладка белая вниз страницы  */}
+      <div style={{ height: "190px" }}> </div>
+      <div className="fonMBLOCK"> </div>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import {
   Box,
   Heading,
@@ -10,14 +11,31 @@ import {
   Alert,
   AlertIcon,
 } from "@chakra-ui/react";
-import booksData from "../testJSON/books.json";
+// import booksData from "../testJSON/books.json";
 import { useState, useEffect } from "react";
 import ModalMain from "../ui/ModalMain";
+import axios from "axios";
 
 export default function MainPage({ user }) {
   const [uniqueGenres, setUniqueGenres] = useState([]);
   const [uniqueAuthors, setUniqueAuthors] = useState([]);
   const [uniqueYears, setUniqueYears] = useState([]);
+  const [booksData, setBooksData] = useState([]);
+
+  useEffect(() => {
+    const fetchAllSms = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/api/listAllBooks");
+        setBooksData(response.data);
+        console.log(response.data)
+      } catch (error) {
+        console.error("Ошибка при получении всех books:", error);
+      }
+    };
+
+    fetchAllSms();
+  }, []);
+
 
   useEffect(() => {
     const yearsSet = new Set();

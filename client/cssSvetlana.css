@@ -107,6 +107,7 @@
   background-color: #919e186c;
   z-index: -1;
   bottom: 0;
+  left: 0;
   width: 2200px;
   height: 900px;
 }
@@ -114,5 +115,8 @@
   column-gap: 20px;
 }
 .this123{
+  justify-content: space-between;
+}
+.this85{
   justify-content: space-between;
 }
