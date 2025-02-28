@@ -141,12 +141,13 @@ const Office = ({ user }) => {
     (async function () {
       try {
         const reviewRes = await axiosInstance.get(
-          "http://localhost:3000/api/review"
+          `http://localhost:3000/api/listUserBooks/${user.id}`
         );
         const favoriteRes = await axiosInstance.get(
           `http://localhost:3000/api/favourites/${user.id}`
         );
         setReview(reviewRes.data);
+        console.log(favoriteRes.data);
         setFavoriteBooks(favoriteRes.data);
       } catch (error) {
         console.error("Ошибка при загрузке книг:", error);

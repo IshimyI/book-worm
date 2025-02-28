@@ -16,32 +16,36 @@ import {
   Avatar,
   Textarea,
   Heading,
+  Input
 } from "@chakra-ui/react";
-import { StarIcon } from "@chakra-ui/icons";
+import { StarIcon, EditIcon } from "@chakra-ui/icons";
 import { useState } from "react";
+import axiosInstance from "../axiosInstance";
 
 const BookModal = ({ book, isOpen, onClose, user }) => {
   const [newReview, setNewReview] = useState("");
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
+  const [textInput, setTextInput] = useState("");
+  const [click, setClick] = useState(false);
 
-  const [reviews, setReviews] = useState([
-    {
-      user: "Иван Петров",
-      text: "Отличная книга! Очень понравилась глубина персонажей.",
-      avatarUrl: "https://bit.ly/broken-link",
-    },
-    {
-      user: "Мария Сидорова",
-      text: "Интересный сюжет, но мне не хватило динамики в развитии событий.",
-      avatarUrl: "https://bit.ly/broken-link",
-    },
-    {
-      user: "Александр Иванов",
-      text: "Читал давно, но до сих пор под впечатлением. Рекомендую!",
-      avatarUrl: "https://bit.ly/broken-link",
-    },
-  ]);
+  // const [reviews, setReviews] = useState([
+  // {
+  //   user: "Иван Петров",
+  //   text: "Отличная книга! Очень понравилась глубина персонажей.",
+  //   avatarUrl: "https://bit.ly/broken-link",
+  // },
+  // {
+  //   user: "Мария Сидорова",
+  //   text: "Интересный сюжет, но мне не хватило динамики в развитии событий.",
+  //   avatarUrl: "https://bit.ly/broken-link",
+  // },
+  // {
+  //   user: "Александр Иванов",
+  //   text: "Читал давно, но до сих пор под впечатлением. Рекомендую!",
+  //   avatarUrl: "https://bit.ly/broken-link",
+  // },
+  // ]);
 
   const handleReview = () => {
     if (newReview.trim()) {
@@ -67,16 +71,35 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
     setHover(rating);
   };
 
-  const handleFavorites = () => {
-    console.log("Книга добавлена в избранное");
+  const handleFavorites = async () => {
+    console.log("Данные на сервер:", {
+      user_id: user.id,
+      book_id: book.id,
+    });
+    try {
+      const res = await axiosInstance.post(
+        `http://localhost:3000/api/user/favourites`,
+        {
+          user_id: user.id,
+          book_id: book.id,
+        }
+      );
+      console.log("Ответ от сервера:", res.data);
+      if (res.status === 200) {
+        console.log("Книга добавлена в избранное");
+      } else {
+        console.log("Что-то пошло не так");
+      }
+    } catch (error) {
+      console.log("Ошибка при добавлении книги в избранное:", error);
+    }
   };
-  
 
   const addOwnBookHandler = async (event) => {
     event.preventDefault();
-    console.log('инпуты в хэндлере', inputs);
+    console.log("инпуты в хэндлере", inputs);
     if (!(inputs.title && inputs.author && inputs.img)) {
-      console.log('Поля * должны быть заполнены');
+      console.log("Поля * должны быть заполнены");
     } else {
       try {
         const res = await axiosInstance.post(`/book/new`, {
@@ -96,7 +119,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
           setHover(0);
         }
       } catch (error) {
-        console.log(error, 'что-то c add не так');
+        console.log(error, "что-то c add не так");
       }
     }
   };
@@ -111,6 +134,30 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
       backdropFilter="blur(10px) hue-rotate(90deg)"
     />
   );
+
+  const changeHandler = (event) => {
+    event.preventDefault();
+    setTextInput(() => event.target.value);
+  };
+
+  const switchClick = () => {
+    setClick(true);
+  };
+
+  async function remakeHandler(event) {
+    console.log("put отработал");
+    event.preventDefault();
+    try {
+      await axiosInstance.put(`/api/review/${review.id}`, {
+        body: textInput,
+      });
+      setClick(true);
+      setTextInput("");
+    } catch (error) {
+      console.log(error, "что-то c del не так");
+      setClick(false);
+    }
+  }
 
   return (
     <Modal isCentered isOpen={isOpen} onClose={onClose} size="xl">
@@ -200,27 +247,62 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                   border="1px solid #ccc"
                   borderRadius="md"
                 >
-                  {(book.reviews && book.reviews.length > 0
-                    ? book.reviews
-                    : reviews
-                  ).map((review, index) => (
-                    <Box
-                      key={index}
-                      p="3"
-                      border="1px solid #ddd"
-                      borderRadius="md"
-                      mb="3"
-                    >
-                      <Stack direction="row" spacing="4" align="center">
-                        <Avatar name={review.user} src={review.avatarUrl} />
-                        <Box>
-                          <Text fontWeight="bold">{review.user}</Text>
-                          <Divider my="2" />
-                          <Text>{review.text}</Text>
-                        </Box>
-                      </Stack>
-                    </Box>
-                  ))}
+                  {(book.review && book.review.length > 0
+                    ? book.review
+                    : null
+                  ).map((review, index) => {
+                    return (
+                      <Box
+                        key={index}
+                        p="3"
+                        border="1px solid #ddd"
+                        borderRadius="md"
+                        mb="3"
+                      >
+                        <Stack direction="row" spacing="4" align="center">
+                          <Avatar
+                            name={review.userName}
+                            src={`https://bit.ly/broken-link`}
+                          />
+
+                          <Box>
+                            <Flex justifyContent="space-between">
+                              <Text fontWeight="bold">{review.userName}</Text>
+                              <Box>
+                                {user.id && (
+                                  <>
+                                    {click ? (
+                                      <Button
+                                        onClick={switchClick}
+                                      >
+                                        <EditIcon />
+                                      </Button>
+                                    ) : (
+                                      <form onSubmit={remakeHandler}>
+                                        <Input
+                                          value={newReview}
+                                          onChange={(e) =>
+                                            setNewReview(e.target.value)
+                                          }
+                                          placeholder="Напиши свою рецензию"
+                                        />
+                                        <Button type="submit">
+                                          ОК
+                                        </Button>
+                                      </form>
+                                    )}
+                                  </>
+                                )}
+                              </Box>
+                            </Flex>
+                            <Divider my="2" />
+                            <Text>{review.user_rev}</Text>
+                            <Text>{review.user_raeting} ⭐</Text>
+                          </Box>
+                        </Stack>
+                      </Box>
+                    );
+                  })}
                   {reviews.length === 0 && (
                     <Text color="gray.500">Нет рецензий на эту книгу.</Text>
                   )}
@@ -232,7 +314,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                     placeholder="Напиши свою рецензию"
                   />
 
-                  <Box mt="15vh" h="1vh">
+                  <Box mt="15px">
                     {[...Array(5)].map((_, index) => {
                       const ratingValue = index + 1;
                       return (
