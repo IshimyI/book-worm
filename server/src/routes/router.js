@@ -102,7 +102,8 @@ router.get("/favourites/:id", async (req, res) => {
   try {
     const user = await User.findByPk(id);
     if (user) {
-      const books = user.favourites.split(" ");
+      const books = user.favourites ? user.favourites.split(" ") : [];
+
 
       const result = await Promise.all(
         books.map(async (bookId) => await Book.findByPk(bookId))
