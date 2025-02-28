@@ -147,6 +147,7 @@ const Office = ({ user }) => {
           `http://localhost:3000/api/favourites/${user.id}`
         );
         setReview(reviewRes.data);
+        console.log(favoriteRes.data);
         setFavoriteBooks(favoriteRes.data);
       } catch (error) {
         console.error("Ошибка при загрузке книг:", error);
