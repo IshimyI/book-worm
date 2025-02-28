@@ -216,7 +216,7 @@ router.post("/updateFavourites/:id", async (req, res) => {
 
     let favouriteBooks = user.favourites ? user.favourites.split(" ") : [];
 
-    if (favouriteBooks.includes(bookId)) {
+    if (favouriteBooks.includes(bookId + "")) {
       favouriteBooks = favouriteBooks.filter((book_id) => book_id !== bookId);
     } else {
       favouriteBooks.push(bookId);
@@ -231,4 +231,3 @@ router.post("/updateFavourites/:id", async (req, res) => {
 });
 
 module.exports = router;
-
