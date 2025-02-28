@@ -15,7 +15,44 @@ router.get("/users", async (req, res) => {
 
 router.get("/listAllBooks", async (req, res) => {
   try {
-    res.status(200).send(await Book.findAll({}));
+    const books = await Book.findAll({
+      include: [
+        {
+          model: Review,
+          attributes: ["userId", "body", "user_rating"],
+          include: [
+            {
+              model: User,
+              attributes: ["name"],
+            },
+          ],
+        },
+      ],
+    });
+
+    const booksWithReviews = books.map((book) => {
+      const reviews = book.Reviews.map((review) => ({
+        userName: review.User.name,
+        user_rev: review.body,
+        user_id: review.userId,
+        user_raeting: review.user_rating,
+      }));
+
+      return {
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        annotation: book.annotation,
+        rating: book.rating,
+        quantity_rate: book.quantity_rate,
+        img: book.img,
+        genre: book.genre,
+        year: book.year,
+        reviews,
+      };
+    });
+
+    res.status(200).send(booksWithReviews);
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);
@@ -31,12 +68,58 @@ router.get("/listUserBooks/:id", async (req, res) => {
         .send({ message: "Пользователя с таким id не обнаружено" });
     }
 
-    const reviews = await Review.findAll({
-      where: { userId: id },
-      include: { model: Book },
+    const books = await Book.findAll({
+      include: [
+        {
+          model: Review,
+          where: { userId: id },
+          required: true,
+          attributes: ["userId", "body", "user_rating"],
+          include: [
+            {
+              model: User,
+              attributes: ["name"],
+            },
+          ],
+        },
+      ],
     });
-    const books = reviews.map((review) => review.Book);
-    res.status(200).send(books);
+
+    const booksWithReviews = await Promise.all(
+      books.map(async (book) => {
+        const allReviews = await Review.findAll({
+          where: { bookId: book.id },
+          include: [
+            {
+              model: User,
+              attributes: ["name"],
+            },
+          ],
+        });
+
+        const reviews = allReviews.map((review) => ({
+          userName: review.User.name,
+          user_rev: review.body,
+          user_id: review.userId,
+          user_raeting: review.user_rating,
+        }));
+
+        return {
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          annotation: book.annotation,
+          rating: book.rating,
+          quantity_rate: book.quantity_rate,
+          img: book.img,
+          genre: book.genre,
+          year: book.year,
+          reviews,
+        };
+      })
+    );
+
+    res.status(200).send(booksWithReviews);
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);
@@ -86,7 +169,7 @@ router.post("/book/new", async (req, res) => {
       raw: true,
     });
 
-    newBook.rating = Number(parseFloat(avgRating[0].avgRating).toFixed(1));
+    newBook.rating = parseFloat(avgRating[0].avgRating).toFixed(1);
     newBook.quantity_rate = Number(parseFloat(avgRating[0].quantityRate));
     await newBook.save();
 
@@ -103,7 +186,6 @@ router.get("/favourites/:id", async (req, res) => {
     const user = await User.findByPk(id);
     if (user) {
       const books = user.favourites ? user.favourites.split(" ") : [];
-
 
       const result = await Promise.all(
         books.map(async (bookId) => await Book.findByPk(bookId))
@@ -149,6 +231,3 @@ router.post("/updateFavourites/:id", async (req, res) => {
 });
 
 module.exports = router;
-
-// TODO Ваня 7. Если нет оценок и отзывов по умолчанию чтоб 0 возвращал.
-// TODO ваня 8.  Ручка- тебе приходит idBook ты вернёшь список рецензий к этой книге где каждый элемент это  1. имя юзера  2. его рецензия к этой книге 3. id юзера 4/ его оценка

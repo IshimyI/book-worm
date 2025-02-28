@@ -40,6 +40,68 @@ module.exports = {
       ],
       {}
     );
+    await queryInterface.bulkInsert(
+      "Books",
+      [
+        {
+          title: "Война и мир",
+          author: "Лев Толстой",
+          annotation: "Толстой",
+          quantity_rate: 3,
+          rating: "4.33",
+          img: "https://book-cover.ru/sites/default/files/styles/medium-list/public/field/image/tolstoj-vojna-i-mir-amerika-2.jpg?itok=4T_LuEzE",
+          genre: "Исторический роман",
+          year: 1869,
+        },
+        {
+          title: "Гарри Поттер и философский камень",
+          author: "Дж.К. Роулинг",
+          annotation: "Гарри Поттер",
+          quantity_rate: 2,
+          rating: 4,
+          img: "https://hpclub.ru/wp-content/uploads/2013/02/newhpcover.jpg",
+          genre: "Фэнтези",
+          year: 1997,
+        },
+      ],
+      {}
+    );
+    await queryInterface.bulkInsert(
+      "Reviews",
+      [
+        {
+          body: "Очень интересно",
+          bookId: 1,
+          userId: 1,
+          user_rating: 5,
+        },
+        {
+          body: "Книга о многом",
+          bookId: 1,
+          userId: 2,
+          user_rating: 3,
+        },
+        {
+          body: "Просто великолепно",
+          bookId: 1,
+          userId: 3,
+          user_rating: 5,
+        },
+        {
+          body: "Захватывающе",
+          bookId: 2,
+          userId: 1,
+          user_rating: 4,
+        },
+        {
+          body: "Отличная книга",
+          bookId: 2,
+          userId: 2,
+          user_rating: 4,
+        },
+      ],
+      {}
+    );
   },
 
   async down(queryInterface, Sequelize) {
