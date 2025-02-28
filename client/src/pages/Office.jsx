@@ -8,6 +8,7 @@ import BookModal from "../ui/BookModal";
 
 const Office = ({ user }) => {
   console.log(user);
+  const [favoriteBooks, setFavoriteBooks] = useState([]);
 
   const [review, setReview] = useState([
     {
@@ -137,21 +138,21 @@ const Office = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    // (async function () {
-    //   try {
-    //     const reviewRes = await axiosInstance.get(
-    //       "http://localhost:3000/api/review"
-    //     );
-    //     const favoriteRes = await axiosInstance.get(
-    //       "http://localhost:3000/api/favorite"
-    //     );
-    //     setReview(reviewRes.data);
-    //     setFavorite(favoriteRes.data);
-    //   } catch (error) {
-    //     console.error("Ошибка при загрузке книг:", error);
-    //   }
-    // })();
-  }, []);
+    (async function () {
+      try {
+        const reviewRes = await axiosInstance.get(
+          "http://localhost:3000/api/review"
+        );
+        const favoriteRes = await axiosInstance.get(
+          `http://localhost:3000/api/favourites/${user.id}`
+        );
+        setReview(reviewRes.data);
+        setFavoriteBooks(favoriteRes.data);
+      } catch (error) {
+        console.error("Ошибка при загрузке книг:", error);
+      }
+    })();
+  }, [user.id]);
 
   const handleBookClick = (book) => {
     setSelectedBook(book);
@@ -171,8 +172,9 @@ const Office = ({ user }) => {
           />
           <Box marginTop="100px">
             <FavoriteProfile
-              favoriteBooks={favorite}
+              favoriteBooks={favoriteBooks}
               handleBookClick={handleBookClick}
+              setFavoriteBooks={setFavoriteBooks}
             />
           </Box>
         </Box>
