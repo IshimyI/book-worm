@@ -231,3 +231,4 @@ router.post("/updateFavourites/:id", async (req, res) => {
 });
 
 module.exports = router;
+

@@ -23,11 +23,12 @@ import { useState } from "react";
 import axiosInstance from "../axiosInstance";
 
 const BookModal = ({ book, isOpen, onClose, user }) => {
-  const [newReview, setNewReview] = useState("");
+  //const [newReview, setNewReview] = useState("");
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [textInput, setTextInput] = useState("");
   const [click, setClick] = useState(false);
+  const [inputBody, setInputBody] = useState('')
 
   // const [reviews, setReviews] = useState([
   // {
@@ -78,10 +79,9 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
     });
     try {
       const res = await axiosInstance.post(
-        `http://localhost:3000/api/user/favourites`,
+        `http://localhost:3000/api/updateFavourites/${user.id}`,
         {
-          user_id: user.id,
-          book_id: book.id,
+          bookId: book.id,
         }
       );
       console.log("Ответ от сервера:", res.data);
@@ -95,26 +95,22 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
     }
   };
 
-  const addOwnBookHandler = async (event) => {
+  const addReviewHandler = async (event) => {
     event.preventDefault();
-    console.log("инпуты в хэндлере", inputs);
-    if (!(inputs.title && inputs.author && inputs.img)) {
-      console.log("Поля * должны быть заполнены");
+    console.log("инпут боди", inputBody);
+    if (!inputBody) {
+      console.log("Поля должны быть заполнены");
     } else {
       try {
         const res = await axiosInstance.post(`/book/new`, {
           user_id: user.id,
-          title: inputs.title,
-          author: inputs.author,
-          genre: inputs.genre,
-          //annotation: inputs.annotation,
-          year: inputs.year,
-          img: inputs.img,
-          body: inputs.body,
+          body: inputBody,
+          title: book.title,
+          author: book.author,
           user_rating: rating,
         });
         if (res.status === 200) {
-          setInputs(emptyInputs);
+          setInputBody('');
           setRating(0);
           setHover(0);
         }
@@ -137,7 +133,9 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
 
   const changeHandler = (event) => {
     event.preventDefault();
-    setTextInput(() => event.target.value);
+    setInputBody(() => event.target.value);
+    setRating(() => event.target.value);
+
   };
 
   const switchClick = () => {
@@ -173,7 +171,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
               <Flex className="this12">
                 <Box maxWidth="250px">
                   <Image
-                    src={book.IMG || "./default.jpg"}
+                    src={book.img || "./default.jpg"}
                     width="250px"
                     height="350px"
                     objectFit="cover"
@@ -249,7 +247,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                 >
                   {(book.review && book.review.length > 0
                     ? book.review
-                    : null
+                    : []
                   ).map((review, index) => {
                     return (
                       <Box
@@ -303,14 +301,14 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                       </Box>
                     );
                   })}
-                  {reviews.length === 0 && (
+                  {/* {reviews.length === 0 && (
                     <Text color="gray.500">Нет рецензий на эту книгу.</Text>
-                  )}
+                  )} */}
                 </Box>
                 <Box mt="4">
                   <Textarea
-                    value={newReview}
-                    onChange={(e) => setNewReview(e.target.value)}
+                    value={inputBody}
+                    onChange={(e) => setInputBody(e.target.value)}
                     placeholder="Напиши свою рецензию"
                   />
 
@@ -351,7 +349,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
             <Button
               backgroundColor="#334d00"
               color="white"
-              onClick={handleReview}
+              onClick={addReviewHandler}
             >
               Добавить рецензию
             </Button>

@@ -1,4 +1,4 @@
-import { Box, Image, Text } from "@chakra-ui/react";
+import { Box, Image, Text, Wrap } from "@chakra-ui/react";
 import Slider from "react-slick";
 
 const ReviewProfile = ({ reviewBooks, handleBookClick }) => {
@@ -12,15 +12,16 @@ const ReviewProfile = ({ reviewBooks, handleBookClick }) => {
   };
 
   return (
-    <Box>
+    <Box m={0}>
       <Text fontSize="20px" marginBottom="20px">
         Мои рецензии на книги
       </Text>
-      <Slider {...settings}>
+      <Wrap>
+        {console.log('reviewBooks', reviewBooks)}
           {reviewBooks.map((book) => (
             <Box key={book.id} position="relative" onClick={() => handleBookClick(book)}>
               <Image
-                src='./default.jpg'
+                src={book.img}
                 width="150px"
                 height="200px"
                 objectFit="cover"
@@ -28,7 +29,7 @@ const ReviewProfile = ({ reviewBooks, handleBookClick }) => {
               />
             </Box>
           ))}
-      </Slider>
+      </Wrap>
     </Box>
   );
 };

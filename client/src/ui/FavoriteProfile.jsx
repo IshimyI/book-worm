@@ -1,4 +1,4 @@
-import { Box, Image, Text } from "@chakra-ui/react";
+import { Box, Image, Text, Wrap } from "@chakra-ui/react";
 import { SmallCloseIcon, Icon } from "@chakra-ui/icons";
 import Slider from "react-slick";
 import axiosInstance from "../axiosInstance";
@@ -32,7 +32,7 @@ const FavoriteProfile = ({
       <Text fontSize="20px" marginBottom="20px">
         Мои избранные книги
       </Text>
-      <Slider {...settings}>
+      <Wrap>
         {favoriteBooks.map((book) => {
           console.log(book);
           return (
@@ -64,7 +64,7 @@ const FavoriteProfile = ({
             </Box>
           );
         })}
-      </Slider>
+      </Wrap>
     </Box>
   );
 };
