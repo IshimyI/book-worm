@@ -24,7 +24,6 @@ module.exports = {
         type: Sequelize.STRING,
       },
       quantity_rate: {
-        defaultValue: 0,
         type: Sequelize.INTEGER,
       },
       img: {
