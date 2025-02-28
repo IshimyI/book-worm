@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowBackIcon, StarIcon } from '@chakra-ui/icons';
-import { Box, Flex, Input, Text, Center, Button, Textarea, Select, ModalOverlay, Modal, ModalContent, useDisclosure, Heading } from '@chakra-ui/react';
+import { Box, Flex, Input, Text, Center, Button, Textarea, Select, ModalOverlay, Modal, ModalContent, useDisclosure, Heading, Stack, Alert, AlertIcon, ModalCloseButton } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
 import SelectedBook from './SelectedBook';
 import axios from 'axios';
@@ -15,8 +15,6 @@ const emptyInputs = {
   body: '',
   user_rating: '',
 };
-
-const rating = [1, 2, 3, 4, 5];
 
 const genres = ['Классика', 'Научная фантастика', 'Фэнтези', 'Антиутопия'];
 
@@ -34,7 +32,7 @@ export default function AddBook({ user }) {
         const booksData = response.data.docs.map((book) => ({
           title: book.title || 'Неизвестно',
           author: book.author_name?.join(', ') || 'Неизвестно',
-          //annotation: book.first_sentence?.join(' '),
+          annotation: book.first_sentence?.join(' '),
           img: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg` : null,
           genre: book.subject ? book.subject.slice(0, 3) : 'Жанр неизвестен',
           year: book.first_publish_year || 'Неизвестно',
@@ -57,6 +55,8 @@ export default function AddBook({ user }) {
   const [changeBook, setChangeBook] = useState(false);
   const [selectedBook, setSelectedBook] = useState({});
   const [inputs, setInputs] = useState(emptyInputs);
+  const [alertCode, setAlertCode] = useState(null);
+  const [alertMessage, setAlertMessage] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const handleRating = (value) => {
@@ -77,19 +77,17 @@ export default function AddBook({ user }) {
   };
 
   const switchSearch = () => {
-    searchBookFlag ? setSearchBookFlag(false) : setSearchBookFlag(true);
+    //searchBookFlag ? setSearchBookFlag(false) : setSearchBookFlag(true);
     setChangeBook(false);
+    setSearchBookFlag(false);
   };
 
   const handleBookClick = (book) => {
     setSelectedBook(book);
     setSearchBookFlag(false);
     setChangeBook(true);
+    setQuery('');
   };
-
-  useEffect(() => {
-    setInputs({ ...selectedBook });
-  }, []);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -99,19 +97,27 @@ export default function AddBook({ user }) {
     }));
   };
 
-  // const handleStarChange = (event) => {
-  //   setStars(event.target.checked);
-  // };
+  useEffect(() => {
+    setInputs({ ...selectedBook });
+  }, []);
 
-  // useEffect(()=>{
-  //   setInputs([inputs.user_rating]: stars)
-  // }, [stars])
+  useEffect(() => {
+    if (query) {
+      setSearchBookFlag(true);
+    }
+  }, [query]);
+
+  const alertFunction = (alertCode, alertMessage) => {
+    setAlertCode(alertCode);
+    setAlertMessage(alertMessage)
+    setTimeout(()=>{setAlertCode(null); setAlertMessage('')}, 2000)
+  };
 
   const addOwnBookHandler = async (event) => {
     event.preventDefault();
     console.log('инпуты в хэндлере', inputs);
     if (!(inputs.title && inputs.author && inputs.img)) {
-      console.log('Поля * должны быть заполнены');
+      alertFunction(500, 'Не все поля заполнены');
     } else {
       try {
         const res = await axiosInstance.post(`/book/new`, {
@@ -119,7 +125,7 @@ export default function AddBook({ user }) {
           title: inputs.title,
           author: inputs.author,
           genre: inputs.genre,
-          //annotation: inputs.annotation,
+          annotation: inputs.annotation,
           year: inputs.year,
           img: inputs.img,
           body: inputs.body,
@@ -129,15 +135,14 @@ export default function AddBook({ user }) {
           setInputs(emptyInputs);
           setRating(0);
           setHover(0);
+          setChangeBook(false);
+          alertFunction(200, 'Книга успешно добавлена! Спасибо!');
+          setTimeout(()=>{onClose()}, 2000);
         }
       } catch (error) {
         console.log(error, 'что-то c add не так');
       }
     }
-  };
-
-  const click = (score) => {
-    console.log(`clack${score}`);
   };
 
   return (
@@ -158,7 +163,27 @@ export default function AddBook({ user }) {
           <Flex m="40px" style={{ flexDirection: 'column' }}>
             <Center>
               <Flex w="100%" style={{ flexDirection: 'column' }}>
-                <Heading mb="20px">Выбор книги</Heading>
+                <Flex><Heading mb="20px">Выбор книги</Heading><ModalCloseButton /></Flex>
+
+                {alertCode && (
+                  <Stack spacing={3} mb="10px">
+                    {alertCode === 500 && (
+                      <Alert status="error">
+                        <AlertIcon />
+                        {alertMessage}
+                      </Alert>
+                    )}
+
+                    {alertCode === 200 && (
+                      <Alert status="success">
+                      <AlertIcon />
+                      {alertMessage}
+                    </Alert>
+                    )}
+
+              
+                  </Stack>
+                )}
                 <form onSubmit={addOwnBookHandler}>
                   {addBookFlag ? (
                     <>
@@ -241,7 +266,7 @@ export default function AddBook({ user }) {
                         justifyContent: 'space-between',
                       }}
                     >
-                      <Textarea type="text" name="body" value={inputs.body} onChange={handleInputChange}></Textarea>
+                      <Textarea type="text" name="body" value={inputs.body} onChange={handleInputChange} placeholder="Написать рецензию"></Textarea>
 
                       <Box mt="40px" h="40px">
                         {[...Array(5)].map((_, index) => {
@@ -250,7 +275,7 @@ export default function AddBook({ user }) {
                             <StarIcon
                               key={index}
                               aria-label={`Рейтинг ${ratingValue}`}
-                              fontSize="40px"
+                              fontSize="25px"
                               variant="ghost"
                               color={ratingValue <= (hover || rating) ? 'gold' : 'gray.300'}
                               onClick={() => handleRating(ratingValue)}
