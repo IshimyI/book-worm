@@ -1,6 +1,6 @@
 const express = require("express");
 const { User, Book, Review } = require("../../db/models");
-const { Sequelize } = require("sequelize");
+const { Sequelize, where } = require("sequelize");
 
 const router = express.Router();
 
@@ -22,17 +22,38 @@ router.get("/listAllBooks", async (req, res) => {
   }
 });
 
+router.get("/listUserBooks/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (!id) {
+      return res
+        .status(400)
+        .send({ message: "Пользователя с таким id не обнаружено" });
+    }
+
+    const reviews = await Review.findAll({
+      where: { userId: id },
+      include: { model: Book },
+    });
+    const books = reviews.map((review) => review.Book);
+    res.status(200).send(books);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
 router.post("/book/new", async (req, res) => {
   const {
     user_id,
-    title= "",
-    author= "",
+    title = "",
+    author = "",
     genre = "",
-    year= 1,
-    annotation= "Описание отсутствует",
+    year = 1,
+    annotation = "Описание отсутствует",
     img = "https://cdn1.ozone.ru/s3/multimedia-x/6597669093.jpg",
     body = "",
-    user_rating= 1,
+    user_rating = 1,
   } = req.body;
 
   if (!(title && author && user_id)) {
@@ -55,6 +76,19 @@ router.post("/book/new", async (req, res) => {
       review.user_rating = user_rating;
       await review.save();
     }
+
+    const avgRating = await Review.findAll({
+      where: { bookId: newBook.id },
+      attributes: [
+        [Sequelize.fn("AVG", Sequelize.col("user_rating")), "avgRating"],
+        [Sequelize.fn("COUNT", Sequelize.col("user_rating")), "quantityRate"],
+      ],
+      raw: true,
+    });
+
+    newBook.rating = Number(parseFloat(avgRating[0].avgRating).toFixed(1));
+    newBook.quantity_rate = Number(parseFloat(avgRating[0].quantityRate));
+    await newBook.save();
 
     res.status(200).json({ book: newBook, review });
   } catch (error) {
@@ -84,4 +118,36 @@ router.get("/favourites/:id", async (req, res) => {
   }
 });
 
+router.post("/updateFavourites/:id", async (req, res) => {
+  const { id } = req.params;
+  const { bookId } = req.body;
+
+  try {
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res
+        .status(400)
+        .send({ message: "Пользователь с таким id не найден" });
+    }
+
+    let favouriteBooks = user.favourites ? user.favourites.split(" ") : [];
+
+    if (favouriteBooks.includes(bookId)) {
+      favouriteBooks = favouriteBooks.filter((book_id) => book_id !== bookId);
+    } else {
+      favouriteBooks.push(bookId);
+    }
+    user.favourites = favouriteBooks.join(" ");
+    user.save();
+    res.status(200).send(user);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
 module.exports = router;
+
+// TODO Ваня 7. Если нет оценок и отзывов по умолчанию чтоб 0 возвращал.
+// TODO ваня 8.  Ручка- тебе приходит idBook ты вернёшь список рецензий к этой книге где каждый элемент это  1. имя юзера  2. его рецензия к этой книге 3. id юзера 4/ его оценка
