@@ -8,6 +8,7 @@ import BookModal from "../ui/BookModal";
 
 const Office = ({ user }) => {
   console.log(user);
+  const [books, setBooks] = useState([]);
 
   const [review, setReview] = useState([
     {
@@ -137,20 +138,20 @@ const Office = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    // (async function () {
-    //   try {
-    //     const reviewRes = await axiosInstance.get(
-    //       "http://localhost:3000/api/review"
-    //     );
-    //     const favoriteRes = await axiosInstance.get(
-    //       "http://localhost:3000/api/favorite"
-    //     );
-    //     setReview(reviewRes.data);
-    //     setFavorite(favoriteRes.data);
-    //   } catch (error) {
-    //     console.error("Ошибка при загрузке книг:", error);
-    //   }
-    // })();
+    (async function () {
+      try {
+        const reviewRes = await axiosInstance.get(
+          "http://localhost:3000/api/review"
+        );
+        const favoriteRes = await axiosInstance.get(
+          `http://localhost:3000/api/favourites/${user.id}`
+        );
+        setReview(reviewRes.data);
+        setFavorite(favoriteRes.data);
+      } catch (error) {
+        console.error("Ошибка при загрузке книг:", error);
+      }
+    })();
   }, []);
 
   const handleBookClick = (book) => {
