@@ -20,10 +20,11 @@ const FavoriteProfile = ({ favoriteBooks, handleBookClick }) => {
           {favoriteBooks.map((book) => (
             <Box key={book.id} position="relative" onClick={() => handleBookClick(book)}>
               <Image
-                src={book.IMG}
-                width="120px"
+                src='./default.jpg'
+                width="150px"
                 height="200px"
                 objectFit="cover"
+                borderRadius="10px"
               />
             </Box>
           ))}
