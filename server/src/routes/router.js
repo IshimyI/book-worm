@@ -1,6 +1,6 @@
 const express = require("express");
-const { User, Book } = require("../../db/models");
-const { where } = require("sequelize");
+const { User, Book, Review } = require("../../db/models");
+const { Sequelize } = require("sequelize");
 
 const router = express.Router();
 
@@ -25,41 +25,39 @@ router.get("/listAllBooks", async (req, res) => {
 router.post("/book/new", async (req, res) => {
   const {
     user_id,
-    title,
-    author,
-    genre,
-    year,
-    annotation,
-    img,
+    title= "",
+    author= "",
+    genre = "",
+    year= 1,
+    annotation= "Описание отсутствует",
+    img = "https://cdn1.ozone.ru/s3/multimedia-x/6597669093.jpg",
     body = "",
-    user_rating,
+    user_rating= 1,
   } = req.body;
 
   if (!(title && author && user_id)) {
     return res.status(400).json({ message: "Поля должны быть заполнены" });
   }
 
-  const transaction = await Sequelize.transaction();
-
   try {
-    const [newBook] = await Book.findOrCreate({
+    const [newBook, created] = await Book.findOrCreate({
       where: { title, author },
       defaults: { genre, year, annotation, img },
-      transaction,
     });
 
-    if (user_rating) {
-      await Review.findOrCreate({
-        where: { book_id: newBook.id, user_id },
-        defaults: { body, user_rating },
-        transaction,
-      });
+    const [review, reviewCreated] = await Review.findOrCreate({
+      where: { bookId: newBook.id, userId: user_id },
+      defaults: { body, user_rating },
+    });
+
+    if (!reviewCreated) {
+      review.body = body;
+      review.user_rating = user_rating;
+      await review.save();
     }
 
-    await transaction.commit();
-    res.status(201).json(newBook);
+    res.status(200).json({ book: newBook, review });
   } catch (error) {
-    await transaction.rollback();
     console.error(error);
     res.status(500).send("Ошибка при добавлении книги или отзыва");
   }
@@ -73,7 +71,7 @@ router.get("/favourites/:id", async (req, res) => {
       const books = user.favourites.split(" ");
 
       const result = await Promise.all(
-        books.map(async (book_id) => await Book.findByPk(book_id))
+        books.map(async (bookId) => await Book.findByPk(bookId))
       );
 
       res.status(200).send(result);
