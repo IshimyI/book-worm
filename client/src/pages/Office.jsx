@@ -159,27 +159,31 @@ const Office = ({ user }) => {
   };
 
   return (
-    <Center>
-      <Box maxW="1200px" width="100%" padding="20px">
-        <Flex justify="flex-end" align="center" mb="20px">
-          {/* <Button colorScheme="blue" onClick={handleOpen}>Добавить рецензию</Button> */}
-
-          <AddBook user={user} />
-        </Flex>
-        <ReviewProfile reviewBooks={review} handleBookClick={handleBookClick} />
-        <Box marginTop="100px">
-          <FavoriteProfile
-            favoriteBooks={favorite}
+    <div className="conteyner">
+      <Center>
+        <Box maxW="1200px" width="100%" padding="20px">
+          <Flex justify="flex-end" align="center" mb="20px">
+            <AddBook user={user} />
+          </Flex>
+          <ReviewProfile
+            reviewBooks={review}
             handleBookClick={handleBookClick}
           />
+          <Box marginTop="100px">
+            <FavoriteProfile
+              favoriteBooks={favorite}
+              handleBookClick={handleBookClick}
+            />
+          </Box>
         </Box>
-      </Box>
-      <BookModal
-        book={selectedBook}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </Center>
+        <BookModal
+          book={selectedBook}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          user={user}
+        />
+      </Center>
+    </div>
   );
 };
 
