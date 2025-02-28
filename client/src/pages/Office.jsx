@@ -8,7 +8,7 @@ import BookModal from "../ui/BookModal";
 
 const Office = ({ user }) => {
   console.log(user);
-  const [books, setBooks] = useState([]);
+  const [favoriteBooks, setFavoriteBooks] = useState([]);
 
   const [review, setReview] = useState([
     {
@@ -147,12 +147,12 @@ const Office = ({ user }) => {
           `http://localhost:3000/api/favourites/${user.id}`
         );
         setReview(reviewRes.data);
-        setFavorite(favoriteRes.data);
+        setFavoriteBooks(favoriteRes.data);
       } catch (error) {
         console.error("Ошибка при загрузке книг:", error);
       }
     })();
-  }, []);
+  }, [user.id]);
 
   const handleBookClick = (book) => {
     setSelectedBook(book);
@@ -172,8 +172,9 @@ const Office = ({ user }) => {
           />
           <Box marginTop="100px">
             <FavoriteProfile
-              favoriteBooks={favorite}
+              favoriteBooks={favoriteBooks}
               handleBookClick={handleBookClick}
+              setFavoriteBooks={setFavoriteBooks}
             />
           </Box>
         </Box>
