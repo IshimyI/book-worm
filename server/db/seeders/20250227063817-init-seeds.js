@@ -8,33 +8,27 @@ module.exports = {
       "Users",
       [
         {
-          name: "1",
+          name: "Маша",
           email: "1@1",
           password: await bcrypt.hash("1", 10),
           isEmailConfirmed: true,
         },
         {
-          name: "2",
+          name: "Дима",
           email: "2@2",
           password: await bcrypt.hash("2", 10),
           isEmailConfirmed: true,
         },
         {
-          name: "3",
+          name: "Света",
           email: "3@3",
           password: await bcrypt.hash("3", 10),
           isEmailConfirmed: true,
         },
         {
-          name: "4",
+          name: "Ваня",
           email: "4@4",
           password: await bcrypt.hash("4", 10),
-          isEmailConfirmed: true,
-        },
-        {
-          name: "5",
-          email: "5@5",
-          password: await bcrypt.hash("5", 10),
           isEmailConfirmed: true,
         },
       ],
@@ -46,7 +40,8 @@ module.exports = {
         {
           title: "Война и мир",
           author: "Лев Толстой",
-          annotation: "Толстой",
+          annotation:
+            "роман-эпопея Льва Николаевича Толстого, описывающий русское общество в эпоху войн против Наполеона в 1805—1812 годах. Эпилог романа доводит повествование до 1820 года.",
           quantity_rate: 3,
           rating: "4.33",
           img: "https://book-cover.ru/sites/default/files/styles/medium-list/public/field/image/tolstoj-vojna-i-mir-amerika-2.jpg?itok=4T_LuEzE",
@@ -56,7 +51,8 @@ module.exports = {
         {
           title: "Гарри Поттер и философский камень",
           author: "Дж.К. Роулинг",
-          annotation: "Гарри Поттер",
+          annotation:
+            "серия романов, написанная британской писательницей Дж. К. Роулинг. Книги представляют собой хронику приключений юного волшебника Гарри Поттера, а также его друзей Рона Уизли и Гермионы Грейнджер, обучающихся в школе чародейства и волшебства Хогвартс.",
           quantity_rate: 2,
           rating: 4,
           img: "https://hpclub.ru/wp-content/uploads/2013/02/newhpcover.jpg",
