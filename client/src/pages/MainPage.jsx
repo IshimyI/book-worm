@@ -10,8 +10,8 @@ import {
   Button,
   Alert,
   AlertIcon,
-  Spinner,
-  Center,
+  Skeleton,
+  SkeletonText,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
@@ -226,9 +226,29 @@ export default function MainPage({ user }) {
               </Text>
 
               {loading ? (
-                <Center py="60px">
-                  <Spinner size="xl" />
-                </Center>
+                [...Array(4)].map((_, i) => (
+                  <Box
+                    bg="white"
+                    key={i}
+                    borderWidth="1px"
+                    borderRadius="lg"
+                    overflow="hidden"
+                    boxShadow="md"
+                    mb="20px"
+                    h={250}
+                    w="90vh"
+                  >
+                    <Flex align="start">
+                      <Skeleton width="180px" height="250px" mr={4} />
+                      <Box p="4" mt="10px" flex="1">
+                        <Skeleton height="24px" width="60%" mb="10px" />
+                        <Skeleton height="14px" width="40%" mb="10px" />
+                        <SkeletonText noOfLines={2} spacing="2" mb="20px" width="80%" />
+                        <Skeleton height="36px" width="200px" />
+                      </Box>
+                    </Flex>
+                  </Box>
+                ))
               ) : (
                 books.map((book) => (
                   <Box

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
-import { Box, Center, Heading, Text, Stack, Avatar, Divider, Image, Flex, Spinner, Button } from '@chakra-ui/react';
+import { Box, Center, Heading, Text, Stack, Avatar, Divider, Image, Flex, Button, Skeleton, SkeletonCircle, SkeletonText } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
@@ -34,8 +34,24 @@ export default function PublicProfilePage() {
 
   if (loading) {
     return (
-      <Center py="100px">
-        <Spinner size="xl" />
+      <Center py="40px" px="20px">
+        <Box maxW="800px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">
+          <Flex align="center" gap="16px" mb="10px">
+            <SkeletonCircle size="16" />
+            <Box flex="1">
+              <Skeleton height="24px" width="200px" mb="10px" />
+              <Skeleton height="14px" width="260px" />
+            </Box>
+          </Flex>
+          <Divider my="20px" />
+          <Skeleton height="20px" width="120px" mb="16px" />
+          {[...Array(3)].map((_, i) => (
+            <Flex key={i} gap="14px" p="12px" mb="14px" border="1px solid #eee" borderRadius="md">
+              <Skeleton width="60px" height="84px" borderRadius="4px" />
+              <Box flex="1"><SkeletonText noOfLines={2} spacing="2" /></Box>
+            </Flex>
+          ))}
+        </Box>
       </Center>
     );
   }

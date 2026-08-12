@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
-import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textarea, Button, Select, useToast, Spinner } from '@chakra-ui/react';
+import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textarea, Button, Select, useToast, Skeleton, SkeletonText, SkeletonCircle } from '@chakra-ui/react';
 import { StarIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
@@ -168,8 +168,26 @@ export default function BookPage({ user }) {
 
   if (loading) {
     return (
-      <Center py="100px">
-        <Spinner size="xl" />
+      <Center py="40px" px="20px">
+        <Box maxW="1000px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">
+          <Flex gap="30px" flexWrap="wrap">
+            <Skeleton width="250px" height="350px" borderRadius="md" />
+            <Box flex="1" minW="250px">
+              <Skeleton height="32px" width="70%" mb="14px" />
+              <Skeleton height="16px" width="40%" mb="20px" />
+              <SkeletonText noOfLines={4} spacing="3" mb="20px" />
+              <Skeleton height="40px" width="180px" />
+            </Box>
+          </Flex>
+          <Divider my="30px" />
+          <Skeleton height="24px" width="150px" mb="20px" />
+          {[...Array(3)].map((_, i) => (
+            <Flex key={i} gap="14px" p="12px" mb="12px" border="1px solid #eee" borderRadius="md">
+              <SkeletonCircle size="10" />
+              <Box flex="1"><SkeletonText noOfLines={2} spacing="2" /></Box>
+            </Flex>
+          ))}
+        </Box>
       </Center>
     );
   }
