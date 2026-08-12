@@ -5,6 +5,7 @@ import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textar
 import { StarIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
+import useSeoMeta from '../utils/useSeoMeta';
 
 export default function BookPage({ user }) {
   const { id } = useParams();
@@ -30,30 +31,12 @@ export default function BookPage({ user }) {
       .finally(() => setLoading(false));
   }, [id]);
 
-  useEffect(() => {
-    const defaultTitle = document.title;
-    const setMeta = (name, content, attr = 'name') => {
-      let el = document.querySelector(`meta[${attr}="${name}"]`);
-      if (!el) {
-        el = document.createElement('meta');
-        el.setAttribute(attr, name);
-        document.head.appendChild(el);
-      }
-      el.setAttribute('content', content);
-    };
-
-    if (book) {
-      document.title = `${book.title} — Mr Book Worm`;
-      setMeta('description', book.annotation || `${book.title}, ${book.author}`);
-      setMeta('og:title', book.title, 'property');
-      setMeta('og:description', book.annotation || '', 'property');
-      if (book.img) setMeta('og:image', book.img, 'property');
-    }
-
-    return () => {
-      document.title = defaultTitle;
-    };
-  }, [book]);
+  useSeoMeta({
+    enabled: Boolean(book),
+    title: book?.title,
+    description: book?.annotation || (book ? `${book.title}, ${book.author}` : ''),
+    image: book?.img,
+  });
 
   const handleFavorites = async () => {
     if (!user) {

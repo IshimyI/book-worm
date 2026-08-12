@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Box, Center, Heading, Text, Stack, Spinner } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
+import useSeoMeta from '../utils/useSeoMeta';
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
 export default function NewsPage() {
   const [news, setNews] = useState(null);
+
+  useSeoMeta({
+    title: 'Новости',
+    description: 'Новости и обновления Mr Book Worm — каталога книг с рейтингами и рецензиями.',
+  });
 
   useEffect(() => {
     axiosInstance

@@ -1,6 +1,12 @@
 import { Box, Center, Heading, Text, Stack, ListItem, UnorderedList } from '@chakra-ui/react';
+import useSeoMeta from '../utils/useSeoMeta';
 
 export default function PrivacyPage() {
+  useSeoMeta({
+    title: 'Политика конфиденциальности',
+    description: 'Политика конфиденциальности Mr Book Worm: какие данные мы собираем и как их используем.',
+  });
+
   return (
     <Center py="40px" px="20px">
       <Box maxW="800px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">

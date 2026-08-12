@@ -1,6 +1,12 @@
 import { Box, Center, Heading, Text, Stack, ListItem, OrderedList } from '@chakra-ui/react';
+import useSeoMeta from '../utils/useSeoMeta';
 
 export default function TermsPage() {
+  useSeoMeta({
+    title: 'Пользовательское соглашение',
+    description: 'Пользовательское соглашение Mr Book Worm: правила использования каталога книг и публикации рецензий.',
+  });
+
   return (
     <Center py="40px" px="20px">
       <Box maxW="800px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">

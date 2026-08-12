@@ -3,6 +3,7 @@ import { useParams, NavLink } from 'react-router-dom';
 import { Box, Center, Heading, Text, Stack, Avatar, Divider, Image, Flex, Spinner, Button } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
+import useSeoMeta from '../utils/useSeoMeta';
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' });
 
@@ -11,6 +12,12 @@ export default function PublicProfilePage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+
+  useSeoMeta({
+    enabled: Boolean(profile),
+    title: profile ? `${profile.name} — профиль` : '',
+    description: profile ? `${profile.reviewCount} рецензий от ${profile.name} на Mr Book Worm` : '',
+  });
 
   useEffect(() => {
     setPage(1);

@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import ModalMain from "../ui/ModalMain";
 import axiosInstance from "../axiosInstance";
+import useSeoMeta from "../utils/useSeoMeta";
 
 const EMPTY_FILTERS = {
   genre: "",
@@ -27,6 +28,11 @@ const EMPTY_FILTERS = {
 };
 
 export default function MainPage({ user }) {
+  useSeoMeta({
+    title: "Каталог книг",
+    description: "Каталог книг с рейтингами и рецензиями читателей — находите книги, читайте отзывы и оценивайте прочитанное.",
+  });
+
   const [books, setBooks] = useState([]);
   const [facets, setFacets] = useState({ genres: [], authors: [], years: [] });
   const [total, setTotal] = useState(0);
