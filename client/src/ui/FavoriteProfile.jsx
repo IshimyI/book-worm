@@ -2,6 +2,7 @@
 import { Box, Image, Text, SimpleGrid } from "@chakra-ui/react";
 import { SmallCloseIcon, Icon } from "@chakra-ui/icons";
 import axiosInstance from "../axiosInstance";
+import { coverThumbUrl } from "../utils/coverUrl";
 
 const FavoriteProfile = ({
   favoriteBooks,
@@ -37,8 +38,9 @@ const FavoriteProfile = ({
             _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
           >
             <Image
-              src={book.img || "./default.jpg"}
+              src={coverThumbUrl(book.img) || "./default.jpg"}
               alt={book.title}
+              loading="lazy"
               width="150px"
               height="200px"
               objectFit="cover"

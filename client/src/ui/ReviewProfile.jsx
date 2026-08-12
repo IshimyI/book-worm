@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { Box, Image, Text, SimpleGrid } from "@chakra-ui/react";
+import { coverThumbUrl } from "../utils/coverUrl";
 
 const ReviewProfile = ({ reviewBooks, handleBookClick }) => {
   return (
@@ -20,8 +21,9 @@ const ReviewProfile = ({ reviewBooks, handleBookClick }) => {
             _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
           >
             <Image
-              src={book.img}
+              src={coverThumbUrl(book.img)}
               alt={book.title}
+              loading="lazy"
               width="150px"
               height="200px"
               objectFit="cover"

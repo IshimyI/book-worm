@@ -4,6 +4,7 @@ import { Box, Center, Heading, Text, Stack, Avatar, Divider, Image, Flex, Button
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
+import { coverThumbUrl } from '../utils/coverUrl';
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' });
 
@@ -103,7 +104,7 @@ export default function PublicProfilePage() {
                   _hover={{ borderColor: '#4b5320', boxShadow: 'sm' }}
                   transition="border-color 0.15s ease"
                 >
-                  <Image src={review.bookImg} alt={review.bookTitle} width="60px" height="84px" objectFit="cover" borderRadius="4px" />
+                  <Image src={coverThumbUrl(review.bookImg)} alt={review.bookTitle} loading="lazy" width="60px" height="84px" objectFit="cover" borderRadius="4px" />
                   <Box>
                     <Text fontWeight="bold">{review.bookTitle}</Text>
                     <Text fontSize="sm" color="gray.600" noOfLines={2}>{review.body}</Text>

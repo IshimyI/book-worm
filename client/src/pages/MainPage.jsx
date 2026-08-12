@@ -18,6 +18,7 @@ import { NavLink } from "react-router-dom";
 import ModalMain from "../ui/ModalMain";
 import axiosInstance from "../axiosInstance";
 import useSeoMeta from "../utils/useSeoMeta";
+import { coverThumbUrl } from "../utils/coverUrl";
 
 const EMPTY_FILTERS = {
   genre: "",
@@ -267,8 +268,9 @@ export default function MainPage({ user, setUser }) {
                     <Flex align="start">
                       <NavLink to={`/books/${book.id}`}>
                         <Image
-                          src={book.img}
+                          src={coverThumbUrl(book.img)}
                           alt={book.title}
+                          loading="lazy"
                           width="180px"
                           height="250px"
                           objectFit="cover"

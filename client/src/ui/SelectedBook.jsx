@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { Card, CardBody, CardFooter, Flex, Heading, Image, Stack, Text } from '@chakra-ui/react';
+import { coverThumbUrl } from '../utils/coverUrl';
 
 export default function SelectedBook({ book, handleBookClick, setInputs }) {
   function selectBook(book) {
@@ -9,8 +10,8 @@ export default function SelectedBook({ book, handleBookClick, setInputs }) {
 
   return (
     <Card onClick={() => selectBook(book)} rounded={10} direction={{ base: 'column', sm: 'row' }} overflow="hidden" variant="outline" m={2} _hover={{ border: '1px', borderColor: 'blue' }}>
-     
-      <Image objectFit="cover" w="150px" rounded={10} m='1px' src={book.img} alt="Обложка" />
+
+      <Image objectFit="cover" w="150px" rounded={10} m='1px' loading="lazy" src={coverThumbUrl(book.img)} alt={book.title || 'Обложка'} />
 
       <Stack>
         <CardBody>
