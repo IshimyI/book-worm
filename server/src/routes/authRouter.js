@@ -29,7 +29,19 @@ const authLimiter = rateLimit({
 
 authRouter.post("/signup", authLimiter, async (req, res) => {
   try {
-    const { email, name, password } = req.body;
+    const { email, name, password, website, formRenderedAt } = req.body;
+
+    // Honeypot: a field real users never see or fill, styled off-screen in
+    // the form. Bots that auto-fill every input trip it. Also reject forms
+    // submitted implausibly fast (under 1.5s), another bot tell.
+    if (website) {
+      logSecurityEvent({ type: "signup_bot_blocked", email, ip: req.ip, detail: "honeypot" });
+      return res.status(400).json({ message: "Не удалось зарегистрироваться" });
+    }
+    if (formRenderedAt && Date.now() - Number(formRenderedAt) < 1500) {
+      logSecurityEvent({ type: "signup_bot_blocked", email, ip: req.ip, detail: "too_fast" });
+      return res.status(400).json({ message: "Не удалось зарегистрироваться" });
+    }
 
     if (!name || !email || !password) {
       return res

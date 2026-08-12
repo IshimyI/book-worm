@@ -32,6 +32,30 @@ describe("POST /api/auth/signup", () => {
     expect(res.status).toBe(400);
   });
 
+  it("rejects a submission with the honeypot field filled in", async () => {
+    const res = await request(app).post("/api/auth/signup").send({
+      name: "Bot",
+      email: "bot@example.com",
+      password: "password123",
+      website: "http://spam.example",
+    });
+
+    expect(res.status).toBe(400);
+    expect(await User.findOne({ where: { email: "bot@example.com" } })).toBeNull();
+  });
+
+  it("rejects a submission that arrives implausibly fast", async () => {
+    const res = await request(app).post("/api/auth/signup").send({
+      name: "Bot",
+      email: "fast-bot@example.com",
+      password: "password123",
+      formRenderedAt: Date.now(),
+    });
+
+    expect(res.status).toBe(400);
+    expect(await User.findOne({ where: { email: "fast-bot@example.com" } })).toBeNull();
+  });
+
   it("rejects a duplicate email", async () => {
     await request(app).post("/api/auth/signup").send({
       name: "First",

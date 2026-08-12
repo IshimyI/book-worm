@@ -16,6 +16,7 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
   const [firstPassword, setFirstPassword] = useState("");
   const [secondPassword, setSecondPassword] = useState("");
   const [bool, setBool] = useState(false);
+  const [formRenderedAt] = useState(() => Date.now());
 
   const handleCorrect = (e) => {
     e.preventDefault();
@@ -44,6 +45,15 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
             <Heading as="h2" size="md" textAlign="center" mb={2}>
               Регистрация
             </Heading>
+
+            {/* Honeypot: hidden from real users, bots that auto-fill every
+                field trip it. Never remove the off-screen positioning —
+                display:none/visibility:hidden fields get skipped by some
+                bots and defeat the point. */}
+            <Box position="absolute" left="-9999px" aria-hidden="true">
+              <Input name="website" tabIndex={-1} autoComplete="off" />
+            </Box>
+            <input type="hidden" name="formRenderedAt" value={formRenderedAt} readOnly />
 
             <FormControl mb={2}>
               <Input
