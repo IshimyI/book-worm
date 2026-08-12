@@ -4,6 +4,7 @@ import { useParams, NavLink } from 'react-router-dom';
 import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textarea, Button, useToast, Spinner } from '@chakra-ui/react';
 import { StarIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
+import { openLibrarySearchUrl } from '../utils/openLibrary';
 
 export default function BookPage({ user }) {
   const { id } = useParams();
@@ -28,6 +29,31 @@ export default function BookPage({ user }) {
       .finally(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    const defaultTitle = document.title;
+    const setMeta = (name, content, attr = 'name') => {
+      let el = document.querySelector(`meta[${attr}="${name}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    if (book) {
+      document.title = `${book.title} — Mr Book Worm`;
+      setMeta('description', book.annotation || `${book.title}, ${book.author}`);
+      setMeta('og:title', book.title, 'property');
+      setMeta('og:description', book.annotation || '', 'property');
+      if (book.img) setMeta('og:image', book.img, 'property');
+    }
+
+    return () => {
+      document.title = defaultTitle;
+    };
+  }, [book]);
+
   const handleFavorites = async () => {
     if (!user) {
       toast({ title: 'Войдите, чтобы добавлять книги в избранное', status: 'info', duration: 2500, isClosable: true });
@@ -45,6 +71,15 @@ export default function BookPage({ user }) {
     } catch (error) {
       toast({ title: 'Не удалось обновить избранное', status: 'error', duration: 2500, isClosable: true });
     }
+  };
+
+  const myReview = user ? reviews.find((r) => r.user_id === user.id) : null;
+  const isEditing = Boolean(myReview);
+
+  const startEditing = () => {
+    setInputBody(myReview.user_rev);
+    setRating(myReview.user_raeting);
+    document.getElementById('reviewForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   const addReviewHandler = async (event) => {
@@ -66,17 +101,25 @@ export default function BookPage({ user }) {
         user_rating: rating,
       });
       if (res.status === 200) {
-        setReviews((prev) => [
-          { userName: user.name, user_rev: inputBody, user_id: user.id, user_raeting: rating },
-          ...prev,
-        ]);
+        setReviews((prev) => {
+          const already = prev.some((r) => r.user_id === user.id);
+          const updated = { userName: user.name, user_rev: inputBody, user_id: user.id, user_raeting: rating };
+          return already
+            ? prev.map((r) => (r.user_id === user.id ? updated : r))
+            : [updated, ...prev];
+        });
         setInputBody('');
         setRating(0);
         setHover(0);
-        toast({ title: 'Рецензия добавлена', status: 'success', duration: 2000, isClosable: true });
+        toast({
+          title: isEditing ? 'Рецензия обновлена' : 'Рецензия добавлена',
+          status: 'success',
+          duration: 2000,
+          isClosable: true,
+        });
       }
     } catch (error) {
-      toast({ title: 'Не удалось добавить рецензию', status: 'error', duration: 2500, isClosable: true });
+      toast({ title: 'Не удалось сохранить рецензию', status: 'error', duration: 2500, isClosable: true });
     }
   };
 
@@ -101,7 +144,7 @@ export default function BookPage({ user }) {
 
   return (
     <Center py="40px" px="20px">
-      <Box maxW="1000px" width="100%" bg="white" borderRadius="lg" boxShadow="md" p="30px">
+      <Box maxW="1000px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">
         <NavLink to="/">
           <Button variant="link" mb="20px" sx={{ color: '#334d00' }}>
             <ArrowBackIcon mr="6px" /> К каталогу
@@ -119,9 +162,21 @@ export default function BookPage({ user }) {
               <Text fontSize="sm"><b>Рейтинг:</b> {book.rating ?? 0} ⭐ ({book.quantity_rate ?? 0} отзывов)</Text>
             </Stack>
             <Text mb="20px">{book.annotation}</Text>
-            <Button backgroundColor={isFavorite ? '#334d00' : '#909e18'} color="white" onClick={handleFavorites}>
-              {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
-            </Button>
+            <Flex gap="12px" flexWrap="wrap">
+              <Button backgroundColor={isFavorite ? '#334d00' : '#909e18'} color="white" onClick={handleFavorites}>
+                {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
+              </Button>
+              <Button
+                as="a"
+                href={openLibrarySearchUrl(book.title, book.author)}
+                target="_blank"
+                rel="noreferrer"
+                variant="outline"
+                sx={{ color: '#334d00', borderColor: '#334d00' }}
+              >
+                Читать / найти книгу
+              </Button>
+            </Flex>
           </Box>
         </Flex>
 
@@ -130,19 +185,38 @@ export default function BookPage({ user }) {
         <Heading as="h2" size="md" mb="20px">Рецензии</Heading>
         <Box maxH="400px" overflowY="auto" mb="20px">
           {reviews.length > 0 ? (
-            reviews.map((review, index) => (
-              <Box key={index} p="3" border="1px solid #ddd" borderRadius="md" mb="3">
-                <Stack direction="row" spacing="4" align="center">
-                  <Avatar name={review.userName} />
-                  <Box>
-                    <Text fontWeight="bold">{review.userName}</Text>
-                    <Divider my="2" />
-                    <Text>{review.user_rev}</Text>
-                    <Text>{review.user_raeting} ⭐</Text>
-                  </Box>
-                </Stack>
-              </Box>
-            ))
+            reviews.map((review, index) => {
+              const isMine = user && review.user_id === user.id;
+              return (
+                <Box
+                  key={index}
+                  p="3"
+                  border={isMine ? '2px solid #4b5320' : '1px solid #ddd'}
+                  bg={isMine ? '#f7f8ef' : 'white'}
+                  borderRadius="md"
+                  mb="3"
+                >
+                  <Stack direction="row" spacing="4" align="center">
+                    <Avatar name={review.userName} />
+                    <Box flex="1">
+                      <Flex justify="space-between" align="center">
+                        <Text fontWeight="bold">
+                          {review.userName} {isMine && <Text as="span" fontSize="xs" color="#4b5320" fontWeight="bold">(ваш отзыв)</Text>}
+                        </Text>
+                        {isMine && (
+                          <Button size="xs" variant="link" sx={{ color: '#4b5320' }} onClick={startEditing}>
+                            Редактировать
+                          </Button>
+                        )}
+                      </Flex>
+                      <Divider my="2" />
+                      <Text>{review.user_rev}</Text>
+                      <Text>{review.user_raeting} ⭐</Text>
+                    </Box>
+                  </Stack>
+                </Box>
+              );
+            })
           ) : (
             <Text color="gray.500" textAlign="center" py="6">
               Пока нет рецензий — будьте первым
@@ -150,26 +224,31 @@ export default function BookPage({ user }) {
           )}
         </Box>
 
-        <Textarea value={inputBody} onChange={(e) => setInputBody(e.target.value)} placeholder="Напиши свою рецензию" mb="10px" />
-        <Box mb="15px">
-          {[...Array(5)].map((_, index) => {
-            const ratingValue = index + 1;
-            return (
-              <StarIcon
-                key={index}
-                fontSize="25px"
-                color={ratingValue <= (hover || rating) ? 'gold' : 'gray.300'}
-                onClick={() => setRating(ratingValue)}
-                onMouseEnter={() => setHover(ratingValue)}
-                onMouseLeave={() => setHover(rating)}
-                cursor="pointer"
-              />
-            );
-          })}
+        <Box id="reviewForm">
+          {isEditing && (
+            <Text fontSize="sm" color="#4b5320" fontWeight="bold" mb="6px">Вы редактируете свой отзыв</Text>
+          )}
+          <Textarea value={inputBody} onChange={(e) => setInputBody(e.target.value)} placeholder="Напиши свою рецензию" mb="10px" />
+          <Box mb="15px">
+            {[...Array(5)].map((_, index) => {
+              const ratingValue = index + 1;
+              return (
+                <StarIcon
+                  key={index}
+                  fontSize="25px"
+                  color={ratingValue <= (hover || rating) ? 'gold' : 'gray.300'}
+                  onClick={() => setRating(ratingValue)}
+                  onMouseEnter={() => setHover(ratingValue)}
+                  onMouseLeave={() => setHover(rating)}
+                  cursor="pointer"
+                />
+              );
+            })}
+          </Box>
+          <Button backgroundColor="#334d00" color="white" onClick={addReviewHandler}>
+            {isEditing ? 'Обновить рецензию' : 'Добавить рецензию'}
+          </Button>
         </Box>
-        <Button backgroundColor="#334d00" color="white" onClick={addReviewHandler}>
-          Добавить рецензию
-        </Button>
       </Box>
     </Center>
   );

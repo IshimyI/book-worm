@@ -14,6 +14,12 @@ function randDateBetween(start, end) {
   const t = start.getTime() + Math.random() * (end.getTime() - start.getTime());
   return new Date(t);
 }
+// Review pool sentences use "(а)" for a verb ending that depends on the
+// author's gender (e.g. "читал(а)") — resolve it to the actual reviewer's
+// gender instead of leaving the placeholder in displayed text.
+function resolveGender(text, gender) {
+  return text.replace(/\(а\)/g, gender === "f" ? "а" : "");
+}
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -91,30 +97,30 @@ function pickRating() {
 }
 
 const USERS = [
-  { id: 1, name: "Маша", regDate: "2024-08-10" },
-  { id: 2, name: "Дима", regDate: "2024-08-10" },
-  { id: 3, name: "Света", regDate: "2024-08-12" },
-  { id: 4, name: "Ваня", regDate: "2024-08-14" },
-  { id: 5, name: "Аня", regDate: "2024-09-01" },
-  { id: 6, name: "Пётр", regDate: "2024-10-20" },
-  { id: 7, name: "Ольга", regDate: "2024-12-15" },
-  { id: 8, name: "Кирилл", regDate: "2025-02-01" },
-  { id: 9, name: "Настя", regDate: "2025-04-10" },
-  { id: 10, name: "Максим", regDate: "2025-07-05" },
-  { id: 11, name: "Юля", regDate: "2025-09-20" },
-  { id: 12, name: "Артём", regDate: "2026-01-10" },
-  { id: 13, name: "Богдан", regDate: "2024-09-15" },
-  { id: 14, name: "Вера", regDate: "2024-10-01" },
-  { id: 15, name: "Григорий", regDate: "2024-11-05" },
-  { id: 16, name: "Дарья", regDate: "2024-12-01" },
-  { id: 17, name: "Егор", regDate: "2025-01-10" },
-  { id: 18, name: "Жанна", regDate: "2025-02-20" },
-  { id: 19, name: "Захар", regDate: "2025-03-15" },
-  { id: 20, name: "Инна", regDate: "2025-04-25" },
-  { id: 21, name: "Лев", regDate: "2025-06-01" },
-  { id: 22, name: "Марина", regDate: "2025-07-15" },
-  { id: 23, name: "Никита", regDate: "2025-09-01" },
-  { id: 24, name: "Полина", regDate: "2025-11-10" },
+  { id: 1, name: "Маша", regDate: "2024-08-10", gender: "f" },
+  { id: 2, name: "Дима", regDate: "2024-08-10", gender: "m" },
+  { id: 3, name: "Света", regDate: "2024-08-12", gender: "f" },
+  { id: 4, name: "Ваня", regDate: "2024-08-14", gender: "m" },
+  { id: 5, name: "Аня", regDate: "2024-09-01", gender: "f" },
+  { id: 6, name: "Пётр", regDate: "2024-10-20", gender: "m" },
+  { id: 7, name: "Ольга", regDate: "2024-12-15", gender: "f" },
+  { id: 8, name: "Кирилл", regDate: "2025-02-01", gender: "m" },
+  { id: 9, name: "Настя", regDate: "2025-04-10", gender: "f" },
+  { id: 10, name: "Максим", regDate: "2025-07-05", gender: "m" },
+  { id: 11, name: "Юля", regDate: "2025-09-20", gender: "f" },
+  { id: 12, name: "Артём", regDate: "2026-01-10", gender: "m" },
+  { id: 13, name: "Богдан", regDate: "2024-09-15", gender: "m" },
+  { id: 14, name: "Вера", regDate: "2024-10-01", gender: "f" },
+  { id: 15, name: "Григорий", regDate: "2024-11-05", gender: "m" },
+  { id: 16, name: "Дарья", regDate: "2024-12-01", gender: "f" },
+  { id: 17, name: "Егор", regDate: "2025-01-10", gender: "m" },
+  { id: 18, name: "Жанна", regDate: "2025-02-20", gender: "f" },
+  { id: 19, name: "Захар", regDate: "2025-03-15", gender: "m" },
+  { id: 20, name: "Инна", regDate: "2025-04-25", gender: "f" },
+  { id: 21, name: "Лев", regDate: "2025-06-01", gender: "m" },
+  { id: 22, name: "Марина", regDate: "2025-07-15", gender: "f" },
+  { id: 23, name: "Никита", regDate: "2025-09-01", gender: "m" },
+  { id: 24, name: "Полина", regDate: "2025-11-10", gender: "f" },
 ];
 
 const BOOKS = [
@@ -199,10 +205,11 @@ module.exports = {
         const reviewDate = randDateBetween(bookStart, NOW);
         const eligibleUsers = USERS.filter((u) => new Date(u.regDate) <= reviewDate);
         if (!eligibleUsers.length) continue;
+        const reviewer = pick(eligibleUsers);
 
         bookReviews.push({
           bookId: book.id,
-          userId: pick(eligibleUsers).id,
+          userId: reviewer.id,
           user_rating: rating,
           body: text,
           createdAt: reviewDate,
@@ -215,6 +222,7 @@ module.exports = {
         const reviewDate = randDateBetween(bookStart, NOW);
         const eligibleUsers = USERS.filter((u) => new Date(u.regDate) <= reviewDate);
         if (!eligibleUsers.length) continue;
+        const reviewer = pick(eligibleUsers);
 
         const rating = pickRating();
         const pool = REVIEW_POOLS[rating];
@@ -225,10 +233,11 @@ module.exports = {
           attempts++;
         }
         usedTextByRating[rating].add(text);
+        text = resolveGender(text, reviewer.gender);
 
         bookReviews.push({
           bookId: book.id,
-          userId: pick(eligibleUsers).id,
+          userId: reviewer.id,
           user_rating: rating,
           body: text,
           createdAt: reviewDate,

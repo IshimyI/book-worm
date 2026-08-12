@@ -11,102 +11,72 @@ import {
   Alert,
   AlertIcon,
 } from "@chakra-ui/react";
-// import booksData from "../testJSON/books.json";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { NavLink } from "react-router-dom";
 import ModalMain from "../ui/ModalMain";
 import axiosInstance from "../axiosInstance";
 
+const EMPTY_FILTERS = {
+  genre: "",
+  author: "",
+  year: "",
+  minRating: "",
+  search: "",
+};
+
 export default function MainPage({ user }) {
-  const [uniqueGenres, setUniqueGenres] = useState([]);
-  const [uniqueAuthors, setUniqueAuthors] = useState([]);
-  const [uniqueYears, setUniqueYears] = useState([]);
   const [booksData, setBooksData] = useState([]);
-  const [fillterBooksData, setFillterBooksData] = useState([]);
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [sortBy, setSortBy] = useState("rating");
+  const [sortDir, setSortDir] = useState("desc");
 
   useEffect(() => {
-    const fetchAllSms = async () => {
-      try {
-        const response = await axiosInstance.get("/listAllBooks");
-        setBooksData(response.data);
-        setFillterBooksData(response.data);
-      } catch (error) {
-        console.error("Ошибка при получении всех books:", error);
-      }
-    };
-
-    fetchAllSms();
+    axiosInstance
+      .get("/listAllBooks")
+      .then((response) => setBooksData(response.data))
+      .catch((error) => console.error("Ошибка при получении всех books:", error));
   }, []);
 
-  const sbros = () => {
-    setBooksData(fillterBooksData);
+  const uniqueGenres = useMemo(
+    () => Array.from(new Set(booksData.map((b) => b.genre))).sort(),
+    [booksData]
+  );
+  const uniqueAuthors = useMemo(
+    () => Array.from(new Set(booksData.map((b) => b.author))).sort(),
+    [booksData]
+  );
+  const uniqueYears = useMemo(
+    () => Array.from(new Set(booksData.map((b) => b.year))).sort((a, b) => a - b),
+    [booksData]
+  );
+
+  const visibleBooks = useMemo(() => {
+    let result = booksData.filter((book) => {
+      if (filters.genre && book.genre !== filters.genre) return false;
+      if (filters.author && book.author !== filters.author) return false;
+      if (filters.year && String(book.year) !== filters.year) return false;
+      if (filters.minRating && Number(book.rating ?? 0) < Number(filters.minRating)) return false;
+      if (filters.search && !book.title.toLowerCase().includes(filters.search.toLowerCase())) return false;
+      return true;
+    });
+
+    const dir = sortDir === "asc" ? 1 : -1;
+    result = [...result].sort((a, b) => {
+      if (sortBy === "rating") return dir * ((a.rating ?? 0) - (b.rating ?? 0));
+      if (sortBy === "reviews") return dir * ((a.quantity_rate ?? 0) - (b.quantity_rate ?? 0));
+      if (sortBy === "year") return dir * (a.year - b.year);
+      if (sortBy === "title") return dir * a.title.localeCompare(b.title, "ru");
+      return 0;
+    });
+
+    return result;
+  }, [booksData, filters, sortBy, sortDir]);
+
+  const updateFilter = (key) => (event) => {
+    setFilters((prev) => ({ ...prev, [key]: event.target.value }));
   };
 
-  useEffect(() => {
-    const yearsSet = new Set();
-    fillterBooksData.forEach((book) => yearsSet.add(book.year));
-    setUniqueYears(Array.from(yearsSet).sort());
-  }, [booksData]);
-
-  useEffect(() => {
-    const authorsSet = new Set();
-    fillterBooksData.forEach((book) => authorsSet.add(book.author));
-    setUniqueAuthors(Array.from(authorsSet));
-  }, [booksData]);
-
-  useEffect(() => {
-    const genresSet = new Set();
-    fillterBooksData.forEach((book) => genresSet.add(book.genre));
-    setUniqueGenres(Array.from(genresSet));
-  }, [booksData]);
-
-  const helperSort = (value) => {
-    if (value.target.value === "option1") {
-      const newData = [...booksData].sort((a, b) =>
-        a.rating > b.rating ? 1 : -1
-      );
-      setBooksData(newData);
-    }
-    if (value.target.value === "option2") {
-      const newData2 = [...booksData].sort((a, b) =>
-        a.title > b.title ? 1 : -1
-      );
-      setBooksData(newData2);
-    }
-    if (value.target.value === "option3") {
-      const newData3 = [...booksData].sort((a, b) =>
-        a.year > b.year ? 1 : -1
-      );
-      setBooksData(newData3);
-    }
-  };
-
-  const fillHelper1 = (value) => {
-    const newData = [...fillterBooksData].filter(
-      (el) => el.genre === value.target.value
-    );
-    setBooksData(newData);
-  };
-
-  const fillHelper2 = (value) => {
-    const newData = [...fillterBooksData].filter(
-      (el) => el.author === value.target.value
-    );
-    setBooksData(newData);
-  };
-  const fillHelper3 = (value) => {
-    const newData = [...fillterBooksData].filter(
-      (el) => String(el.year) === String(value.target.value)
-    );
-    setBooksData(newData);
-  };
-
-  const inputHand = (value) => {
-    const newData = [...fillterBooksData].filter(
-      (el) => el.title.toLowerCase().includes(value.target.value.toLowerCase())
-    );
-    setBooksData(newData);
-  }
+  const resetFilters = () => setFilters(EMPTY_FILTERS);
 
   return (
     <>
@@ -133,6 +103,7 @@ export default function MainPage({ user }) {
               boxShadow="md"
               mb={"20px"}
               p={"7px"}
+              height="auto"
             >
               <Heading
                 sx={{ fontFamily: "Lato, sans-serif" }}
@@ -149,7 +120,8 @@ export default function MainPage({ user }) {
                 placeholder="Жанр"
                 w={"90%"}
                 m={"0 auto"}
-                onChange={fillHelper1}
+                value={filters.genre}
+                onChange={updateFilter("genre")}
               >
                 {uniqueGenres.map((genre) => (
                   <option key={genre} value={genre}>
@@ -163,7 +135,8 @@ export default function MainPage({ user }) {
                 w={"90%"}
                 m={"0 auto"}
                 mt={"20px"}
-                onChange={fillHelper2}
+                value={filters.author}
+                onChange={updateFilter("author")}
               >
                 {uniqueAuthors.map((author) => (
                   <option key={author} value={author}>
@@ -177,7 +150,8 @@ export default function MainPage({ user }) {
                 w={"90%"}
                 m={"0 auto"}
                 mt={"20px"}
-                onChange={fillHelper3}
+                value={filters.year}
+                onChange={updateFilter("year")}
               >
                 {uniqueYears.map((year) => (
                   <option key={year} value={year}>
@@ -186,23 +160,27 @@ export default function MainPage({ user }) {
                 ))}
               </Select>
 
-              <Flex mt={"20px"} justifyContent={"center"} columnGap={"15px"}>
-                {/* <Button
-                  sx={{
-                    backgroundColor: "#334d00",
-                    color: "white",
-                  }}
-                  size="sm"
-                >
-                  Искать
-                </Button> */}
+              <Select
+                placeholder="Рейтинг от"
+                w={"90%"}
+                m={"0 auto"}
+                mt={"20px"}
+                value={filters.minRating}
+                onChange={updateFilter("minRating")}
+              >
+                <option value="3">от 3 ⭐</option>
+                <option value="4">от 4 ⭐</option>
+                <option value="4.5">от 4.5 ⭐</option>
+              </Select>
+
+              <Flex mt={"20px"} mb={"10px"} justifyContent={"center"} columnGap={"15px"}>
                 <Button
                   sx={{
                     backgroundColor: "#334d00",
                     color: "white",
                   }}
                   size="sm"
-                  onClick={sbros}
+                  onClick={resetFilters}
                 >
                   Сброс
                 </Button>
@@ -215,20 +193,36 @@ export default function MainPage({ user }) {
                   w={"100%"}
                   placeholder="Поиск по названию"
                   bg={"white"}
-                  onChange={inputHand}
+                  value={filters.search}
+                  onChange={updateFilter("search")}
                 />
                 <Select
-                  placeholder="Сортировать"
                   w={200}
                   bg={"white"}
-                  onChange={helperSort}
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
                 >
-                  <option value="option1">По рейтингу</option>
-                  <option value="option2">По названию</option>
-                  <option value="option3">По году издания</option>
+                  <option value="rating">По рейтингу</option>
+                  <option value="reviews">По популярности</option>
+                  <option value="title">По названию</option>
+                  <option value="year">По году издания</option>
+                </Select>
+                <Select
+                  w={140}
+                  bg={"white"}
+                  value={sortDir}
+                  onChange={(e) => setSortDir(e.target.value)}
+                >
+                  <option value="desc">По убыванию</option>
+                  <option value="asc">По возрастанию</option>
                 </Select>
               </div>
-              {booksData.map((book) => (
+
+              <Text textAlign="left" color="gray.600" fontSize="sm" mb="12px">
+                Найдено книг: {visibleBooks.length}
+              </Text>
+
+              {visibleBooks.map((book) => (
                 <Box
                   bg={"white"}
                   key={book.id}
@@ -243,14 +237,16 @@ export default function MainPage({ user }) {
                   _hover={{ transform: "translateY(-3px)", boxShadow: "xl" }}
                 >
                   <Flex align="start">
-                    <Image
-                      src={book.img}
-                      alt={book.title}
-                      width="180px"
-                      height="100%"
-                      objectFit="cover"
-                      mr={4}
-                    />
+                    <NavLink to={`/books/${book.id}`}>
+                      <Image
+                        src={book.img}
+                        alt={book.title}
+                        width="180px"
+                        height="250px"
+                        objectFit="cover"
+                        mr={4}
+                      />
+                    </NavLink>
                     <Box textAlign="left" p="4" mt={"10px"}>
                       <NavLink to={`/books/${book.id}`}>
                         <Heading as="h3" size="md" mb={2} _hover={{ color: "#334d00" }}>
@@ -266,7 +262,7 @@ export default function MainPage({ user }) {
                       <Text fontSize="xs" color="gray.600" mb={2}>
                         {book.year}
                       </Text>
-                      <Flex alignItems="center" mt={"60px"}>
+                      <Flex alignItems="center" mt={"30px"} columnGap="10px" flexWrap="wrap">
                         <Text fontWeight="bold" mr={2}>
                           {book.rating == null ? 0 : book.rating} ⭐
                         </Text>
@@ -275,6 +271,19 @@ export default function MainPage({ user }) {
                           отзывов)
                         </Text>
                         <ModalMain user={user} book={book} />
+                        <NavLink to={`/books/${book.id}`}>
+                          <Button
+                            size="sm"
+                            ml={"8px"}
+                            sx={{
+                              backgroundColor: "#4b5320",
+                              color: "white",
+                              boxShadow: "0 2px 6px rgba(75,83,32,0.4)",
+                            }}
+                          >
+                            Смотреть книгу →
+                          </Button>
+                        </NavLink>
                       </Flex>
                     </Box>
                   </Flex>
@@ -284,7 +293,6 @@ export default function MainPage({ user }) {
           </div>
         </div>
       </div>
-      <div className="fonMBLOCK"> </div>
     </>
   );
 }

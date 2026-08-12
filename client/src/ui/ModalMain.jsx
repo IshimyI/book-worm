@@ -19,9 +19,11 @@ import {
   Divider,
   Textarea,
 } from "@chakra-ui/react";
-import { StarIcon } from "@chakra-ui/icons";
+import { StarIcon, ExternalLinkIcon } from "@chakra-ui/icons";
 import { useState, useEffect } from "react";
+import { NavLink } from "react-router-dom";
 import axiosInstance from '../axiosInstance';
+import { openLibrarySearchUrl } from '../utils/openLibrary';
 
 export default function ModalMain({ user, book }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -126,6 +128,11 @@ export default function ModalMain({ user, book }) {
         <ModalCloseButton />
         <ModalHeader fontSize="2xl" fontWeight="bold">
           {book.title}
+          <NavLink to={`/books/${book.id}`}>
+            <Button size="xs" ml="12px" variant="outline" sx={{ color: '#334d00', borderColor: '#334d00' }}>
+              <ExternalLinkIcon mr="6px" /> Открыть страницу книги
+            </Button>
+          </NavLink>
         </ModalHeader>
         <ModalBody overflow="auto">
           <Flex>
@@ -230,12 +237,22 @@ export default function ModalMain({ user, book }) {
             </Box>
           </Flex>
 
-          <Flex className="this123" mt={'30px'}>
+          <Flex className="this123" mt={'30px'} gap="12px">
             <Button backgroundColor={isFavorite ? '#334d00' : '#909e18'} color="white" onClick={handleFavorites}>
               {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
             </Button>
             <Button backgroundColor="#334d00" color="white" onClick={addReviewHandler}>
               Добавить рецензию
+            </Button>
+            <Button
+              as="a"
+              href={openLibrarySearchUrl(book.title, book.author)}
+              target="_blank"
+              rel="noreferrer"
+              variant="outline"
+              sx={{ color: '#334d00', borderColor: '#334d00' }}
+            >
+              Читать / найти книгу
             </Button>
           </Flex>
         </ModalBody>
