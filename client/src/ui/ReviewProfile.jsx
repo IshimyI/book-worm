@@ -21,6 +21,7 @@ const ReviewProfile = ({ reviewBooks, handleBookClick }) => {
           >
             <Image
               src={book.img}
+              alt={book.title}
               width="150px"
               height="200px"
               objectFit="cover"

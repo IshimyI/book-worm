@@ -212,7 +212,7 @@ export default function BookPage({ user }) {
         </NavLink>
 
         <Flex gap="30px" flexWrap="wrap">
-          <Image src={book.img || './default.jpg'} width="250px" height="350px" objectFit="cover" borderRadius="md" />
+          <Image src={book.img || './default.jpg'} alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
           <Box flex="1" minW="250px">
             <Heading as="h1" size="lg" mb="10px">{book.title}</Heading>
             <Text color="gray.600" mb="10px">{book.author}</Text>

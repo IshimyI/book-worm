@@ -38,6 +38,7 @@ const FavoriteProfile = ({
           >
             <Image
               src={book.img || "./default.jpg"}
+              alt={book.title}
               width="150px"
               height="200px"
               objectFit="cover"
