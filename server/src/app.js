@@ -45,10 +45,17 @@ app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 
-app.use("/api", router);
-app.use("/api/auth", authRouter);
-app.use("/api/tokens", tokensRouter);
-app.use("/api/admin", adminRouter);
+// /api/v1 is the canonical path; bare /api is kept as an alias to the same
+// routers so the currently-deployed client (still calling /api directly)
+// keeps working without a synchronized deploy. New clients/integrations
+// should target /api/v1 — it's the one that'll stick around if a v2 with
+// breaking changes is ever needed.
+for (const prefix of ["/api", "/api/v1"]) {
+  app.use(prefix, router);
+  app.use(`${prefix}/auth`, authRouter);
+  app.use(`${prefix}/tokens`, tokensRouter);
+  app.use(`${prefix}/admin`, adminRouter);
+}
 
 if (process.env.SENTRY_DSN) {
   Sentry.setupExpressErrorHandler(app);
