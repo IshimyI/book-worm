@@ -5,7 +5,10 @@ const cookieConfig = require("../configs/cookieConfig");
 const jwt = require("jsonwebtoken");
 const generateTokens = require("../utils/generateTokens");
 const sendEmail = require("../utils/emailService");
+const { confirmationEmailHtml, resetPasswordEmailHtml } = require("../utils/emailTemplates");
 const authRouter = express.Router();
+
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -38,12 +41,20 @@ authRouter.post("/signup", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    const confirmationLink = `http://localhost:5173/confirm-email?token=${emailConfirmationToken}`;
-    await sendEmail({
+    const confirmationLink = `${CLIENT_URL}/confirm-email?token=${emailConfirmationToken}`;
+    const emailSent = await sendEmail({
       to: email,
       subject: "Подтверждение email",
       text: `Пожалуйста, подтвердите ваш email, перейдя по ссылке: ${confirmationLink}`,
+      html: confirmationEmailHtml(confirmationLink, name),
     });
+
+    // Письмо не ушло (например, исходящий SMTP заблокирован сетью) — не
+    // блокируем пользователя недоступным подтверждением, подтверждаем сразу.
+    if (!emailSent) {
+      newUser.isEmailConfirmed = true;
+      await newUser.save();
+    }
 
     const plainUser = newUser.get({ plain: true });
     delete plainUser.password;
@@ -129,11 +140,12 @@ authRouter.post("/forgot-password", async (req, res) => {
       { where: { email } }
     );
 
-    const confirmationLink = `http://localhost:5173/reset/${resetToken}`;
+    const confirmationLink = `${CLIENT_URL}/reset/${resetToken}`;
     await sendEmail({
       to: email,
       subject: "Восстановление пароля",
       text: `Для восстановления пароля перейдите по ссылке: ${confirmationLink}`,
+      html: resetPasswordEmailHtml(confirmationLink, user.name),
     });
 
     res.status(200).json({

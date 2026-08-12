@@ -12,7 +12,12 @@ const app = express();
 const { PORT } = process.env || 3000;
 
 const corsConfig = {
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+  origin: [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://mrbookworm.ru",
+    "https://www.mrbookworm.ru",
+  ],
   credentials: true,
 };
 
