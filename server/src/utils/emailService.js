@@ -1,43 +1,40 @@
-// Исходящий SMTP (465/587) заблокирован на уровне сети — письма через него
-// не проходят ни с одним провайдером. Отправляем через HTTP API Resend
-// вместо SMTP-протокола: обычный HTTPS-запрос, который сеть не блокирует.
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const RESEND_FROM = process.env.RESEND_FROM || "Book Worm <onboarding@resend.dev>";
+const nodemailer = require("nodemailer");
+
+const SMTP_HOST = process.env.SMTP_HOST || "smtp.mail.ru";
+const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const MAIL_FROM = process.env.MAIL_FROM || `Mr Book Worm <${SMTP_USER}>`;
+
+const transporter = SMTP_USER && SMTP_PASS
+  ? nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    })
+  : null;
 
 const sendEmail = async ({ to, subject, text, html }) => {
   console.log(`[email -> ${to}] ${subject}\n${text}`);
 
-  if (!RESEND_API_KEY) {
-    console.error("RESEND_API_KEY не задан в .env — письмо не отправлено.");
+  if (!transporter) {
+    console.error("SMTP_USER/SMTP_PASS не заданы в .env — письмо не отправлено.");
     return false;
   }
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: RESEND_FROM,
-        to,
-        subject,
-        text,
-        ...(html ? { html } : {}),
-      }),
+    await transporter.sendMail({
+      from: MAIL_FROM,
+      to,
+      subject,
+      text,
+      ...(html ? { html } : {}),
     });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error("Resend отклонил письмо:", response.status, errorBody);
-      return false;
-    }
-
-    console.log("Письмо отправлено через Resend");
+    console.log("Письмо отправлено через SMTP");
     return true;
   } catch (error) {
-    console.error("Ошибка при отправке письма через Resend:", error.message);
+    console.error("Ошибка при отправке письма через SMTP:", error.message);
     return false;
   }
 };
