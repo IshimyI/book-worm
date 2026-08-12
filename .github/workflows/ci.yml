@@ -37,3 +37,38 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: client/dist
+          retention-days: 1
+
+  deploy-staging:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [server, client]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: client-dist
+          path: client/dist
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.STAGING_HOST }} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDPgbIIsPJkCZPKxkwVdU8ySWpjvO6u6pJ/IggVbgo9B" >> ~/.ssh/known_hosts
+      - name: Deploy server + client to staging
+        run: |
+          rsync -az --exclude node_modules --exclude .env server/ root@${{ secrets.STAGING_HOST }}:/var/www/mrbookworm-staging/server/
+          rsync -az --delete client/dist/ root@${{ secrets.STAGING_HOST }}:/var/www/mrbookworm-staging/client/
+      - name: Migrate + restart
+        run: |
+          ssh root@${{ secrets.STAGING_HOST }} '
+            cd /var/www/mrbookworm-staging/server &&
+            npm ci --omit=dev &&
+            set -a && source .env && set +a &&
+            npx sequelize db:migrate --env staging &&
+            systemctl restart bookworm-staging.service
+          '
