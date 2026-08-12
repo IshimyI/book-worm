@@ -1,4 +1,5 @@
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 const { User, Inventory, User_selected_items } = require("../../db/models");
 const bcrypt = require("bcrypt");
 const cookieConfig = require("../configs/cookieConfig");
@@ -10,7 +11,16 @@ const authRouter = express.Router();
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
-authRouter.post("/signup", async (req, res) => {
+// Slow down credential-guessing / signup-spam without blocking normal use.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Слишком много попыток. Попробуйте снова через несколько минут." },
+});
+
+authRouter.post("/signup", authLimiter, async (req, res) => {
   try {
     const { email, name, password } = req.body;
 
@@ -116,7 +126,7 @@ authRouter.get("/confirm-email", async (req, res) => {
   }
 });
 
-authRouter.post("/forgot-password", async (req, res) => {
+authRouter.post("/forgot-password", authLimiter, async (req, res) => {
   const { email } = req.body;
   console.log(email);
   try {
@@ -191,7 +201,7 @@ authRouter.post(`/reset-password/:token`, async (req, res) => {
   return "done";
 });
 
-authRouter.post("/login", async (req, res) => {
+authRouter.post("/login", authLimiter, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ message: "Email и пароль обязательны" });

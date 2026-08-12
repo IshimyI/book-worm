@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       bookId: DataTypes.INTEGER,
       userId: DataTypes.INTEGER,
       user_rating: DataTypes.INTEGER,
+      reportCount: DataTypes.INTEGER,
     },
     {
       sequelize,

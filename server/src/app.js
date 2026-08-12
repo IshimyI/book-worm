@@ -3,6 +3,7 @@ const express = require("express");
 const logger = require("morgan");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const helmet = require("helmet");
 
 const router = require("./routes/router");
 const authRouter = require("./routes/authRouter");
@@ -21,6 +22,7 @@ const corsConfig = {
   credentials: true,
 };
 
+app.use(helmet());
 app.use(cors(corsConfig));
 app.use(logger("dev"));
 app.use(express.urlencoded({ extended: true }));

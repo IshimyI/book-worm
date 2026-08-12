@@ -1,8 +1,39 @@
 const express = require("express");
 const { User, Book, Review, News } = require("../../db/models");
-const { Sequelize, where } = require("sequelize");
+const { Sequelize } = require("sequelize");
+const verifyAccessToken = require("../middlewares/verifyAccessToken");
+const { containsProfanity } = require("../utils/moderation");
 
 const router = express.Router();
+
+const REPORT_HIDE_THRESHOLD = 3;
+
+function mapReview(review) {
+  return {
+    id: review.id,
+    userName: review.User.name,
+    user_rev: review.body,
+    user_id: review.userId,
+    user_raeting: review.user_rating,
+    createdAt: review.createdAt,
+  };
+}
+
+async function recomputeBookRating(bookId) {
+  const avgRating = await Review.findAll({
+    where: { bookId, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
+    attributes: [
+      [Sequelize.fn("AVG", Sequelize.col("user_rating")), "avgRating"],
+      [Sequelize.fn("COUNT", Sequelize.col("user_rating")), "quantityRate"],
+    ],
+    raw: true,
+  });
+  const book = await Book.findByPk(bookId);
+  book.rating = avgRating[0].avgRating ? parseFloat(avgRating[0].avgRating).toFixed(2) : null;
+  book.quantity_rate = Number(parseFloat(avgRating[0].quantityRate)) || 0;
+  await book.save();
+  return book;
+}
 
 router.get("/news", async (req, res) => {
   try {
@@ -23,44 +54,67 @@ router.get("/users", async (req, res) => {
   }
 });
 
+router.get("/users/:id/profile", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findByPk(id, { attributes: ["id", "name", "createdAt"] });
+    if (!user) {
+      return res.status(404).send({ message: "Пользователь не найден" });
+    }
+
+    const reviews = await Review.findAll({
+      where: { userId: id, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
+      include: [{ model: Book, attributes: ["id", "title", "img"] }],
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).send({
+      id: user.id,
+      name: user.name,
+      memberSince: user.createdAt,
+      reviewCount: reviews.length,
+      reviews: reviews.map((r) => ({
+        id: r.id,
+        bookId: r.bookId,
+        bookTitle: r.Book?.title,
+        bookImg: r.Book?.img,
+        body: r.body,
+        rating: r.user_rating,
+        createdAt: r.createdAt,
+      })),
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
 router.get("/listAllBooks", async (req, res) => {
   try {
     const books = await Book.findAll({
       include: [
         {
           model: Review,
-          attributes: ["userId", "body", "user_rating"],
-          include: [
-            {
-              model: User,
-              attributes: ["name"],
-            },
-          ],
+          where: { reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
+          required: false,
+          attributes: ["id", "userId", "body", "user_rating", "createdAt"],
+          include: [{ model: User, attributes: ["name"] }],
         },
       ],
     });
 
-    const booksWithReviews = books.map((book) => {
-      const reviews = book.Reviews.map((review) => ({
-        userName: review.User.name,
-        user_rev: review.body,
-        user_id: review.userId,
-        user_raeting: review.user_rating,
-      }));
-
-      return {
-        id: book.id,
-        title: book.title,
-        author: book.author,
-        annotation: book.annotation,
-        rating: book.rating,
-        quantity_rate: book.quantity_rate,
-        img: book.img,
-        genre: book.genre,
-        year: book.year,
-        reviews,
-      };
-    });
+    const booksWithReviews = books.map((book) => ({
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      annotation: book.annotation,
+      rating: book.rating,
+      quantity_rate: book.quantity_rate,
+      img: book.img,
+      genre: book.genre,
+      year: book.year,
+      reviews: book.Reviews.map(mapReview),
+    }));
 
     res.status(200).send(booksWithReviews);
   } catch (error) {
@@ -76,13 +130,10 @@ router.get("/book/:id", async (req, res) => {
       include: [
         {
           model: Review,
-          attributes: ["userId", "body", "user_rating"],
-          include: [
-            {
-              model: User,
-              attributes: ["name"],
-            },
-          ],
+          where: { reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
+          required: false,
+          attributes: ["id", "userId", "body", "user_rating", "createdAt"],
+          include: [{ model: User, attributes: ["name"] }],
         },
       ],
     });
@@ -90,13 +141,6 @@ router.get("/book/:id", async (req, res) => {
     if (!book) {
       return res.status(404).send({ message: "Книга не найдена" });
     }
-
-    const reviews = book.Reviews.map((review) => ({
-      userName: review.User.name,
-      user_rev: review.body,
-      user_id: review.userId,
-      user_raeting: review.user_rating,
-    }));
 
     res.status(200).send({
       id: book.id,
@@ -108,7 +152,7 @@ router.get("/book/:id", async (req, res) => {
       img: book.img,
       genre: book.genre,
       year: book.year,
-      reviews,
+      reviews: book.Reviews.map(mapReview),
     });
   } catch (error) {
     console.log(error);
@@ -131,13 +175,8 @@ router.get("/listUserBooks/:id", async (req, res) => {
           model: Review,
           where: { userId: id },
           required: true,
-          attributes: ["userId", "body", "user_rating"],
-          include: [
-            {
-              model: User,
-              attributes: ["name"],
-            },
-          ],
+          attributes: ["id", "userId", "body", "user_rating", "createdAt"],
+          include: [{ model: User, attributes: ["name"] }],
         },
       ],
     });
@@ -145,21 +184,9 @@ router.get("/listUserBooks/:id", async (req, res) => {
     const booksWithReviews = await Promise.all(
       books.map(async (book) => {
         const allReviews = await Review.findAll({
-          where: { bookId: book.id },
-          include: [
-            {
-              model: User,
-              attributes: ["name"],
-            },
-          ],
+          where: { bookId: book.id, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
+          include: [{ model: User, attributes: ["name"] }],
         });
-
-        const reviews = allReviews.map((review) => ({
-          userName: review.User.name,
-          user_rev: review.body,
-          user_id: review.userId,
-          user_raeting: review.user_rating,
-        }));
 
         return {
           id: book.id,
@@ -171,7 +198,7 @@ router.get("/listUserBooks/:id", async (req, res) => {
           img: book.img,
           genre: book.genre,
           year: book.year,
-          reviews,
+          reviews: allReviews.map(mapReview),
         };
       })
     );
@@ -183,7 +210,7 @@ router.get("/listUserBooks/:id", async (req, res) => {
   }
 });
 
-router.post("/book/new", async (req, res) => {
+router.post("/book/new", verifyAccessToken, async (req, res) => {
   const {
     user_id,
     title = "",
@@ -199,9 +226,15 @@ router.post("/book/new", async (req, res) => {
   if (!(title && author && user_id)) {
     return res.status(400).json({ message: "Поля должны быть заполнены" });
   }
+  if (Number(user_id) !== req.userId) {
+    return res.status(403).json({ message: "Нельзя оставлять рецензию от чужого имени" });
+  }
+  if (containsProfanity(body)) {
+    return res.status(400).json({ message: "Текст рецензии содержит недопустимые слова" });
+  }
 
   try {
-    const [newBook, created] = await Book.findOrCreate({
+    const [newBook] = await Book.findOrCreate({
       where: { title, author },
       defaults: { genre, year, annotation, img },
     });
@@ -217,23 +250,51 @@ router.post("/book/new", async (req, res) => {
       await review.save();
     }
 
-    const avgRating = await Review.findAll({
-      where: { bookId: newBook.id },
-      attributes: [
-        [Sequelize.fn("AVG", Sequelize.col("user_rating")), "avgRating"],
-        [Sequelize.fn("COUNT", Sequelize.col("user_rating")), "quantityRate"],
-      ],
-      raw: true,
-    });
-
-    newBook.rating = parseFloat(avgRating[0].avgRating).toFixed(1);
-    newBook.quantity_rate = Number(parseFloat(avgRating[0].quantityRate));
-    await newBook.save();
+    await recomputeBookRating(newBook.id);
 
     res.status(200).json({ book: newBook, review });
   } catch (error) {
     console.error(error);
     res.status(500).send("Ошибка при добавлении книги или отзыва");
+  }
+});
+
+router.delete("/review/:id", verifyAccessToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const review = await Review.findByPk(id);
+    if (!review) {
+      return res.status(404).json({ message: "Рецензия не найдена" });
+    }
+    if (review.userId !== req.userId) {
+      return res.status(403).json({ message: "Можно удалять только свои рецензии" });
+    }
+    const { bookId } = review;
+    await review.destroy();
+    await recomputeBookRating(bookId);
+    res.status(200).json({ message: "Рецензия удалена" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.post("/review/:id/report", verifyAccessToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const review = await Review.findByPk(id);
+    if (!review) {
+      return res.status(404).json({ message: "Рецензия не найдена" });
+    }
+    review.reportCount += 1;
+    await review.save();
+    if (review.reportCount >= REPORT_HIDE_THRESHOLD) {
+      await recomputeBookRating(review.bookId);
+    }
+    res.status(200).json({ message: "Спасибо, жалоба принята" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
   }
 });
 
@@ -258,9 +319,13 @@ router.get("/favourites/:id", async (req, res) => {
   }
 });
 
-router.post("/updateFavourites/:id", async (req, res) => {
+router.post("/updateFavourites/:id", verifyAccessToken, async (req, res) => {
   const { id } = req.params;
   const { bookId } = req.body;
+
+  if (Number(id) !== req.userId) {
+    return res.status(403).json({ message: "Нельзя менять избранное другого пользователя" });
+  }
 
   try {
     const user = await User.findByPk(id);
