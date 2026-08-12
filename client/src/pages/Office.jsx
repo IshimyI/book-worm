@@ -7,7 +7,7 @@ import FavoriteProfile from "../ui/FavoriteProfile";
 import AddBook from "../ui/AddBook";
 import BookModal from "../ui/BookModal";
 
-const Office = ({ user }) => {
+const Office = ({ user, setUser }) => {
   const [review, setReview] = useState([]);
   const [favorite, setFavorite] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
@@ -56,6 +56,7 @@ const Office = ({ user }) => {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           user={user}
+          setUser={setUser}
         />
       </Center>
     </div>

@@ -27,7 +27,7 @@ const EMPTY_FILTERS = {
   search: "",
 };
 
-export default function MainPage({ user }) {
+export default function MainPage({ user, setUser }) {
   useSeoMeta({
     title: "Каталог книг",
     description: "Каталог книг с рейтингами и рецензиями читателей — находите книги, читайте отзывы и оценивайте прочитанное.",
@@ -298,7 +298,7 @@ export default function MainPage({ user }) {
                             ({book.quantity_rate == null ? 0 : book.quantity_rate}{" "}
                             отзывов)
                           </Text>
-                          <ModalMain user={user} book={book} />
+                          <ModalMain user={user} setUser={setUser} book={book} />
                           <NavLink to={`/books/${book.id}`}>
                             <Button
                               size="sm"

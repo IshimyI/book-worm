@@ -25,14 +25,15 @@ import { NavLink } from "react-router-dom";
 import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
 import StarRatingInput from './StarRatingInput';
+import useFavorite from '../utils/useFavorite';
 
-export default function ModalMain({ user, book }) {
+export default function ModalMain({ user, setUser, book }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [rating, setRating] = useState(0);
   const [inputBody, setInputBody] = useState('');
   const [reviews, setReviews] = useState(book?.reviews || []);
   const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isFavorite, toggle: toggleFavorite } = useFavorite(user, setUser, book?.id);
   const toast = useToast();
 
   // The catalog list doesn't ship full review bodies for every book (that's
@@ -71,13 +72,11 @@ export default function ModalMain({ user, book }) {
       toast({ title: 'Войдите, чтобы добавлять книги в избранное', status: 'info', duration: 2500, isClosable: true });
       return;
     }
+    const wasFavorite = isFavorite;
     try {
-      await axiosInstance.post(`/updateFavourites/${user.id}`, {
-        bookId: book.id,
-      });
-      setIsFavorite((prev) => !prev);
+      await toggleFavorite();
       toast({
-        title: isFavorite ? 'Убрано из избранного' : 'Добавлено в избранное',
+        title: wasFavorite ? 'Убрано из избранного' : 'Добавлено в избранное',
         status: 'success',
         duration: 2000,
         isClosable: true,

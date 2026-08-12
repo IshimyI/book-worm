@@ -98,9 +98,9 @@ function App() {
               <AuthPage handleSignUp={handleSignUp} handleLogin={handleLogin} />
             }
           ></Route>
-          <Route path="/office" element={<Office user={user} />} />
-          <Route path="/" element={<MainPage user={user} />} />
-          <Route path="/books/:id" element={<BookPage user={user} />} />
+          <Route path="/office" element={<Office user={user} setUser={setUser} />} />
+          <Route path="/" element={<MainPage user={user} setUser={setUser} />} />
+          <Route path="/books/:id" element={<BookPage user={user} setUser={setUser} />} />
           <Route
             path="/confirm-email"
             element={<ConfirmationEmail user={user} setUser={setUser} />}

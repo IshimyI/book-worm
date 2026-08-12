@@ -7,8 +7,9 @@ import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
 import useSeoMeta from '../utils/useSeoMeta';
 import StarRatingInput from '../ui/StarRatingInput';
+import useFavorite from '../utils/useFavorite';
 
-export default function BookPage({ user }) {
+export default function BookPage({ user, setUser }) {
   const { id } = useParams();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +17,7 @@ export default function BookPage({ user }) {
   const [reviewSort, setReviewSort] = useState('newest');
   const [inputBody, setInputBody] = useState('');
   const [rating, setRating] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isFavorite, toggle: toggleFavorite } = useFavorite(user, setUser, book?.id);
   const toast = useToast();
 
   useEffect(() => {
@@ -43,11 +44,11 @@ export default function BookPage({ user }) {
       toast({ title: 'Войдите, чтобы добавлять книги в избранное', status: 'info', duration: 2500, isClosable: true });
       return;
     }
+    const wasFavorite = isFavorite;
     try {
-      await axiosInstance.post(`/updateFavourites/${user.id}`, { bookId: book.id });
-      setIsFavorite((prev) => !prev);
+      await toggleFavorite();
       toast({
-        title: isFavorite ? 'Убрано из избранного' : 'Добавлено в избранное',
+        title: wasFavorite ? 'Убрано из избранного' : 'Добавлено в избранное',
         status: 'success',
         duration: 2000,
         isClosable: true,

@@ -6,12 +6,13 @@ import { NavLink } from 'react-router-dom';
 import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
 import StarRatingInput from './StarRatingInput';
+import useFavorite from '../utils/useFavorite';
 
-const BookModal = ({ book, isOpen, onClose, user }) => {
+const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
   const [rating, setRating] = useState(0);
   const [inputBody, setInputBody] = useState('');
   const [reviews, setReviews] = useState(book?.reviews || []);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isFavorite, toggle: toggleFavorite } = useFavorite(user, setUser, book?.id);
   const toast = useToast();
 
   useEffect(() => {
@@ -38,13 +39,11 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
   };
 
   const handleFavorites = async () => {
+    const wasFavorite = isFavorite;
     try {
-      await axiosInstance.post(`/updateFavourites/${user.id}`, {
-        bookId: book.id,
-      });
-      setIsFavorite((prev) => !prev);
+      await toggleFavorite();
       toast({
-        title: isFavorite ? 'Убрано из избранного' : 'Добавлено в избранное',
+        title: wasFavorite ? 'Убрано из избранного' : 'Добавлено в избранное',
         status: 'success',
         duration: 2000,
         isClosable: true,
