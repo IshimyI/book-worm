@@ -12,6 +12,7 @@ import MainPage from "./pages/MainPage";
 import ConfirmationEmail from "./pages/ConfirmationEmail";
 import RecoverPassword from "./pages/RecoverPassword";
 import ResetPassword from "./pages/ResetPassword";
+import BookPage from "./pages/BookPage";
 // import axios from "axios";
 
 function App() {
@@ -83,6 +84,7 @@ function App() {
         ></Route>
         <Route path="/office" element={<Office user={user} />} />
         <Route path="/" element={<MainPage user={user} />} />
+        <Route path="/books/:id" element={<BookPage user={user} />} />
         <Route
           path="/confirm-email"
           element={<ConfirmationEmail user={user} setUser={setUser} />}

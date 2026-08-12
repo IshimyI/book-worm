@@ -13,8 +13,9 @@ import {
 } from "@chakra-ui/react";
 // import booksData from "../testJSON/books.json";
 import { useState, useEffect } from "react";
+import { NavLink } from "react-router-dom";
 import ModalMain from "../ui/ModalMain";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
 
 export default function MainPage({ user }) {
   const [uniqueGenres, setUniqueGenres] = useState([]);
@@ -26,12 +27,9 @@ export default function MainPage({ user }) {
   useEffect(() => {
     const fetchAllSms = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3000/api/listAllBooks"
-        );
+        const response = await axiosInstance.get("/listAllBooks");
         setBooksData(response.data);
         setFillterBooksData(response.data);
-        console.log(response.data);
       } catch (error) {
         console.error("Ошибка при получении всех books:", error);
       }
@@ -241,6 +239,8 @@ export default function MainPage({ user }) {
                   mb={"20px"}
                   h={250}
                   w={"90vh"}
+                  transition="transform 0.15s ease, box-shadow 0.15s ease"
+                  _hover={{ transform: "translateY(-3px)", boxShadow: "xl" }}
                 >
                   <Flex align="start">
                     <Image
@@ -252,9 +252,11 @@ export default function MainPage({ user }) {
                       mr={4}
                     />
                     <Box textAlign="left" p="4" mt={"10px"}>
-                      <Heading as="h3" size="md" mb={2}>
-                        {book.title}
-                      </Heading>
+                      <NavLink to={`/books/${book.id}`}>
+                        <Heading as="h3" size="md" mb={2} _hover={{ color: "#334d00" }}>
+                          {book.title}
+                        </Heading>
+                      </NavLink>
                       <Text color="gray.500" fontSize="sm" mb={2}>
                         {book.author}
                       </Text>
@@ -272,7 +274,7 @@ export default function MainPage({ user }) {
                           ({book.quantity_rate == null ? 0 : book.quantity_rate}{" "}
                           отзывов)
                         </Text>
-                        {user ? <ModalMain user={user} book={book} /> : null}
+                        <ModalMain user={user} book={book} />
                       </Flex>
                     </Box>
                   </Flex>

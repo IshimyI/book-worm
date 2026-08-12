@@ -59,6 +59,53 @@ router.get("/listAllBooks", async (req, res) => {
   }
 });
 
+router.get("/book/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const book = await Book.findByPk(id, {
+      include: [
+        {
+          model: Review,
+          attributes: ["userId", "body", "user_rating"],
+          include: [
+            {
+              model: User,
+              attributes: ["name"],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!book) {
+      return res.status(404).send({ message: "Книга не найдена" });
+    }
+
+    const reviews = book.Reviews.map((review) => ({
+      userName: review.User.name,
+      user_rev: review.body,
+      user_id: review.userId,
+      user_raeting: review.user_rating,
+    }));
+
+    res.status(200).send({
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      annotation: book.annotation,
+      rating: book.rating,
+      quantity_rate: book.quantity_rate,
+      img: book.img,
+      genre: book.genre,
+      year: book.year,
+      reviews,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
 router.get("/listUserBooks/:id", async (req, res) => {
   const { id } = req.params;
   try {
