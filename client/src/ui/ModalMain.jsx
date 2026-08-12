@@ -38,6 +38,20 @@ export default function ModalMain({ user, book }) {
     setReviews(book?.reviews || []);
   }, [book]);
 
+  const myReview = user ? reviews.find((r) => r.user_id === user.id) : null;
+
+  useEffect(() => {
+    if (myReview) {
+      setInputBody(myReview.user_rev);
+      setRating(myReview.user_raeting);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myReview?.id]);
+
+  const sortedReviews = user
+    ? [...reviews].sort((a, b) => (b.user_id === user.id ? 1 : 0) - (a.user_id === user.id ? 1 : 0))
+    : reviews;
+
   const handleRating = (value) => {
     setRating(value);
   };
@@ -90,17 +104,32 @@ export default function ModalMain({ user, book }) {
         user_rating: rating,
       });
       if (res.status === 200) {
-        setReviews((prev) => [
-          { userName: user.name, user_rev: inputBody, user_id: user.id, user_raeting: rating },
-          ...prev,
-        ]);
+        setReviews((prev) => {
+          const already = prev.some((r) => r.user_id === user.id);
+          const updated = {
+            id: res.data.review.id,
+            userName: user.name,
+            user_rev: inputBody,
+            user_id: user.id,
+            user_raeting: rating,
+          };
+          return already
+            ? prev.map((r) => (r.user_id === user.id ? updated : r))
+            : [updated, ...prev];
+        });
         setInputBody('');
         setRating(0);
         setHover(0);
-        toast({ title: 'Рецензия добавлена', status: 'success', duration: 2000, isClosable: true });
+        toast({
+          title: myReview ? 'Рецензия обновлена' : 'Рецензия добавлена',
+          status: 'success',
+          duration: 2000,
+          isClosable: true,
+        });
       }
     } catch (error) {
-      toast({ title: 'Не удалось добавить рецензию', status: 'error', duration: 2500, isClosable: true });
+      const message = error.response?.data?.message || 'Не удалось сохранить рецензию';
+      toast({ title: message, status: 'error', duration: 3000, isClosable: true });
     }
   };
 
@@ -189,15 +218,27 @@ export default function ModalMain({ user, book }) {
                   Рецензии
                 </Text>
                 <Box maxH="300px" overflowY="auto" p="2" border="1px solid #ccc" borderRadius="md">
-                  {reviews.length > 0 ? (
-                    reviews.map((review, index) => (
-                      <Box key={index} p="3" border="1px solid #ddd" borderRadius="md" mb="3">
+                  {sortedReviews.length > 0 ? (
+                    sortedReviews.map((review, index) => (
+                      <Box
+                        key={index}
+                        p="3"
+                        border={user && review.user_id === user.id ? '2px solid #4b5320' : '1px solid #ddd'}
+                        bg={user && review.user_id === user.id ? '#f7f8ef' : 'white'}
+                        borderRadius="md"
+                        mb="3"
+                      >
                         <Stack direction="row" spacing="4" align="center">
                           <Avatar name={review.userName} />
 
                           <Box>
                             <Flex justifyContent="space-between">
-                              <Text fontWeight="bold">{review.userName}</Text>
+                              <Text fontWeight="bold">
+                                {review.userName}{' '}
+                                {user && review.user_id === user.id && (
+                                  <Text as="span" fontSize="xs" color="#4b5320" fontWeight="bold">(ваш отзыв)</Text>
+                                )}
+                              </Text>
                             </Flex>
                             <Divider my="2" />
                             <Text>{review.user_rev}</Text>
@@ -242,7 +283,7 @@ export default function ModalMain({ user, book }) {
               {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
             </Button>
             <Button backgroundColor="#334d00" color="white" onClick={addReviewHandler}>
-              Добавить рецензию
+              {myReview ? 'Обновить рецензию' : 'Добавить рецензию'}
             </Button>
             <Button
               as="a"

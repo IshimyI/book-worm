@@ -200,12 +200,18 @@ module.exports = {
       const usedTextByRating = { 5: new Set(), 4: new Set(), 3: new Set(), 2: new Set() };
       const substantial = BOOK_REVIEWS[book.id] || [];
       const bookReviews = [];
+      // The app only allows one review per user per book — never let the
+      // same reviewer be picked twice for the same book here either.
+      const usedUserIds = new Set();
 
       for (const { rating, text } of substantial) {
         const reviewDate = randDateBetween(bookStart, NOW);
-        const eligibleUsers = USERS.filter((u) => new Date(u.regDate) <= reviewDate);
+        const eligibleUsers = USERS.filter(
+          (u) => new Date(u.regDate) <= reviewDate && !usedUserIds.has(u.id)
+        );
         if (!eligibleUsers.length) continue;
         const reviewer = pick(eligibleUsers);
+        usedUserIds.add(reviewer.id);
 
         bookReviews.push({
           bookId: book.id,
@@ -220,9 +226,12 @@ module.exports = {
       const extraCount = randInt(substantial.length, substantial.length * 2);
       for (let i = 0; i < extraCount; i++) {
         const reviewDate = randDateBetween(bookStart, NOW);
-        const eligibleUsers = USERS.filter((u) => new Date(u.regDate) <= reviewDate);
+        const eligibleUsers = USERS.filter(
+          (u) => new Date(u.regDate) <= reviewDate && !usedUserIds.has(u.id)
+        );
         if (!eligibleUsers.length) continue;
         const reviewer = pick(eligibleUsers);
+        usedUserIds.add(reviewer.id);
 
         const rating = pickRating();
         const pool = REVIEW_POOLS[rating];

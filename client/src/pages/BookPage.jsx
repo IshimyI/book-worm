@@ -77,6 +77,17 @@ export default function BookPage({ user }) {
   const myReview = user ? reviews.find((r) => r.user_id === user.id) : null;
   const isEditing = Boolean(myReview);
 
+  // Prefill the form with the existing review as soon as it's known, so
+  // opening the form to "write a review" on a book you already reviewed
+  // shows what you wrote instead of a blank box.
+  useEffect(() => {
+    if (myReview) {
+      setInputBody(myReview.user_rev);
+      setRating(myReview.user_raeting);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myReview?.id]);
+
   const startEditing = () => {
     setInputBody(myReview.user_rev);
     setRating(myReview.user_raeting);
@@ -165,8 +176,12 @@ export default function BookPage({ user }) {
     } else {
       list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     }
+    // Your own review always leads, regardless of sort order.
+    if (user) {
+      list.sort((a, b) => (b.user_id === user.id ? 1 : 0) - (a.user_id === user.id ? 1 : 0));
+    }
     return list;
-  }, [reviews, reviewSort]);
+  }, [reviews, reviewSort, user]);
 
   if (loading) {
     return (
