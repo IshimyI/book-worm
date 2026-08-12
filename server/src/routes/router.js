@@ -4,6 +4,7 @@ const { Sequelize } = require("sequelize");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
 const { containsProfanity } = require("../utils/moderation");
 const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRating");
+const cache = require("../utils/simpleCache");
 
 const router = express.Router();
 
@@ -20,7 +21,11 @@ function mapReview(review) {
 
 router.get("/news", async (req, res) => {
   try {
+    const cached = cache.get("news");
+    if (cached) return res.status(200).send(cached);
+
     const news = await News.findAll({ order: [["createdAt", "DESC"]] });
+    cache.set("news", news, 60_000);
     res.status(200).send(news);
   } catch (error) {
     console.log(error);
@@ -107,6 +112,10 @@ router.get("/listAllBooks", async (req, res) => {
       sortDir = "desc",
     } = req.query;
 
+    const cacheKey = `listAllBooks:${JSON.stringify({ page, pageSize, genre, author, year, minRating, search, sortBy, sortDir })}`;
+    const cached = cache.get(cacheKey);
+    if (cached) return res.status(200).json(cached);
+
     // `rating` is stored as a string (formatted with toFixed(2) wherever it's
     // written), so a plain gte/ORDER BY on it would be a lexicographic string
     // comparison, not a numeric one — cast it explicitly instead.
@@ -149,7 +158,7 @@ router.get("/listAllBooks", async (req, res) => {
       Book.findAll({ attributes: ["genre", "author", "year"], raw: true }),
     ]);
 
-    res.status(200).json({
+    const payload = {
       books: books.map((book) => ({
         id: book.id,
         title: book.title,
@@ -169,7 +178,9 @@ router.get("/listAllBooks", async (req, res) => {
         authors: [...new Set(facetRows.map((b) => b.author))].sort(),
         years: [...new Set(facetRows.map((b) => b.year))].sort((a, b) => a - b),
       },
-    });
+    };
+    cache.set(cacheKey, payload, 30_000);
+    res.status(200).json(payload);
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);
