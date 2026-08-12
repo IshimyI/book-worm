@@ -21,6 +21,8 @@ module.exports = (sequelize, DataTypes) => {
       resetPasswordToken: DataTypes.STRING,
       resetPasswordExpires: DataTypes.DATE,
       currentRefreshTokenId: DataTypes.STRING,
+      previousRefreshTokenId: DataTypes.STRING,
+      refreshTokenRotatedAt: DataTypes.DATE,
       isAdmin: DataTypes.BOOLEAN,
     },
     {

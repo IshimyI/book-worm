@@ -89,6 +89,7 @@ authRouter.post("/signup", authLimiter, async (req, res) => {
 
     const { accessToken, refreshToken, refreshTokenId } = generateTokens({ user: plainUser });
     newUser.currentRefreshTokenId = refreshTokenId;
+    newUser.refreshTokenRotatedAt = new Date();
     await newUser.save();
     res
       .cookie("refreshToken", refreshToken, cookieConfig)
@@ -124,6 +125,7 @@ authRouter.get("/confirm-email", async (req, res) => {
     const updatedUser = sanitizeUser(user.get({ plain: true }));
     const { accessToken, refreshToken, refreshTokenId } = generateTokens({ user: updatedUser });
     user.currentRefreshTokenId = refreshTokenId;
+    user.refreshTokenRotatedAt = new Date();
     await user.save();
 
     res.status(200).cookie("refreshToken", refreshToken, cookieConfig).json({
@@ -244,6 +246,7 @@ authRouter.post("/login", authLimiter, async (req, res) => {
   const user = sanitizeUser(foundUser.get());
   const { accessToken, refreshToken, refreshTokenId } = generateTokens({ user });
   foundUser.currentRefreshTokenId = refreshTokenId;
+  foundUser.refreshTokenRotatedAt = new Date();
   await foundUser.save();
 
   res
@@ -258,7 +261,7 @@ authRouter.post("/logout", async (req, res) => {
     if (refreshToken) {
       const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
       await User.update(
-        { currentRefreshTokenId: null },
+        { currentRefreshTokenId: null, previousRefreshTokenId: null },
         { where: { id: decoded.user.id } }
       );
     }

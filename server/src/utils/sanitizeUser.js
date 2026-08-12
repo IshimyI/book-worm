@@ -7,6 +7,8 @@ function sanitizeUser(user) {
     resetPasswordToken,
     resetPasswordExpires,
     currentRefreshTokenId,
+    previousRefreshTokenId,
+    refreshTokenRotatedAt,
     ...safe
   } = user;
   return safe;
