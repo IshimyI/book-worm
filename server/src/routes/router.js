@@ -39,23 +39,32 @@ router.get("/users", async (req, res) => {
 
 router.get("/users/:id/profile", async (req, res) => {
   const { id } = req.params;
+  const { page = 1, pageSize = 10 } = req.query;
   try {
     const user = await User.findByPk(id, { attributes: ["id", "name", "createdAt"] });
     if (!user) {
       return res.status(404).send({ message: "Пользователь не найден" });
     }
 
-    const reviews = await Review.findAll({
-      where: { userId: id, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
+    const limit = Math.min(Number(pageSize) || 10, 50);
+    const offset = (Math.max(Number(page) || 1, 1) - 1) * limit;
+    const where = { userId: id, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } };
+
+    const { count: reviewCount, rows: reviews } = await Review.findAndCountAll({
+      where,
       include: [{ model: Book, attributes: ["id", "title", "img"] }],
       order: [["createdAt", "DESC"]],
+      limit,
+      offset,
     });
 
     res.status(200).send({
       id: user.id,
       name: user.name,
       memberSince: user.createdAt,
-      reviewCount: reviews.length,
+      reviewCount,
+      page: Math.max(Number(page) || 1, 1),
+      totalPages: Math.max(1, Math.ceil(reviewCount / limit)),
       reviews: reviews.map((r) => ({
         id: r.id,
         bookId: r.bookId,

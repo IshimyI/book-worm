@@ -10,15 +10,20 @@ export default function PublicProfilePage() {
   const { id } = useParams();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [id]);
 
   useEffect(() => {
     setLoading(true);
     axiosInstance
-      .get(`/users/${id}/profile`)
+      .get(`/users/${id}/profile`, { params: { page, pageSize: 10 } })
       .then((res) => setProfile(res.data))
       .catch(() => setProfile(false))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, page]);
 
   if (loading) {
     return (
@@ -85,6 +90,30 @@ export default function PublicProfilePage() {
               </NavLink>
             ))}
           </Stack>
+        )}
+
+        {profile.totalPages > 1 && (
+          <Flex justifyContent="center" alignItems="center" columnGap="10px" mt="20px">
+            <Button
+              size="sm"
+              isDisabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              sx={{ backgroundColor: '#334d00', color: 'white' }}
+            >
+              ← Назад
+            </Button>
+            <Text fontSize="sm" color="gray.600">
+              Страница {page} из {profile.totalPages}
+            </Text>
+            <Button
+              size="sm"
+              isDisabled={page >= profile.totalPages}
+              onClick={() => setPage((p) => Math.min(profile.totalPages, p + 1))}
+              sx={{ backgroundColor: '#334d00', color: 'white' }}
+            >
+              Вперёд →
+            </Button>
+          </Flex>
         )}
       </Box>
     </Center>

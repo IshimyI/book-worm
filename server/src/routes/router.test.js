@@ -21,6 +21,33 @@ afterAll(async () => {
   await sequelize.close();
 });
 
+describe("GET /api/users/:id/profile", () => {
+  it("paginates a user's reviews", async () => {
+    const { userId, accessToken } = await signupAndLogin("prolific@example.com");
+    for (let i = 0; i < 12; i++) {
+      await request(app)
+        .post("/api/book/new")
+        .set("Authorization", `Bearer ${accessToken}`)
+        .send({
+          user_id: userId,
+          title: `Book ${i}`,
+          author: "Some Author",
+          body: "Review body",
+          user_rating: 4,
+        });
+    }
+
+    const page1 = await request(app).get(`/api/users/${userId}/profile`).query({ pageSize: 10 });
+    expect(page1.status).toBe(200);
+    expect(page1.body.reviews).toHaveLength(10);
+    expect(page1.body.reviewCount).toBe(12);
+    expect(page1.body.totalPages).toBe(2);
+
+    const page2 = await request(app).get(`/api/users/${userId}/profile`).query({ pageSize: 10, page: 2 });
+    expect(page2.body.reviews).toHaveLength(2);
+  });
+});
+
 describe("GET /api/listAllBooks", () => {
   beforeEach(async () => {
     await Book.bulkCreate([
