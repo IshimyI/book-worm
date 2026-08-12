@@ -1,17 +1,102 @@
+html, body, #root {
+  height: 100%;
+}
+html, body {
+  min-height: 100%;
+  background-image: url("/img/bookshelf-bg.png") !important;
+  background-repeat: repeat !important;
+  background-attachment: fixed !important;
+}
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.pageContent {
+  flex: 1 0 auto;
+  padding-top: 36px;
+}
+
+.siteFooter {
+  background: linear-gradient(135deg, #2f2a1f 0%, #423a26 100%);
+  color: #cbc4a8;
+  padding: 28px 20px;
+  margin-top: 60px;
+}
+.siteFooterInner {
+  max-width: 120vh;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+.siteFooterBrand {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: bold;
+  font-size: 18px;
+  color: #f5f0dc;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.siteFooterBrand span {
+  font-size: 11px;
+  font-weight: normal;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #a89f7f;
+}
+.siteFooterCol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.siteFooterColTitle {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #a89f7f;
+  margin-bottom: 2px;
+}
+.siteFooterLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+.siteFooterLinks a {
+  color: #cbc4a8;
+  text-decoration: none;
+}
+.siteFooterLinks a:hover {
+  color: #f5f0dc;
+  text-decoration: underline;
+}
+.siteFooterCopy {
+  font-size: 12px;
+  color: #8a8368;
+}
+
 .navbar {
-  background-color: #272018ec;
+  background: linear-gradient(135deg, #2f2a1f 0%, #423a26 100%);
   height: 70px;
   color: white;
   position: sticky;
   top: 0;
-  z-index: 1000
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(47, 42, 31, 0.25);
 }
 .conteyner {
   margin: 0 auto;
   width: 120vh;
-  background-color: rgb(255, 255, 255);
+  background-color: #fffdf7;
   padding-left: 20px;
   padding-right: 20px;
+  box-shadow: 0 0 40px rgba(47, 42, 31, 0.15);
+  border-top: 5px solid #4b5320;
 }
 .conteynerNav {
   margin: 0 auto;
@@ -20,12 +105,50 @@
   padding-right: 20px;
 }
 .logo {
-  background-image: url(/img/logo.png);
+  display: flex;
+  align-items: center;
+  gap: 8px;
   height: 70px;
-  width: 150px;
-  background-repeat: no-repeat;
-  background-size: cover;
-  margin: 0 auto;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: bold;
+  font-size: 20px;
+  letter-spacing: 0.3px;
+  color: #f5f0dc;
+  white-space: nowrap;
+}
+.logoTextWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.1;
+}
+.logoTagline {
+  font-size: 10px;
+  font-weight: normal;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #a89f7f;
+}
+.logoIcon {
+  height: 48px;
+  width: 48px;
+  object-fit: contain;
+}
+.navLinksSecondary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.navLinksSecondary a {
+  color: #cbc4a8;
+  text-decoration: none;
+}
+.navLinksSecondary a:hover,
+.navLinksSecondary a.navLinkActive {
+  color: #f5f0dc;
+  text-decoration: underline;
 }
 .btnMain {
   display: flex;
@@ -36,6 +159,7 @@
   height: 60px;
   width: 60px;
   font-size: 14px;
+  color: #f5f0dc;
 }
 .imgMainBTN {
   height: 20px;
@@ -76,40 +200,6 @@
 .blockAuth{
   text-align: center;
   background-color: white;
-}
-.fonAuth {
-  position: fixed;
-  background-image: url(/img/pngtree-monster-and-book-ghost-icon-vector-png-image_6848636.png);
-  background-size: cover;
-  background-repeat: no-repeat;
-  right: 0;
-  z-index: -1;
-  bottom: 0;
-  width: 900px;
-  height: 900px;
-  filter: blur(5px); 
-}
-.fonAuth2 {
-  position: fixed;
-  background-image: url(/img/pngtree-monster-and-book-ghost-icon-vector-png-image_6848636.png);
-  background-size: cover;
-  background-repeat: no-repeat;
-  left: 0;
-  z-index: -1;
-  bottom: 0;
-  width: 900px;
-  height: 900px;
-  filter: blur(5px); 
-  transform: scaleX(-1);
-}
-.fonMBLOCK{
-  position: fixed;
-  background-color: #919e186c;
-  z-index: -1;
-  bottom: 0;
-  left: 0;
-  width: 2200px;
-  height: 900px;
 }
 .this12{
   column-gap: 20px;

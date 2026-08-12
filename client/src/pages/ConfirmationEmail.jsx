@@ -117,9 +117,6 @@ export default function ConfirmationEmail({ user, setUser }) {
             </Button>
           </Box>
         )}
-      </Box>
-      <div className="fonAuth"> </div>
-      <div className="fonAuth2"> </div>
-    </>
+      </Box>    </>
   );
 }

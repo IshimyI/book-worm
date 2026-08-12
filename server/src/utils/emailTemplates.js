@@ -14,7 +14,7 @@ function layout({ preheader, heading, bodyHtml, buttonText, buttonUrl, footerNot
                   <tr>
                     <td style="font-size:26px; line-height:1;">📚</td>
                     <td style="padding-left:12px;">
-                      <div style="font-size:20px; color:#f5f0dc; font-weight:bold; letter-spacing:0.3px;">Книжный червь</div>
+                      <div style="font-size:20px; color:#f5f0dc; font-weight:bold; letter-spacing:0.3px;">Mr Book Worm</div>
                       <div style="font-size:12px; color:#c9c3a5; letter-spacing:0.5px; text-transform:uppercase; margin-top:2px;">читай · оценивай · обсуждай</div>
                     </td>
                   </tr>
@@ -48,7 +48,7 @@ function layout({ preheader, heading, bodyHtml, buttonText, buttonUrl, footerNot
             <tr>
               <td style="padding:0 36px 32px;">
                 <p style="margin:0; font-size:12px; line-height:1.6; color:#a39c81;">${footerNote}</p>
-                <p style="margin:14px 0 0; font-size:12px; color:#c9c3a5; font-style:italic;">— Книжный червь, ваш дневник читателя 🐛</p>
+                <p style="margin:14px 0 0; font-size:12px; color:#c9c3a5; font-style:italic;">— Mr Book Worm, ваш дневник читателя 🐛</p>
               </td>
             </tr>
           </table>
@@ -66,7 +66,7 @@ function confirmationEmailHtml(link, name) {
     preheader: "Подтвердите почту, чтобы открыть доступ к рецензиям и личной книжной полке",
     heading: "Осталось подтвердить почту 🔖",
     bodyHtml: `
-      <p style="margin:0 0 16px;">${greeting} Рады видеть вас на «Книжном черве» — месте, где книги обсуждают, а не просто читают.</p>
+      <p style="margin:0 0 16px;">${greeting} Рады видеть вас на Mr Book Worm — месте, где книги обсуждают, а не просто читают.</p>
       <p style="margin:0 0 16px;">Подтвердите email, и вам будет доступно:</p>
       <ul style="margin:0 0 16px; padding-left:20px;">
         <li style="margin-bottom:6px;">📖 Своя книжная полка и история прочитанного</li>
@@ -77,17 +77,17 @@ function confirmationEmailHtml(link, name) {
     `,
     buttonText: "Подтвердить email",
     buttonUrl: link,
-    footerNote: "Ссылка действительна 1 час. Если вы не регистрировались на «Книжном черве» — просто проигнорируйте это письмо, аккаунт не будет создан.",
+    footerNote: "Ссылка действительна 1 час. Если вы не регистрировались на Mr Book Worm — просто проигнорируйте это письмо, аккаунт не будет создан.",
   });
 }
 
 function resetPasswordEmailHtml(link, name) {
   const greeting = name ? `${name}, ` : "";
   return layout({
-    preheader: "Ссылка для восстановления пароля на «Книжном черве»",
+    preheader: "Ссылка для восстановления пароля на Mr Book Worm",
     heading: "Восстановление пароля 🔑",
     bodyHtml: `
-      <p style="margin:0 0 16px;">${greeting}кто-то (надеемся, что вы) запросил сброс пароля на «Книжном черве».</p>
+      <p style="margin:0 0 16px;">${greeting}кто-то (надеемся, что вы) запросил сброс пароля на Mr Book Worm.</p>
       <p style="margin:0 0 16px;">Нажмите на кнопку ниже, чтобы задать новый пароль и вернуться к чтению.</p>
       <p style="margin:0;">Если это были не вы — аккаунт в безопасности, просто ничего не делайте.</p>
     `,

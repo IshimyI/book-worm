@@ -115,9 +115,6 @@ export default function RecoverPassword() {
             </Button>
           </Text>
         </Box>
-      </Box>
-      <div className="fonAuth"> </div>
-      <div className="fonAuth2"> </div>
-    </>
+      </Box>    </>
   );
 }

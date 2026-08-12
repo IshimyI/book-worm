@@ -17,8 +17,17 @@ export default function NavBar({ user, handleLogout }) {
           justifyContent="space-between"
         >
           <NavLink to="/">
-            <div className="logo"></div>
+            <div className="logo">
+              <img src="/img/logo-mrbookworm-header.png" alt="Mr Book Worm" className="logoIcon" />
+              <div className="logoTextWrap">
+                Mr Book Worm
+                <span className="logoTagline">читай · оценивай · обсуждай</span>
+              </div>
+            </div>
           </NavLink>
+          <nav className="navLinksSecondary">
+            <NavLink to="/news" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Новости</NavLink>
+          </nav>
           <div className="navFlexBlock2">
             {/* <div>
               {user && user.isEmailConfirmed ? `Привет, ${user.name}` : null}
