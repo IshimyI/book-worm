@@ -28,15 +28,6 @@ router.get("/news", async (req, res) => {
   }
 });
 
-router.get("/users", async (req, res) => {
-  try {
-    res.status(200).send(await User.findAll({}));
-  } catch (error) {
-    console.log(error);
-    res.status(500).send(error.message);
-  }
-});
-
 router.get("/users/:id/profile", async (req, res) => {
   const { id } = req.params;
   const { page = 1, pageSize = 10 } = req.query;
