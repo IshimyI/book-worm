@@ -2,10 +2,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
 import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textarea, Button, Select, useToast, Skeleton, SkeletonText, SkeletonCircle } from '@chakra-ui/react';
-import { StarIcon, ArrowBackIcon } from '@chakra-ui/icons';
+import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
 import useSeoMeta from '../utils/useSeoMeta';
+import StarRatingInput from '../ui/StarRatingInput';
 
 export default function BookPage({ user }) {
   const { id } = useParams();
@@ -15,7 +16,6 @@ export default function BookPage({ user }) {
   const [reviewSort, setReviewSort] = useState('newest');
   const [inputBody, setInputBody] = useState('');
   const [rating, setRating] = useState(0);
-  const [hover, setHover] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const toast = useToast();
 
@@ -136,7 +136,6 @@ export default function BookPage({ user }) {
         });
         setInputBody('');
         setRating(0);
-        setHover(0);
         toast({
           title: isEditing ? 'Рецензия обновлена' : 'Рецензия добавлена',
           status: 'success',
@@ -311,20 +310,7 @@ export default function BookPage({ user }) {
           )}
           <Textarea value={inputBody} onChange={(e) => setInputBody(e.target.value)} placeholder="Напиши свою рецензию" mb="10px" />
           <Box mb="15px">
-            {[...Array(5)].map((_, index) => {
-              const ratingValue = index + 1;
-              return (
-                <StarIcon
-                  key={index}
-                  fontSize="25px"
-                  color={ratingValue <= (hover || rating) ? 'gold' : 'gray.300'}
-                  onClick={() => setRating(ratingValue)}
-                  onMouseEnter={() => setHover(ratingValue)}
-                  onMouseLeave={() => setHover(rating)}
-                  cursor="pointer"
-                />
-              );
-            })}
+            <StarRatingInput rating={rating} onChange={setRating} />
           </Box>
           <Button backgroundColor="#334d00" color="white" onClick={addReviewHandler}>
             {isEditing ? 'Обновить рецензию' : 'Добавить рецензию'}

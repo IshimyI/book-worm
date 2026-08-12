@@ -1,14 +1,14 @@
 /* eslint-disable react/prop-types */
 import { Button, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, Text, Image, Flex, Box, Divider, Stack, Avatar, Textarea, Heading, useToast } from '@chakra-ui/react';
-import { StarIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
+import StarRatingInput from './StarRatingInput';
 
 const BookModal = ({ book, isOpen, onClose, user }) => {
   const [rating, setRating] = useState(0);
-  const [hover, setHover] = useState(0);
   const [inputBody, setInputBody] = useState('');
   const [reviews, setReviews] = useState(book?.reviews || []);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -35,14 +35,6 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
 
   const handleRating = (value) => {
     setRating(value);
-  };
-
-  const handleMouseEnter = (value) => {
-    setHover(value);
-  };
-
-  const handleMouseLeave = () => {
-    setHover(rating);
   };
 
   const handleFavorites = async () => {
@@ -102,7 +94,6 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
         });
         setInputBody('');
         setRating(0);
-        setHover(0);
         toast({
           title: myReview ? 'Рецензия обновлена' : 'Рецензия добавлена',
           status: 'success',
@@ -229,21 +220,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
                   <Textarea value={inputBody} onChange={(e) => setInputBody(e.target.value)} placeholder="Напиши свою рецензию" />
 
                   <Box mt="15px">
-                    {[...Array(5)].map((_, index) => {
-                      const ratingValue = index + 1;
-                      return (
-                        <StarIcon
-                          key={index}
-                          aria-label={`Рейтинг ${ratingValue}`}
-                          fontSize="25px"
-                          variant="ghost"
-                          color={ratingValue <= (hover || rating) ? 'gold' : 'gray.300'}
-                          onClick={() => handleRating(ratingValue)}
-                          onMouseEnter={() => handleMouseEnter(ratingValue)}
-                          onMouseLeave={handleMouseLeave}
-                        />
-                      );
-                    })}
+                    <StarRatingInput rating={rating} onChange={handleRating} />
                   </Box>
                 </Box>
               </Box>

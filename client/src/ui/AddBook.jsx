@@ -1,9 +1,10 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react';
-import { ArrowBackIcon, StarIcon } from '@chakra-ui/icons';
+import { ArrowBackIcon } from '@chakra-ui/icons';
 import { Box, Flex, Input, Text, Center, Button, Textarea, Select, ModalOverlay, Modal, ModalContent, useDisclosure, Heading, Stack, Alert, AlertIcon, ModalCloseButton } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
 import SelectedBook from './SelectedBook';
+import StarRatingInput from './StarRatingInput';
 import axios from 'axios';
 
 const emptyInputs = {
@@ -51,7 +52,6 @@ export default function AddBook({ user }) {
   const [addBookFlag, setAddBookFlag] = useState(true);
   const [searchBookFlag, setSearchBookFlag] = useState(false);
   const [rating, setRating] = useState(0);
-  const [hover, setHover] = useState(0);
   const [changeBook, setChangeBook] = useState(false);
   const [selectedBook, setSelectedBook] = useState({});
   const [inputs, setInputs] = useState(emptyInputs);
@@ -61,14 +61,6 @@ export default function AddBook({ user }) {
 
   const handleRating = (value) => {
     setRating(value);
-  };
-
-  const handleMouseEnter = (value) => {
-    setHover(value);
-  };
-
-  const handleMouseLeave = () => {
-    setHover(rating);
   };
 
   const switchAdder = () => {
@@ -132,7 +124,6 @@ export default function AddBook({ user }) {
         if (res.status === 200) {
           setInputs(emptyInputs);
           setRating(0);
-          setHover(0);
           setChangeBook(false);
           alertFunction(200, 'Книга успешно добавлена! Спасибо!');
           setTimeout(()=>{onClose()}, 2000);
@@ -267,21 +258,7 @@ export default function AddBook({ user }) {
                       <Textarea type="text" name="body" value={inputs.body} onChange={handleInputChange} placeholder="Написать рецензию"></Textarea>
 
                       <Box mt="40px" h="40px">
-                        {[...Array(5)].map((_, index) => {
-                          const ratingValue = index + 1;
-                          return (
-                            <StarIcon
-                              key={index}
-                              aria-label={`Рейтинг ${ratingValue}`}
-                              fontSize="25px"
-                              variant="ghost"
-                              color={ratingValue <= (hover || rating) ? 'gold' : 'gray.300'}
-                              onClick={() => handleRating(ratingValue)}
-                              onMouseEnter={() => handleMouseEnter(ratingValue)}
-                              onMouseLeave={handleMouseLeave}
-                            />
-                          );
-                        })}
+                        <StarRatingInput rating={rating} onChange={handleRating} />
                       </Box>
                     </Flex>
                     <Flex
