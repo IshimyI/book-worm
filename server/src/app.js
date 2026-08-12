@@ -1,4 +1,15 @@
 require("dotenv").config();
+
+// Must run before other requires so Sentry can auto-instrument them.
+const Sentry = require("@sentry/node");
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || "development",
+    tracesSampleRate: 0.1,
+  });
+}
+
 const express = require("express");
 const logger = require("morgan");
 const cookieParser = require("cookie-parser");
@@ -36,6 +47,18 @@ app.use(cookieParser());
 app.use("/api", router);
 app.use("/api/auth", authRouter);
 app.use("/api/tokens", tokensRouter);
+
+if (process.env.SENTRY_DSN) {
+  Sentry.setupExpressErrorHandler(app);
+}
+
+// Fallback so a route error becomes a JSON 500 instead of Express's
+// default HTML error page, and (via the handler above) still reaches Sentry.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(err.status || 500).json({ message: "Внутренняя ошибка сервера" });
+});
 
 app.listen(PORT, () => {
   console.log(`Server listening on port: ${PORT}!`);
