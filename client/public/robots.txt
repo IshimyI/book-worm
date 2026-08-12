@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /office
+Disallow: /admin
+Disallow: /auth
+Disallow: /confirm-email
+Disallow: /recover
+Disallow: /reset/
+
+Sitemap: https://mrbookworm.ru/sitemap.xml
