@@ -79,6 +79,20 @@ const SORT_COLUMNS = {
   title: "title",
 };
 
+// Builds a prefix-matching tsquery ("гар:*" from "гар") so search-as-you-type
+// still matches "Гарри" partway through typing — plainto_tsquery alone only
+// matches complete lexemes. Strips tsquery operator characters so arbitrary
+// user input can't produce invalid/malicious query syntax.
+function buildPrefixTsQuery(search) {
+  const words = search
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.replace(/[^\p{L}\p{N}]/gu, ""))
+    .filter(Boolean);
+  if (!words.length) return null;
+  return words.map((w) => `${w}:*`).join(" & ");
+}
+
 router.get("/listAllBooks", async (req, res) => {
   try {
     const {
@@ -103,14 +117,13 @@ router.get("/listAllBooks", async (req, res) => {
     if (author) andConditions.push({ author });
     if (year) andConditions.push({ year });
     if (minRating) andConditions.push(Sequelize.where(ratingAsFloat, { [Sequelize.Op.gte]: Number(minRating) }));
-    if (search) {
-      andConditions.push({
-        [Sequelize.Op.or]: [
-          { title: { [Sequelize.Op.iLike]: `%${search}%` } },
-          { author: { [Sequelize.Op.iLike]: `%${search}%` } },
-          { annotation: { [Sequelize.Op.iLike]: `%${search}%` } },
-        ],
-      });
+    const tsQuery = search ? buildPrefixTsQuery(search) : null;
+    if (tsQuery) {
+      andConditions.push(
+        Sequelize.where(Sequelize.col("search_vector"), {
+          [Sequelize.Op.match]: Sequelize.fn("to_tsquery", "russian", tsQuery),
+        })
+      );
     }
     const where = andConditions.length ? { [Sequelize.Op.and]: andConditions } : {};
 
