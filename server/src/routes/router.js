@@ -72,34 +72,91 @@ router.get("/users/:id/profile", async (req, res) => {
   }
 });
 
+const SORT_COLUMNS = {
+  rating: "rating",
+  reviews: "quantity_rate",
+  year: "year",
+  title: "title",
+};
+
 router.get("/listAllBooks", async (req, res) => {
   try {
-    const books = await Book.findAll({
-      include: [
-        {
-          model: Review,
-          where: { reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
-          required: false,
-          attributes: ["id", "userId", "body", "user_rating", "createdAt"],
-          include: [{ model: User, attributes: ["name"] }],
-        },
-      ],
+    const {
+      page = 1,
+      pageSize = 10,
+      genre = "",
+      author = "",
+      year = "",
+      minRating = "",
+      search = "",
+      sortBy = "rating",
+      sortDir = "desc",
+    } = req.query;
+
+    // `rating` is stored as a string (formatted with toFixed(2) wherever it's
+    // written), so a plain gte/ORDER BY on it would be a lexicographic string
+    // comparison, not a numeric one — cast it explicitly instead.
+    const ratingAsFloat = Sequelize.cast(Sequelize.col("rating"), "FLOAT");
+
+    const andConditions = [];
+    if (genre) andConditions.push({ genre });
+    if (author) andConditions.push({ author });
+    if (year) andConditions.push({ year });
+    if (minRating) andConditions.push(Sequelize.where(ratingAsFloat, { [Sequelize.Op.gte]: Number(minRating) }));
+    if (search) {
+      andConditions.push({
+        [Sequelize.Op.or]: [
+          { title: { [Sequelize.Op.iLike]: `%${search}%` } },
+          { author: { [Sequelize.Op.iLike]: `%${search}%` } },
+          { annotation: { [Sequelize.Op.iLike]: `%${search}%` } },
+        ],
+      });
+    }
+    const where = andConditions.length ? { [Sequelize.Op.and]: andConditions } : {};
+
+    const orderColumn = SORT_COLUMNS[sortBy] || "rating";
+    const orderDir = sortDir === "asc" ? "ASC" : "DESC";
+    // orderColumn only ever comes from the SORT_COLUMNS whitelist above, so
+    // interpolating it directly into the literal is safe.
+    const orderSql =
+      orderColumn === "rating"
+        ? `CAST("rating" AS FLOAT) ${orderDir} NULLS LAST`
+        : `"${orderColumn}" ${orderDir} NULLS LAST`;
+    const limit = Math.min(Number(pageSize) || 10, 50);
+    const offset = (Math.max(Number(page) || 1, 1) - 1) * limit;
+
+    const [{ count: total }, books, facetRows] = await Promise.all([
+      Book.count({ where }).then((count) => ({ count })),
+      Book.findAll({
+        where,
+        order: [Sequelize.literal(orderSql)],
+        limit,
+        offset,
+      }),
+      Book.findAll({ attributes: ["genre", "author", "year"], raw: true }),
+    ]);
+
+    res.status(200).json({
+      books: books.map((book) => ({
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        annotation: book.annotation,
+        rating: book.rating,
+        quantity_rate: book.quantity_rate,
+        img: book.img,
+        genre: book.genre,
+        year: book.year,
+      })),
+      total,
+      page: Math.max(Number(page) || 1, 1),
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      facets: {
+        genres: [...new Set(facetRows.map((b) => b.genre))].sort(),
+        authors: [...new Set(facetRows.map((b) => b.author))].sort(),
+        years: [...new Set(facetRows.map((b) => b.year))].sort((a, b) => a - b),
+      },
     });
-
-    const booksWithReviews = books.map((book) => ({
-      id: book.id,
-      title: book.title,
-      author: book.author,
-      annotation: book.annotation,
-      rating: book.rating,
-      quantity_rate: book.quantity_rate,
-      img: book.img,
-      genre: book.genre,
-      year: book.year,
-      reviews: book.Reviews.map(mapReview),
-    }));
-
-    res.status(200).send(booksWithReviews);
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);

@@ -21,6 +21,53 @@ afterAll(async () => {
   await sequelize.close();
 });
 
+describe("GET /api/listAllBooks", () => {
+  beforeEach(async () => {
+    await Book.bulkCreate([
+      { title: "Alpha", author: "Author A", genre: "Роман", year: 2000, rating: "3.50", quantity_rate: 2 },
+      { title: "Beta", author: "Author B", genre: "Фэнтези", year: 2010, rating: "4.80", quantity_rate: 5 },
+      { title: "Gamma", author: "Author A", genre: "Роман", year: 2020, rating: null, quantity_rate: 0 },
+    ]);
+  });
+
+  it("paginates results", async () => {
+    const res = await request(app).get("/api/listAllBooks").query({ pageSize: 2, page: 1 });
+    expect(res.status).toBe(200);
+    expect(res.body.books).toHaveLength(2);
+    expect(res.body.total).toBe(3);
+    expect(res.body.totalPages).toBe(2);
+  });
+
+  it("filters by minRating using a numeric comparison, not string", async () => {
+    const res = await request(app).get("/api/listAllBooks").query({ minRating: "4" });
+    expect(res.status).toBe(200);
+    expect(res.body.books.map((b) => b.title)).toEqual(["Beta"]);
+  });
+
+  it("filters by genre and author", async () => {
+    const res = await request(app).get("/api/listAllBooks").query({ genre: "Роман", author: "Author A" });
+    expect(res.status).toBe(200);
+    expect(res.body.books.map((b) => b.title).sort()).toEqual(["Alpha", "Gamma"]);
+  });
+
+  it("searches title/author/annotation", async () => {
+    const res = await request(app).get("/api/listAllBooks").query({ search: "Beta" });
+    expect(res.status).toBe(200);
+    expect(res.body.books.map((b) => b.title)).toEqual(["Beta"]);
+  });
+
+  it("returns facets for filter dropdowns", async () => {
+    const res = await request(app).get("/api/listAllBooks");
+    expect(res.body.facets.genres.sort()).toEqual(["Роман", "Фэнтези"]);
+    expect(res.body.facets.authors.sort()).toEqual(["Author A", "Author B"]);
+  });
+
+  it("sorts unrated books last regardless of direction", async () => {
+    const asc = await request(app).get("/api/listAllBooks").query({ sortBy: "rating", sortDir: "asc" });
+    expect(asc.body.books.map((b) => b.title)).toEqual(["Alpha", "Beta", "Gamma"]);
+  });
+});
+
 describe("POST /api/book/new", () => {
   it("requires authentication", async () => {
     const res = await request(app).post("/api/book/new").send({

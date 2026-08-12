@@ -31,12 +31,22 @@ export default function ModalMain({ user, book }) {
   const [hover, setHover] = useState(0);
   const [inputBody, setInputBody] = useState('');
   const [reviews, setReviews] = useState(book?.reviews || []);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const toast = useToast();
 
+  // The catalog list doesn't ship full review bodies for every book (that's
+  // most of the payload weight for a page most visitors never open) — fetch
+  // them lazily the moment this book's modal actually opens.
   useEffect(() => {
-    setReviews(book?.reviews || []);
-  }, [book]);
+    if (!isOpen || !book) return;
+    setReviewsLoading(true);
+    axiosInstance
+      .get(`/book/${book.id}`)
+      .then((res) => setReviews(res.data.reviews || []))
+      .catch(() => setReviews([]))
+      .finally(() => setReviewsLoading(false));
+  }, [isOpen, book]);
 
   const myReview = user ? reviews.find((r) => r.user_id === user.id) : null;
 
@@ -218,7 +228,9 @@ export default function ModalMain({ user, book }) {
                   Рецензии
                 </Text>
                 <Box maxH="300px" overflowY="auto" p="2" border="1px solid #ccc" borderRadius="md">
-                  {sortedReviews.length > 0 ? (
+                  {reviewsLoading ? (
+                    <Text color="gray.500" textAlign="center" py="6">Загрузка…</Text>
+                  ) : sortedReviews.length > 0 ? (
                     sortedReviews.map((review, index) => (
                       <Box
                         key={index}
