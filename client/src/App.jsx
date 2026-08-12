@@ -19,6 +19,7 @@ const FaqPage = lazy(() => import("./pages/FaqPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const NewsPage = lazy(() => import("./pages/NewsPage"));
+const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 
 function RouteFallback() {
   return (
@@ -109,6 +110,7 @@ function App() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/news" element={<NewsPage />} />
+          <Route path="/users/:id" element={<PublicProfilePage />} />
           <Route path="*" element={<ErrorPage />} />
         </Route>
       </Routes>

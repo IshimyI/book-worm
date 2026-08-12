@@ -52,7 +52,7 @@ export default function ResetPassword() {
   return (
     <>
       <Box
-        className="blockAuth"
+        className="authFormBox"
         width={"400px"}
         mx="auto"
         mt={"60px"}

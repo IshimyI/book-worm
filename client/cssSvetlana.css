@@ -197,16 +197,13 @@ html, body {
   display: flex;
   column-gap: 20px;
 }
-.blockAuth{
+.authFormBox{
   text-align: center;
   background-color: white;
 }
-.this12{
+.bookInfoRow{
   column-gap: 20px;
 }
-.this123{
-  justify-content: space-between;
-}
-.this85{
+.bookActionsRow{
   justify-content: space-between;
 }

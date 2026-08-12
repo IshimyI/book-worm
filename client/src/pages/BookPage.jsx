@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
-import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textarea, Button, useToast, Spinner } from '@chakra-ui/react';
+import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textarea, Button, Select, useToast, Spinner } from '@chakra-ui/react';
 import { StarIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
@@ -11,6 +11,7 @@ export default function BookPage({ user }) {
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
+  const [reviewSort, setReviewSort] = useState('newest');
   const [inputBody, setInputBody] = useState('');
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -82,6 +83,30 @@ export default function BookPage({ user }) {
     document.getElementById('reviewForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  const deleteReview = async () => {
+    if (!myReview || !window.confirm('Удалить вашу рецензию?')) return;
+    try {
+      await axiosInstance.delete(`/review/${myReview.id}`);
+      setReviews((prev) => prev.filter((r) => r.id !== myReview.id));
+      toast({ title: 'Рецензия удалена', status: 'success', duration: 2000, isClosable: true });
+    } catch (error) {
+      toast({ title: 'Не удалось удалить рецензию', status: 'error', duration: 2500, isClosable: true });
+    }
+  };
+
+  const reportReview = async (review) => {
+    if (!user) {
+      toast({ title: 'Войдите, чтобы отправить жалобу', status: 'info', duration: 2500, isClosable: true });
+      return;
+    }
+    try {
+      await axiosInstance.post(`/review/${review.id}/report`);
+      toast({ title: 'Жалоба отправлена, спасибо', status: 'success', duration: 2000, isClosable: true });
+    } catch (error) {
+      toast({ title: 'Не удалось отправить жалобу', status: 'error', duration: 2500, isClosable: true });
+    }
+  };
+
   const addReviewHandler = async (event) => {
     event.preventDefault();
     if (!user) {
@@ -103,7 +128,14 @@ export default function BookPage({ user }) {
       if (res.status === 200) {
         setReviews((prev) => {
           const already = prev.some((r) => r.user_id === user.id);
-          const updated = { userName: user.name, user_rev: inputBody, user_id: user.id, user_raeting: rating };
+          const updated = {
+            id: res.data.review.id,
+            userName: user.name,
+            user_rev: inputBody,
+            user_id: user.id,
+            user_raeting: rating,
+            createdAt: res.data.review.createdAt,
+          };
           return already
             ? prev.map((r) => (r.user_id === user.id ? updated : r))
             : [updated, ...prev];
@@ -119,9 +151,22 @@ export default function BookPage({ user }) {
         });
       }
     } catch (error) {
-      toast({ title: 'Не удалось сохранить рецензию', status: 'error', duration: 2500, isClosable: true });
+      const message = error.response?.data?.message || 'Не удалось сохранить рецензию';
+      toast({ title: message, status: 'error', duration: 3000, isClosable: true });
     }
   };
+
+  const sortedReviews = useMemo(() => {
+    const list = [...reviews];
+    if (reviewSort === 'rating') {
+      list.sort((a, b) => (b.user_raeting ?? 0) - (a.user_raeting ?? 0));
+    } else if (reviewSort === 'oldest') {
+      list.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+    } else {
+      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+    return list;
+  }, [reviews, reviewSort]);
 
   if (loading) {
     return (
@@ -182,14 +227,21 @@ export default function BookPage({ user }) {
 
         <Divider my="30px" />
 
-        <Heading as="h2" size="md" mb="20px">Рецензии</Heading>
+        <Flex justify="space-between" align="center" mb="20px" flexWrap="wrap" gap="10px">
+          <Heading as="h2" size="md">Рецензии</Heading>
+          <Select size="sm" w="200px" value={reviewSort} onChange={(e) => setReviewSort(e.target.value)}>
+            <option value="newest">Сначала новые</option>
+            <option value="oldest">Сначала старые</option>
+            <option value="rating">По оценке</option>
+          </Select>
+        </Flex>
         <Box maxH="400px" overflowY="auto" mb="20px">
-          {reviews.length > 0 ? (
-            reviews.map((review, index) => {
+          {sortedReviews.length > 0 ? (
+            sortedReviews.map((review) => {
               const isMine = user && review.user_id === user.id;
               return (
                 <Box
-                  key={index}
+                  key={review.id}
                   p="3"
                   border={isMine ? '2px solid #4b5320' : '1px solid #ddd'}
                   bg={isMine ? '#f7f8ef' : 'white'}
@@ -201,11 +253,24 @@ export default function BookPage({ user }) {
                     <Box flex="1">
                       <Flex justify="space-between" align="center">
                         <Text fontWeight="bold">
-                          {review.userName} {isMine && <Text as="span" fontSize="xs" color="#4b5320" fontWeight="bold">(ваш отзыв)</Text>}
+                          <NavLink to={`/users/${review.user_id}`} style={{ textDecoration: 'none' }}>
+                            <Text as="span" _hover={{ textDecoration: 'underline', color: '#4b5320' }}>{review.userName}</Text>
+                          </NavLink>
+                          {' '}
+                          {isMine && <Text as="span" fontSize="xs" color="#4b5320" fontWeight="bold">(ваш отзыв)</Text>}
                         </Text>
-                        {isMine && (
-                          <Button size="xs" variant="link" sx={{ color: '#4b5320' }} onClick={startEditing}>
-                            Редактировать
+                        {isMine ? (
+                          <Flex gap="10px">
+                            <Button size="xs" variant="link" sx={{ color: '#4b5320' }} onClick={startEditing}>
+                              Редактировать
+                            </Button>
+                            <Button size="xs" variant="link" sx={{ color: '#a4522a' }} onClick={deleteReview}>
+                              Удалить
+                            </Button>
+                          </Flex>
+                        ) : (
+                          <Button size="xs" variant="link" color="gray.500" onClick={() => reportReview(review)}>
+                            Пожаловаться
                           </Button>
                         )}
                       </Flex>

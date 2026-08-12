@@ -108,7 +108,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
         <ModalBody overflow="auto">
           <Flex>
             <Box>
-              <Flex className="this12">
+              <Flex className="bookInfoRow">
                 <Box maxWidth="250px">
                   <Image src={book.img || './default.jpg'} width="250px" height="350px" objectFit="cover" borderRadius="md" />
                 </Box>
@@ -208,7 +208,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
             </Box>
           </Flex>
 
-          <Flex className="this123" mt={'30px'} gap="12px">
+          <Flex className="bookActionsRow" mt={'30px'} gap="12px">
             <Button backgroundColor={isFavorite ? '#334d00' : '#909e18'} color="white" onClick={handleFavorites}>
               {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
             </Button>

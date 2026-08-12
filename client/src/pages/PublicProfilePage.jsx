@@ -1,0 +1,92 @@
+import { useEffect, useState } from 'react';
+import { useParams, NavLink } from 'react-router-dom';
+import { Box, Center, Heading, Text, Stack, Avatar, Divider, Image, Flex, Spinner, Button } from '@chakra-ui/react';
+import { ArrowBackIcon } from '@chakra-ui/icons';
+import axiosInstance from '../axiosInstance';
+
+const dateFormatter = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' });
+
+export default function PublicProfilePage() {
+  const { id } = useParams();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    axiosInstance
+      .get(`/users/${id}/profile`)
+      .then((res) => setProfile(res.data))
+      .catch(() => setProfile(false))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Center py="100px">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <Center py="100px" flexDirection="column">
+        <Text fontSize="xl" mb="20px">Пользователь не найден</Text>
+        <NavLink to="/">
+          <Button backgroundColor="#334d00" color="white">На главную</Button>
+        </NavLink>
+      </Center>
+    );
+  }
+
+  return (
+    <Center py="40px" px="20px">
+      <Box maxW="800px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">
+        <NavLink to="/">
+          <Button variant="link" mb="20px" sx={{ color: '#334d00' }}>
+            <ArrowBackIcon mr="6px" /> К каталогу
+          </Button>
+        </NavLink>
+
+        <Flex align="center" gap="16px" mb="10px">
+          <Avatar name={profile.name} size="lg" />
+          <Box>
+            <Heading as="h1" size="lg">{profile.name}</Heading>
+            <Text color="gray.500" fontSize="sm">
+              На сайте с {dateFormatter.format(new Date(profile.memberSince))} · {profile.reviewCount} рецензий
+            </Text>
+          </Box>
+        </Flex>
+
+        <Divider my="20px" />
+
+        <Heading as="h2" size="md" mb="16px">Рецензии</Heading>
+        {profile.reviews.length === 0 ? (
+          <Text color="gray.500">Пока нет рецензий</Text>
+        ) : (
+          <Stack spacing="14px">
+            {profile.reviews.map((review) => (
+              <NavLink key={review.id} to={`/books/${review.bookId}`}>
+                <Flex
+                  gap="14px"
+                  p="12px"
+                  border="1px solid #ddd"
+                  borderRadius="md"
+                  _hover={{ borderColor: '#4b5320', boxShadow: 'sm' }}
+                  transition="border-color 0.15s ease"
+                >
+                  <Image src={review.bookImg} alt={review.bookTitle} width="60px" height="84px" objectFit="cover" borderRadius="4px" />
+                  <Box>
+                    <Text fontWeight="bold">{review.bookTitle}</Text>
+                    <Text fontSize="sm" color="gray.600" noOfLines={2}>{review.body}</Text>
+                    <Text fontSize="sm">{review.rating} ⭐</Text>
+                  </Box>
+                </Flex>
+              </NavLink>
+            ))}
+          </Stack>
+        )}
+      </Box>
+    </Center>
+  );
+}

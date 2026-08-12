@@ -24,11 +24,14 @@ const EMPTY_FILTERS = {
   search: "",
 };
 
+const PAGE_SIZE = 10;
+
 export default function MainPage({ user }) {
   const [booksData, setBooksData] = useState([]);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [sortBy, setSortBy] = useState("rating");
   const [sortDir, setSortDir] = useState("desc");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     axiosInstance
@@ -56,7 +59,14 @@ export default function MainPage({ user }) {
       if (filters.author && book.author !== filters.author) return false;
       if (filters.year && String(book.year) !== filters.year) return false;
       if (filters.minRating && Number(book.rating ?? 0) < Number(filters.minRating)) return false;
-      if (filters.search && !book.title.toLowerCase().includes(filters.search.toLowerCase())) return false;
+      if (filters.search) {
+        const q = filters.search.toLowerCase();
+        const matches =
+          book.title.toLowerCase().includes(q) ||
+          book.author.toLowerCase().includes(q) ||
+          (book.annotation || "").toLowerCase().includes(q);
+        if (!matches) return false;
+      }
       return true;
     });
 
@@ -77,6 +87,13 @@ export default function MainPage({ user }) {
   };
 
   const resetFilters = () => setFilters(EMPTY_FILTERS);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters, sortBy, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(visibleBooks.length / PAGE_SIZE));
+  const pagedBooks = visibleBooks.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <>
@@ -222,7 +239,7 @@ export default function MainPage({ user }) {
                 Найдено книг: {visibleBooks.length}
               </Text>
 
-              {visibleBooks.map((book) => (
+              {pagedBooks.map((book) => (
                 <Box
                   bg={"white"}
                   key={book.id}
@@ -289,6 +306,30 @@ export default function MainPage({ user }) {
                   </Flex>
                 </Box>
               ))}
+
+              {totalPages > 1 && (
+                <Flex justifyContent="center" alignItems="center" columnGap="10px" mt="10px" mb="30px">
+                  <Button
+                    size="sm"
+                    isDisabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    sx={{ backgroundColor: "#334d00", color: "white" }}
+                  >
+                    ← Назад
+                  </Button>
+                  <Text fontSize="sm" color="gray.600">
+                    Страница {page} из {totalPages}
+                  </Text>
+                  <Button
+                    size="sm"
+                    isDisabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    sx={{ backgroundColor: "#334d00", color: "white" }}
+                  >
+                    Вперёд →
+                  </Button>
+                </Flex>
+              )}
             </div>
           </div>
         </div>
