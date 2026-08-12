@@ -1,8 +1,18 @@
 const express = require("express");
-const { User, Book, Review } = require("../../db/models");
+const { User, Book, Review, News } = require("../../db/models");
 const { Sequelize, where } = require("sequelize");
 
 const router = express.Router();
+
+router.get("/news", async (req, res) => {
+  try {
+    const news = await News.findAll({ order: [["createdAt", "DESC"]] });
+    res.status(200).send(news);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
 
 router.get("/users", async (req, res) => {
   try {

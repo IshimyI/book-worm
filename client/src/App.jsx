@@ -1,19 +1,32 @@
 import { Routes, Route } from "react-router";
 
-import AuthPage from "./pages/AuthPage";
-
 import Layout from "./ui/Layout";
 import axiosInstance, { setAccessToken } from "./axiosInstance";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
-import ErrorPage from "./pages/ErrorPage";
-import Office from "./pages/Office";
+import { Center, Spinner } from "@chakra-ui/react";
 import MainPage from "./pages/MainPage";
-import ConfirmationEmail from "./pages/ConfirmationEmail";
-import RecoverPassword from "./pages/RecoverPassword";
-import ResetPassword from "./pages/ResetPassword";
-import BookPage from "./pages/BookPage";
-// import axios from "axios";
+
+// Lazily loaded: not needed for the first paint of the catalog homepage.
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const Office = lazy(() => import("./pages/Office"));
+const BookPage = lazy(() => import("./pages/BookPage"));
+const ConfirmationEmail = lazy(() => import("./pages/ConfirmationEmail"));
+const RecoverPassword = lazy(() => import("./pages/RecoverPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const ErrorPage = lazy(() => import("./pages/ErrorPage"));
+const FaqPage = lazy(() => import("./pages/FaqPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const NewsPage = lazy(() => import("./pages/NewsPage"));
+
+function RouteFallback() {
+  return (
+    <Center py="100px">
+      <Spinner size="xl" />
+    </Center>
+  );
+}
 
 function App() {
   const [user, setUser] = useState();
@@ -74,26 +87,32 @@ function App() {
   };
 
   return (
-    <Routes>
-      <Route element={<Layout user={user} handleLogout={handleLogout} />}>
-        <Route
-          path="/auth"
-          element={
-            <AuthPage handleSignUp={handleSignUp} handleLogin={handleLogin} />
-          }
-        ></Route>
-        <Route path="/office" element={<Office user={user} />} />
-        <Route path="/" element={<MainPage user={user} />} />
-        <Route path="/books/:id" element={<BookPage user={user} />} />
-        <Route
-          path="/confirm-email"
-          element={<ConfirmationEmail user={user} setUser={setUser} />}
-        />
-        <Route path="/recover" element={<RecoverPassword />} />
-        <Route path="/reset/:token" element={<ResetPassword />} />
-        <Route path="*" element={<ErrorPage />} />
-      </Route>
-    </Routes>
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
+        <Route element={<Layout user={user} handleLogout={handleLogout} />}>
+          <Route
+            path="/auth"
+            element={
+              <AuthPage handleSignUp={handleSignUp} handleLogin={handleLogin} />
+            }
+          ></Route>
+          <Route path="/office" element={<Office user={user} />} />
+          <Route path="/" element={<MainPage user={user} />} />
+          <Route path="/books/:id" element={<BookPage user={user} />} />
+          <Route
+            path="/confirm-email"
+            element={<ConfirmationEmail user={user} setUser={setUser} />}
+          />
+          <Route path="/recover" element={<RecoverPassword />} />
+          <Route path="/reset/:token" element={<ResetPassword />} />
+          <Route path="/faq" element={<FaqPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/news" element={<NewsPage />} />
+          <Route path="*" element={<ErrorPage />} />
+        </Route>
+      </Routes>
+    </Suspense>
   );
 }
 
