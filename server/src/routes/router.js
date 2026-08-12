@@ -3,10 +3,9 @@ const { User, Book, Review, News } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
 const { containsProfanity } = require("../utils/moderation");
+const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRating");
 
 const router = express.Router();
-
-const REPORT_HIDE_THRESHOLD = 3;
 
 function mapReview(review) {
   return {
@@ -17,22 +16,6 @@ function mapReview(review) {
     user_raeting: review.user_rating,
     createdAt: review.createdAt,
   };
-}
-
-async function recomputeBookRating(bookId) {
-  const avgRating = await Review.findAll({
-    where: { bookId, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
-    attributes: [
-      [Sequelize.fn("AVG", Sequelize.col("user_rating")), "avgRating"],
-      [Sequelize.fn("COUNT", Sequelize.col("user_rating")), "quantityRate"],
-    ],
-    raw: true,
-  });
-  const book = await Book.findByPk(bookId);
-  book.rating = avgRating[0].avgRating ? parseFloat(avgRating[0].avgRating).toFixed(2) : null;
-  book.quantity_rate = Number(parseFloat(avgRating[0].quantityRate)) || 0;
-  await book.save();
-  return book;
 }
 
 router.get("/news", async (req, res) => {

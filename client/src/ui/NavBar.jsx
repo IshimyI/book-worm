@@ -4,8 +4,6 @@ import { NavLink } from "react-router";
 import { Flex } from "@chakra-ui/react";
 
 export default function NavBar({ user, handleLogout }) {
-  console.log(user);
-
   return (
     <div className="navbar">
 
@@ -27,6 +25,9 @@ export default function NavBar({ user, handleLogout }) {
           </NavLink>
           <nav className="navLinksSecondary">
             <NavLink to="/news" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Новости</NavLink>
+            {user && user.isAdmin ? (
+              <NavLink to="/admin" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Модерация</NavLink>
+            ) : null}
           </nav>
           <div className="navFlexBlock2">
             {/* <div>

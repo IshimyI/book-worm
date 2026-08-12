@@ -19,6 +19,7 @@ const helmet = require("helmet");
 const router = require("./routes/router");
 const authRouter = require("./routes/authRouter");
 const tokensRouter = require("./routes/tokensRouter");
+const adminRouter = require("./routes/adminRouter");
 
 const app = express();
 const { PORT } = process.env || 3000;
@@ -47,6 +48,7 @@ app.use(cookieParser());
 app.use("/api", router);
 app.use("/api/auth", authRouter);
 app.use("/api/tokens", tokensRouter);
+app.use("/api/admin", adminRouter);
 
 if (process.env.SENTRY_DSN) {
   Sentry.setupExpressErrorHandler(app);
