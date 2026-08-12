@@ -60,8 +60,12 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ message: "Внутренняя ошибка сервера" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port: ${PORT}!`);
-});
+// Don't bind a port when imported by tests (supertest drives the app
+// in-process) — only when run directly as the server entrypoint.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server listening on port: ${PORT}!`);
+  });
+}
 
 module.exports = app;

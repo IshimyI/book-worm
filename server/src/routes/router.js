@@ -339,12 +339,12 @@ router.post("/updateFavourites/:id", verifyAccessToken, async (req, res) => {
     let favouriteBooks = user.favourites ? user.favourites.split(" ") : [];
 
     if (favouriteBooks.includes(bookId + "")) {
-      favouriteBooks = favouriteBooks.filter((book_id) => book_id !== bookId);
+      favouriteBooks = favouriteBooks.filter((book_id) => book_id !== bookId + "");
     } else {
-      favouriteBooks.push(bookId);
+      favouriteBooks.push(bookId + "");
     }
     user.favourites = favouriteBooks.join(" ");
-    user.save();
+    await user.save();
     res.status(200).send(user);
   } catch (error) {
     console.log(error);

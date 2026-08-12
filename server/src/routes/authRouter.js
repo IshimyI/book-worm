@@ -18,6 +18,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Слишком много попыток. Попробуйте снова через несколько минут." },
+  skip: () => process.env.NODE_ENV === "test",
 });
 
 authRouter.post("/signup", authLimiter, async (req, res) => {
