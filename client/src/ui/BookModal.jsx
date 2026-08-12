@@ -185,7 +185,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
               </Box>{' '}
             </Box>
             <Box>
-              <Box w={'60vh'}>
+              <Box w={{ base: '100%', md: '400px' }}>
                 <Text fontSize="xl" fontWeight="bold" mb="4">
                   Рецензии
                 </Text>

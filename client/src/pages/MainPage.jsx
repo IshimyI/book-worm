@@ -236,7 +236,7 @@ export default function MainPage({ user }) {
                     boxShadow="md"
                     mb="20px"
                     h={250}
-                    w="90vh"
+                    w={{ base: "100%", md: "700px" }}
                   >
                     <Flex align="start">
                       <Skeleton width="180px" height="250px" mr={4} />
@@ -259,8 +259,8 @@ export default function MainPage({ user }) {
                     overflow="hidden"
                     boxShadow="md"
                     mb={"20px"}
-                    h={250}
-                    w={"90vh"}
+                    h={{ base: "auto", md: 250 }}
+                    w={{ base: "100%", md: "700px" }}
                     transition="transform 0.15s ease, box-shadow 0.15s ease"
                     _hover={{ transform: "translateY(-3px)", boxShadow: "xl" }}
                   >

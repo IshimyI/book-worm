@@ -24,7 +24,7 @@ html, body {
   margin-top: 60px;
 }
 .siteFooterInner {
-  max-width: 120vh;
+  max-width: 1100px;
   margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
@@ -91,16 +91,20 @@ html, body {
 }
 .conteyner {
   margin: 0 auto;
-  width: 120vh;
+  width: 100%;
+  max-width: 1100px;
   background-color: #fffdf7;
   padding-left: 20px;
   padding-right: 20px;
   box-shadow: 0 0 40px rgba(47, 42, 31, 0.15);
   border-top: 5px solid #4b5320;
+  box-sizing: border-box;
 }
 .conteynerNav {
   margin: 0 auto;
-  width: 120vh;
+  width: 100%;
+  max-width: 1100px;
+  box-sizing: border-box;
   padding-left: 20px;
   padding-right: 20px;
 }
@@ -186,7 +190,8 @@ html, body {
   column-gap: 20px;
 }
 .blockFillter{
-  width: 28vh;
+  width: 260px;
+  flex-shrink: 0;
   height: 320px;
   background-color: white;
 }
@@ -206,4 +211,18 @@ html, body {
 }
 .bookActionsRow{
   justify-content: space-between;
+}
+
+/* .conteyner used width:120vh (viewport-HEIGHT units for a width), which
+   on a tall/narrow mobile screen produces a container much wider than the
+   viewport — the site scrolled sideways on every page. Stack the catalog
+   sidebar+list below this width instead of squeezing them side by side. */
+@media (max-width: 768px) {
+  .lineTwo {
+    flex-direction: column;
+  }
+  .blockFillter {
+    width: 100%;
+    height: auto;
+  }
 }
