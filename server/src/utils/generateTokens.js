@@ -3,8 +3,6 @@ const jwtConfig = require("../configs/jwtConfig");
 require("dotenv").config();
 
 function generateTokens(payload) {
-  console.log(payload);
-
   return {
     accessToken: jwt.sign(
       payload,

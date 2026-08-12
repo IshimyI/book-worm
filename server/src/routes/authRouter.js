@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const generateTokens = require("../utils/generateTokens");
 const sendEmail = require("../utils/emailService");
 const { confirmationEmailHtml, resetPasswordEmailHtml } = require("../utils/emailTemplates");
+const logSecurityEvent = require("../utils/securityLog");
 const authRouter = express.Router();
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
@@ -19,6 +20,10 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Слишком много попыток. Попробуйте снова через несколько минут." },
   skip: () => process.env.NODE_ENV === "test",
+  handler: (req, res, next, options) => {
+    logSecurityEvent({ type: "rate_limited", ip: req.ip, detail: req.path });
+    res.status(options.statusCode).json(options.message);
+  },
 });
 
 authRouter.post("/signup", authLimiter, async (req, res) => {
@@ -102,8 +107,6 @@ authRouter.get("/confirm-email", async (req, res) => {
     user.isEmailConfirmed = true;
     await user.save();
 
-    console.log("Обновленный пользователь:", await User.findByPk(user.id));
-
     const updatedUser = user.get({ plain: true });
     const { accessToken, refreshToken } = generateTokens({ user: updatedUser });
 
@@ -129,7 +132,6 @@ authRouter.get("/confirm-email", async (req, res) => {
 
 authRouter.post("/forgot-password", authLimiter, async (req, res) => {
   const { email } = req.body;
-  console.log(email);
   try {
     const user = await User.findOne({ where: { email } });
 
@@ -158,6 +160,8 @@ authRouter.post("/forgot-password", authLimiter, async (req, res) => {
       text: `Для восстановления пароля перейдите по ссылке: ${confirmationLink}`,
       html: resetPasswordEmailHtml(confirmationLink, user.name),
     });
+
+    logSecurityEvent({ type: "password_reset_requested", email, ip: req.ip });
 
     res.status(200).json({
       message:
@@ -192,6 +196,8 @@ authRouter.post(`/reset-password/:token`, async (req, res) => {
     user.resetPasswordExpires = undefined;
     await user.save();
 
+    logSecurityEvent({ type: "password_reset_completed", email: user.email, ip: req.ip });
+
     res.status(200).json({ message: "Пароль успешно изменен." });
   } catch (error) {
     console.error(error);
@@ -208,10 +214,16 @@ authRouter.post("/login", authLimiter, async (req, res) => {
     return res.status(400).json({ message: "Email и пароль обязательны" });
   }
   const foundUser = await User.findOne({ where: { email } });
-  if (!foundUser) return res.sendStatus(400);
+  if (!foundUser) {
+    logSecurityEvent({ type: "failed_login", email, ip: req.ip, detail: "unknown_email" });
+    return res.sendStatus(400);
+  }
 
   const isValid = await bcrypt.compare(password, foundUser.password);
-  if (!isValid) return res.sendStatus(400);
+  if (!isValid) {
+    logSecurityEvent({ type: "failed_login", email, ip: req.ip, detail: "wrong_password" });
+    return res.sendStatus(400);
+  }
 
   const user = foundUser.get();
   delete user.password;
