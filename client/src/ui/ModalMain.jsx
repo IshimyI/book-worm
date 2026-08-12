@@ -9,6 +9,7 @@ import {
   ModalCloseButton,
   Button,
   useDisclosure,
+  useToast,
   Text,
   Image,
   Flex,
@@ -19,33 +20,24 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import { StarIcon } from "@chakra-ui/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axiosInstance from '../axiosInstance';
-
-useDisclosure;
 
 export default function ModalMain({ user, book }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
-  const [textInput, setTextInput] = useState('');
-  const [click, setClick] = useState(false);
   const [inputBody, setInputBody] = useState('');
+  const [reviews, setReviews] = useState(book?.reviews || []);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const toast = useToast();
 
-  const handleReview = () => {
-    if (newReview.trim()) {
-      const newRev = {
-        user: user.name,
-        text: newReview,
-        avatarUrl: 'https://bit.ly/broken-link',
-      };
-      setReviews([...reviews, newRev]);
-      setNewReview('');
-    }
-  };
+  useEffect(() => {
+    setReviews(book?.reviews || []);
+  }, [book]);
+
   const handleRating = (value) => {
     setRating(value);
-    console.log(rating);
   };
 
   const handleMouseEnter = (value) => {
@@ -57,79 +49,61 @@ export default function ModalMain({ user, book }) {
   };
 
   const handleFavorites = async () => {
-    console.log('Данные на сервер:', {
-      user_id: user.id,
-      book_id: book.id,
-    });
+    if (!user) {
+      toast({ title: 'Войдите, чтобы добавлять книги в избранное', status: 'info', duration: 2500, isClosable: true });
+      return;
+    }
     try {
-      const res = await axiosInstance.post(`http://localhost:3000/api/updateFavourites/${user.id}`, {
+      await axiosInstance.post(`/updateFavourites/${user.id}`, {
         bookId: book.id,
       });
-      console.log('Ответ от сервера:', res.data);
-      if (res.status === 200) {
-        console.log('Книга добавлена в избранное');
-      } else {
-        console.log('Что-то пошло не так');
-      }
+      setIsFavorite((prev) => !prev);
+      toast({
+        title: isFavorite ? 'Убрано из избранного' : 'Добавлено в избранное',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
     } catch (error) {
-      console.log('Ошибка при добавлении книги в избранное:', error);
+      toast({ title: 'Не удалось обновить избранное', status: 'error', duration: 2500, isClosable: true });
     }
   };
 
   const addReviewHandler = async (event) => {
     event.preventDefault();
-    console.log('инпут боди', inputBody);
-    if (!inputBody) {
-      console.log('Поля должны быть заполнены');
-    } else {
-      try {
-        const res = await axiosInstance.post(`/book/new`, {
-          user_id: user.id,
-          body: inputBody,
-          title: book.title,
-          author: book.author,
-          user_rating: rating,
-        });
-        if (res.status === 200) {
-          setInputBody('');
-          setRating(0);
-          setHover(0);
-        }
-      } catch (error) {
-        console.log(error, 'что-то c add не так');
+    if (!user) {
+      toast({ title: 'Войдите, чтобы оставить рецензию', status: 'info', duration: 2500, isClosable: true });
+      return;
+    }
+    if (!inputBody || !rating) {
+      toast({ title: 'Напишите текст и поставьте оценку', status: 'warning', duration: 2500, isClosable: true });
+      return;
+    }
+    try {
+      const res = await axiosInstance.post(`/book/new`, {
+        user_id: user.id,
+        body: inputBody,
+        title: book.title,
+        author: book.author,
+        user_rating: rating,
+      });
+      if (res.status === 200) {
+        setReviews((prev) => [
+          { userName: user.name, user_rev: inputBody, user_id: user.id, user_raeting: rating },
+          ...prev,
+        ]);
+        setInputBody('');
+        setRating(0);
+        setHover(0);
+        toast({ title: 'Рецензия добавлена', status: 'success', duration: 2000, isClosable: true });
       }
+    } catch (error) {
+      toast({ title: 'Не удалось добавить рецензию', status: 'error', duration: 2500, isClosable: true });
     }
   };
 
   if (!book) {
     return null;
-  }
-
-  // const OverlayOne = () => <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px) hue-rotate(90deg)" />;
-
-  // const changeHandler = (event) => {
-  //   event.preventDefault();
-  //   setInputBody(() => event.target.value);
-  //   setRating(() => event.target.value);
-  // };
-
-  // const switchClick = () => {
-  //   setClick(true);
-  // };
-
-  async function remakeHandler(event) {
-    console.log('put отработал');
-    event.preventDefault();
-    try {
-      await axiosInstance.put(`/api/review/${review.id}`, {
-        body: textInput,
-      });
-      setClick(true);
-      setTextInput('');
-    } catch (error) {
-      console.log(error, 'что-то c del не так');
-      setClick(false);
-    }
   }
 
   return (
@@ -208,11 +182,11 @@ export default function ModalMain({ user, book }) {
                   Рецензии
                 </Text>
                 <Box maxH="300px" overflowY="auto" p="2" border="1px solid #ccc" borderRadius="md">
-                  {(book.reviews && book.reviews.length > 0 ? book.reviews : []).map((review, index) => {
-                    return (
+                  {reviews.length > 0 ? (
+                    reviews.map((review, index) => (
                       <Box key={index} p="3" border="1px solid #ddd" borderRadius="md" mb="3">
                         <Stack direction="row" spacing="4" align="center">
-                          <Avatar name={review.userName} src={`https://bit.ly/broken-link`} />
+                          <Avatar name={review.userName} />
 
                           <Box>
                             <Flex justifyContent="space-between">
@@ -224,11 +198,12 @@ export default function ModalMain({ user, book }) {
                           </Box>
                         </Stack>
                       </Box>
-                    );
-                  })}
-                  {/* {reviews.length === 0 && (
-                    <Text color="gray.500">Нет рецензий на эту книгу.</Text>
-                  )} */}
+                    ))
+                  ) : (
+                    <Text color="gray.500" textAlign="center" py="6">
+                      Пока нет рецензий — будьте первым
+                    </Text>
+                  )}
                 </Box>
                 <Box mt="4">
                   <Textarea value={inputBody} onChange={(e) => setInputBody(e.target.value)} placeholder="Напиши свою рецензию" />
@@ -256,8 +231,8 @@ export default function ModalMain({ user, book }) {
           </Flex>
 
           <Flex className="this123" mt={'30px'}>
-            <Button backgroundColor="#909e18" color="white" onClick={handleFavorites}>
-              Добавить в избранное
+            <Button backgroundColor={isFavorite ? '#334d00' : '#909e18'} color="white" onClick={handleFavorites}>
+              {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
             </Button>
             <Button backgroundColor="#334d00" color="white" onClick={addReviewHandler}>
               Добавить рецензию

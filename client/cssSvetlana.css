@@ -20,7 +20,7 @@
   padding-right: 20px;
 }
 .logo {
-  background-image: url(./img/logo.png);
+  background-image: url(/img/logo.png);
   height: 70px;
   width: 150px;
   background-repeat: no-repeat;
@@ -79,7 +79,7 @@
 }
 .fonAuth {
   position: fixed;
-  background-image: url(./img/pngtree-monster-and-book-ghost-icon-vector-png-image_6848636.png);
+  background-image: url(/img/pngtree-monster-and-book-ghost-icon-vector-png-image_6848636.png);
   background-size: cover;
   background-repeat: no-repeat;
   right: 0;
@@ -91,7 +91,7 @@
 }
 .fonAuth2 {
   position: fixed;
-  background-image: url(./img/pngtree-monster-and-book-ghost-icon-vector-png-image_6848636.png);
+  background-image: url(/img/pngtree-monster-and-book-ghost-icon-vector-png-image_6848636.png);
   background-size: cover;
   background-repeat: no-repeat;
   left: 0;

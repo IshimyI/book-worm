@@ -35,22 +35,42 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-// * Пишем перехватчик для перевыпуска accessToken при его истечении
+// * Пишем перехватчик для перевыпуска accessToken при его истечении.
+// Несколько запросов могут словить 401 одновременно (например, при первой
+// загрузке страницы) — чтобы не слать по refresh-запросу на каждый из них,
+// делимся одним и тем же промисом обновления токена между всеми.
+let refreshPromise = null;
+
 axiosInstance.interceptors.response.use(
-  (res) => {
-    return res;
-  },
+  (res) => res,
   async (error) => {
     const prevReq = error.config;
-    if (error.response.status === 401) {
-      const response = await axios.get(
-        `${import.meta.env.VITE_TARGET}/api/tokens/refresh`,
-        { withCredentials: true } // * мы можем получить куку на клиенте
-      );
-      accessToken = response.data.accessToken;
-      prevReq.sent = true;
-      prevReq.headers.Authorization = `Bearer ${accessToken}`;
+
+    if (!error.response || error.response.status !== 401 || prevReq?.sent) {
+      return Promise.reject(error);
+    }
+    prevReq.sent = true;
+
+    if (!refreshPromise) {
+      refreshPromise = axios
+        .get(`${import.meta.env.VITE_TARGET}/api/tokens/refresh`, {
+          withCredentials: true,
+        })
+        .then((response) => {
+          accessToken = response.data.accessToken;
+          return accessToken;
+        })
+        .finally(() => {
+          refreshPromise = null;
+        });
+    }
+
+    try {
+      const freshToken = await refreshPromise;
+      prevReq.headers.Authorization = `Bearer ${freshToken}`;
       return axiosInstance(prevReq);
+    } catch (refreshError) {
+      return Promise.reject(refreshError);
     }
   }
 );

@@ -7,33 +7,23 @@ import AddBook from "../ui/AddBook";
 import BookModal from "../ui/BookModal";
 
 const Office = ({ user }) => {
-  console.log(user);
-  const [favoriteBooks, setFavoriteBooks] = useState([]);
-
   const [review, setReview] = useState([]);
-  const [favorite, setFavorite] = useState([])
+  const [favorite, setFavorite] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     (async function () {
       try {
-        const reviewRes = await axiosInstance.get(
-          `http://localhost:3000/api/listUserBooks/${user.id}`
-        );
-        const favoriteRes = await axiosInstance.get(
-          `http://localhost:3000/api/favourites/${user.id}`
-        );
+        const reviewRes = await axiosInstance.get(`/listUserBooks/${user.id}`);
+        const favoriteRes = await axiosInstance.get(`/favourites/${user.id}`);
         setReview(reviewRes.data);
         setFavorite(favoriteRes.data);
-        console.log('понравились', favoriteRes.data);
-        console.log('есть отзыв', reviewRes.data);
-        
       } catch (error) {
         console.error("Ошибка при загрузке книг:", error);
       }
     })();
-  }, []);
+  }, [user.id]);
 
   const handleBookClick = (book) => {
     setSelectedBook(book);
@@ -51,11 +41,12 @@ const Office = ({ user }) => {
             reviewBooks={review}
             handleBookClick={handleBookClick}
           />
-          <Box marginTop="100px">
+          <Box marginTop="60px">
             <FavoriteProfile
               favoriteBooks={favorite}
               handleBookClick={handleBookClick}
-              setFavoriteBooks={setFavoriteBooks}
+              setFavoriteBooks={setFavorite}
+              user={user}
             />
           </Box>
         </Box>
@@ -67,7 +58,7 @@ const Office = ({ user }) => {
         />
       </Center>
       {/* ниже два div это фон зеленый и подкладка белая вниз страницы  */}
-      <div style={{ height: "190px" }}> </div>
+      <div style={{ height: "60px" }}> </div>
       <div className="fonMBLOCK"> </div>
     </div>
   );
