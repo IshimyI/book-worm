@@ -81,7 +81,7 @@ export default function ModalMain({ user, book }) {
         isClosable: true,
       });
     } catch (error) {
-      toast({ title: 'Не удалось обновить избранное', status: 'error', duration: 2500, isClosable: true });
+      toast({ title: error.response?.data?.message || 'Не удалось обновить избранное', status: 'error', duration: 2500, isClosable: true });
     }
   };
 

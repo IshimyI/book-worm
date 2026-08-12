@@ -1,4 +1,5 @@
-import { Box, Center, Flex, Button } from "@chakra-ui/react";
+/* eslint-disable react/prop-types */
+import { Box, Center, Flex } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import axiosInstance from "../axiosInstance";
 import ReviewProfile from "../ui/ReviewProfile";

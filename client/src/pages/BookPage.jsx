@@ -70,7 +70,7 @@ export default function BookPage({ user }) {
         isClosable: true,
       });
     } catch (error) {
-      toast({ title: 'Не удалось обновить избранное', status: 'error', duration: 2500, isClosable: true });
+      toast({ title: error.response?.data?.message || 'Не удалось обновить избранное', status: 'error', duration: 2500, isClosable: true });
     }
   };
 
@@ -101,7 +101,7 @@ export default function BookPage({ user }) {
       setReviews((prev) => prev.filter((r) => r.id !== myReview.id));
       toast({ title: 'Рецензия удалена', status: 'success', duration: 2000, isClosable: true });
     } catch (error) {
-      toast({ title: 'Не удалось удалить рецензию', status: 'error', duration: 2500, isClosable: true });
+      toast({ title: error.response?.data?.message || 'Не удалось удалить рецензию', status: 'error', duration: 2500, isClosable: true });
     }
   };
 
@@ -114,7 +114,7 @@ export default function BookPage({ user }) {
       await axiosInstance.post(`/review/${review.id}/report`);
       toast({ title: 'Жалоба отправлена, спасибо', status: 'success', duration: 2000, isClosable: true });
     } catch (error) {
-      toast({ title: 'Не удалось отправить жалобу', status: 'error', duration: 2500, isClosable: true });
+      toast({ title: error.response?.data?.message || 'Не удалось отправить жалобу', status: 'error', duration: 2500, isClosable: true });
     }
   };
 

@@ -1,13 +1,10 @@
-import { Button, Card, CardBody, CardFooter, Flex, Heading, Image, Stack, Text } from '@chakra-ui/react';
-import React, { useState } from 'react';
+/* eslint-disable react/prop-types */
+import { Card, CardBody, CardFooter, Flex, Heading, Image, Stack, Text } from '@chakra-ui/react';
 
-export default function SelectedBook({ book, inputs, handleBookClick, setInputs }) {
+export default function SelectedBook({ book, handleBookClick, setInputs }) {
   function selectBook(book) {
-    
-      setInputs(book);
-      handleBookClick(book);
-      console.log('инпуты', inputs)
-    
+    setInputs(book);
+    handleBookClick(book);
   }
 
   return (

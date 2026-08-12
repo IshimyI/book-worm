@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+/* eslint-disable react/prop-types */
+import { useEffect, useState } from 'react';
 import { ArrowBackIcon, StarIcon } from '@chakra-ui/icons';
 import { Box, Flex, Input, Text, Center, Button, Textarea, Select, ModalOverlay, Modal, ModalContent, useDisclosure, Heading, Stack, Alert, AlertIcon, ModalCloseButton } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
@@ -39,7 +40,6 @@ export default function AddBook({ user }) {
         }));
 
         setBooks(booksData);
-        console.log('booksData', response.data.docs);
       } catch (error) {
         console.error('Ошибка при загрузке книг:', error);
       }
@@ -61,7 +61,6 @@ export default function AddBook({ user }) {
 
   const handleRating = (value) => {
     setRating(value);
-    console.log(rating);
   };
 
   const handleMouseEnter = (value) => {
@@ -115,7 +114,6 @@ export default function AddBook({ user }) {
 
   const addOwnBookHandler = async (event) => {
     event.preventDefault();
-    console.log('инпуты в хэндлере', inputs);
     if (!(inputs.title && inputs.author && inputs.img)) {
       alertFunction(500, 'Не все поля заполнены');
     } else {
@@ -140,7 +138,7 @@ export default function AddBook({ user }) {
           setTimeout(()=>{onClose()}, 2000);
         }
       } catch (error) {
-        console.log(error, 'что-то c add не так');
+        alertFunction(500, error.response?.data?.message || 'Не удалось добавить книгу');
       }
     }
   };

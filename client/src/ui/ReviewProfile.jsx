@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { Box, Image, Text, SimpleGrid } from "@chakra-ui/react";
 
 const ReviewProfile = ({ reviewBooks, handleBookClick }) => {

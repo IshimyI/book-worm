@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { Box, Image, Text, SimpleGrid } from "@chakra-ui/react";
 import { SmallCloseIcon, Icon } from "@chakra-ui/icons";
 import axiosInstance from "../axiosInstance";

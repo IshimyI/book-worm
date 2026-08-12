@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import axiosInstance from "../axiosInstance";
 import { useState } from "react";
 import {
@@ -14,7 +14,6 @@ import {
 } from "@chakra-ui/react";
 
 export default function RecoverPassword() {
-  const navigate = useNavigate();
   const [message, setMessage] = useState(null);
 
   const onFinish = async (event) => {
@@ -70,7 +69,7 @@ export default function RecoverPassword() {
         </Heading>
 
         {message && (
-          <Alert status={message.status || "info"} mb={4}>
+          <Alert status={message.type || "info"} mb={4}>
             <AlertIcon />
             <AlertDescription>{message.text}</AlertDescription>
           </Alert>

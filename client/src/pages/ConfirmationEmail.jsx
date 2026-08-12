@@ -1,5 +1,6 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import axiosInstance from "../axiosInstance";
 import {
   Box,
@@ -11,14 +12,11 @@ import {
   AlertDescription,
 } from "@chakra-ui/react";
 
-export default function ConfirmationEmail({ user, setUser }) {
+export default function ConfirmationEmail({ setUser }) {
   const location = useLocation();
   const token = new URLSearchParams(location.search).get("token");
   const [res, setRes] = useState("");
   const navigate = useNavigate();
-
-  console.log("Получен токен:", token);
-  console.log("user:", user);
 
   useEffect(() => {
     if (!token) {
@@ -102,7 +100,7 @@ export default function ConfirmationEmail({ user, setUser }) {
             </Alert>
 
             <Text fontWeight="bold" mb={8}>
-              Мы отправили вам письмо от book-worm-elbrus@mail.ru со ссылкой для
+              Мы отправили вам письмо от mr-book-worm@mail.ru со ссылкой для
               подтверждения.
             </Text>
 

@@ -7,7 +7,8 @@ import {
   Link,
   Flex,
 } from "@chakra-ui/react";
-import React, { useState } from "react";
+/* eslint-disable react/prop-types */
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router";
 
 export default function SignUpPage({ handleSignUp, handleLogin }) {

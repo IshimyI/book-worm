@@ -59,7 +59,7 @@ const BookModal = ({ book, isOpen, onClose, user }) => {
       });
     } catch (error) {
       toast({
-        title: 'Не удалось обновить избранное',
+        title: error.response?.data?.message || 'Не удалось обновить избранное',
         status: 'error',
         duration: 2500,
         isClosable: true,
