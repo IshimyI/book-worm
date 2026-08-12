@@ -200,6 +200,40 @@ describe("DELETE /api/review/:id", () => {
     expect(res.status).toBe(200);
     expect(await Review.findByPk(reviewId)).toBeNull();
   });
+
+  it("soft-deletes: the row survives (audit trail) but is hidden from normal queries", async () => {
+    const { reviewId } = await createReview("owner3@example.com").then(async (ctx) => {
+      await request(app).delete(`/api/review/${ctx.reviewId}`).set("Authorization", `Bearer ${ctx.accessToken}`);
+      return ctx;
+    });
+
+    expect(await Review.findByPk(reviewId)).toBeNull();
+    const withDeleted = await Review.findByPk(reviewId, { paranoid: false });
+    expect(withDeleted).not.toBeNull();
+    expect(withDeleted.deletedAt).not.toBeNull();
+  });
+
+  it("lets a user write a new review for the same book after deleting the old one", async () => {
+    const { userId, accessToken, reviewId } = await createReview("owner4@example.com");
+    await request(app).delete(`/api/review/${reviewId}`).set("Authorization", `Bearer ${accessToken}`);
+
+    const res = await request(app)
+      .post("/api/book/new")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        user_id: userId,
+        title: "Shared Book",
+        author: "Shared Author",
+        body: "Second try",
+        user_rating: 5,
+      });
+
+    // The unique(bookId, userId) constraint must not see the soft-deleted
+    // row as a conflict — otherwise this would 500.
+    expect(res.status).toBe(200);
+    expect(res.body.review.id).not.toBe(reviewId);
+    expect(res.body.review.body).toBe("Second try");
+  });
 });
 
 describe("POST /api/updateFavourites/:id", () => {

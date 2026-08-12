@@ -23,6 +23,10 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Review",
+      // .destroy() sets deletedAt instead of removing the row, and every
+      // normal find/count query automatically excludes soft-deleted rows —
+      // no changes needed at any of the existing .destroy() call sites.
+      paranoid: true,
     }
   );
   return Review;
