@@ -8,6 +8,7 @@ const generateTokens = require("../utils/generateTokens");
 const sendEmail = require("../utils/emailService");
 const { confirmationEmailHtml, resetPasswordEmailHtml } = require("../utils/emailTemplates");
 const logSecurityEvent = require("../utils/securityLog");
+const sanitizeUser = require("../utils/sanitizeUser");
 const authRouter = express.Router();
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
@@ -72,10 +73,11 @@ authRouter.post("/signup", authLimiter, async (req, res) => {
       await newUser.save();
     }
 
-    const plainUser = newUser.get({ plain: true });
-    delete plainUser.password;
+    const plainUser = sanitizeUser(newUser.get({ plain: true }));
 
-    const { accessToken, refreshToken } = generateTokens({ user: plainUser });
+    const { accessToken, refreshToken, refreshTokenId } = generateTokens({ user: plainUser });
+    newUser.currentRefreshTokenId = refreshTokenId;
+    await newUser.save();
     res
       .cookie("refreshToken", refreshToken, cookieConfig)
       .json({ user: plainUser, accessToken });
@@ -107,8 +109,10 @@ authRouter.get("/confirm-email", async (req, res) => {
     user.isEmailConfirmed = true;
     await user.save();
 
-    const updatedUser = user.get({ plain: true });
-    const { accessToken, refreshToken } = generateTokens({ user: updatedUser });
+    const updatedUser = sanitizeUser(user.get({ plain: true }));
+    const { accessToken, refreshToken, refreshTokenId } = generateTokens({ user: updatedUser });
+    user.currentRefreshTokenId = refreshTokenId;
+    await user.save();
 
     res.status(200).cookie("refreshToken", refreshToken, cookieConfig).json({
       message: "Email успешно подтверждён!",
@@ -225,9 +229,10 @@ authRouter.post("/login", authLimiter, async (req, res) => {
     return res.sendStatus(400);
   }
 
-  const user = foundUser.get();
-  delete user.password;
-  const { accessToken, refreshToken } = generateTokens({ user });
+  const user = sanitizeUser(foundUser.get());
+  const { accessToken, refreshToken, refreshTokenId } = generateTokens({ user });
+  foundUser.currentRefreshTokenId = refreshTokenId;
+  await foundUser.save();
 
   res
     .status(200)
@@ -236,6 +241,18 @@ authRouter.post("/login", authLimiter, async (req, res) => {
 });
 
 authRouter.post("/logout", async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+    if (refreshToken) {
+      const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      await User.update(
+        { currentRefreshTokenId: null },
+        { where: { id: decoded.user.id } }
+      );
+    }
+  } catch (error) {
+    // Token already invalid/expired — nothing server-side to revoke.
+  }
   res.clearCookie("refreshToken").sendStatus(200);
 });
 

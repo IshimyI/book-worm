@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       isEmailConfirmed: DataTypes.BOOLEAN,
       resetPasswordToken: DataTypes.STRING,
       resetPasswordExpires: DataTypes.DATE,
+      currentRefreshTokenId: DataTypes.STRING,
     },
     {
       sequelize,
