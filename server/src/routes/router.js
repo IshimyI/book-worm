@@ -16,6 +16,7 @@ const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRat
 const { computeAchievements } = require("../utils/achievements");
 const { findPossibleDuplicate } = require("../utils/bookDedup");
 const cache = require("../utils/simpleCache");
+const logSecurityEvent = require("../utils/securityLog");
 
 const router = express.Router();
 
@@ -30,6 +31,23 @@ const pageviewLimiter = rateLimit({
   legacyHeaders: false,
   skip: () => process.env.NODE_ENV === "test",
   handler: (req, res, next, options) => res.status(options.statusCode).end(),
+});
+
+// Shared by every authenticated write that could otherwise be scripted
+// into spam or abuse (creating books/reviews/quotes/comments, following,
+// reporting, uploading an avatar — the last of which now runs a CPU-bound
+// canvas resize per request). Generous enough that no real user browsing
+// normally would ever notice it.
+const contentLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === "test",
+  handler: (req, res, next, options) => {
+    logSecurityEvent({ type: "rate_limited", ip: req.ip, detail: req.path });
+    res.status(options.statusCode).json(options.message || { message: "Слишком много запросов. Попробуйте позже." });
+  },
 });
 
 // sendBeacon can't perform a CORS preflight, so the client deliberately
@@ -151,7 +169,7 @@ router.get("/users/:id/profile", optionalAuth, async (req, res) => {
   }
 });
 
-router.post("/users/:id/follow", verifyAccessToken, async (req, res) => {
+router.post("/users/:id/follow", verifyAccessToken, contentLimiter, async (req, res) => {
   const targetId = Number(req.params.id);
   try {
     if (targetId === req.userId) {
@@ -257,6 +275,7 @@ router.get("/users/me/export", verifyAccessToken, async (req, res) => {
 router.post(
   "/users/me/avatar",
   verifyAccessToken,
+  contentLimiter,
   (req, res, next) => {
     uploadAvatar.single("avatar")(req, res, (err) => {
       if (err) {
@@ -645,7 +664,7 @@ router.get("/book/:id/quotes", async (req, res) => {
   }
 });
 
-router.post("/book/:id/quotes", verifyAccessToken, async (req, res) => {
+router.post("/book/:id/quotes", verifyAccessToken, contentLimiter, async (req, res) => {
   try {
     const { text, page } = req.body;
     if (!text || !text.trim()) {
@@ -965,7 +984,7 @@ function sanitizeAdditionalGenres(raw, primaryGenre) {
   return result;
 }
 
-router.post("/book/new", verifyAccessToken, async (req, res) => {
+router.post("/book/new", verifyAccessToken, contentLimiter, async (req, res) => {
   const {
     user_id,
     title = "",
@@ -1125,7 +1144,7 @@ router.get("/review/:id/comments", async (req, res) => {
   }
 });
 
-router.post("/review/:id/comments", verifyAccessToken, async (req, res) => {
+router.post("/review/:id/comments", verifyAccessToken, contentLimiter, async (req, res) => {
   const { id } = req.params;
   const body = (req.body.body || "").trim();
   const parentCommentId = req.body.parentCommentId ? Number(req.body.parentCommentId) : null;
@@ -1217,7 +1236,7 @@ router.delete("/review/:reviewId/comments/:commentId", verifyAccessToken, async 
   }
 });
 
-router.post("/review/:id/report", verifyAccessToken, async (req, res) => {
+router.post("/review/:id/report", verifyAccessToken, contentLimiter, async (req, res) => {
   const { id } = req.params;
   try {
     const review = await Review.findByPk(id);

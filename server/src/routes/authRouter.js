@@ -198,7 +198,7 @@ authRouter.post("/forgot-password", authLimiter, async (req, res) => {
   return "done";
 });
 
-authRouter.post(`/reset-password/:token`, async (req, res) => {
+authRouter.post(`/reset-password/:token`, authLimiter, async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
 
@@ -328,7 +328,7 @@ authRouter.post("/2fa/enable", verifyAccessToken, authLimiter, async (req, res) 
   }
 });
 
-authRouter.post("/2fa/disable", verifyAccessToken, async (req, res) => {
+authRouter.post("/2fa/disable", verifyAccessToken, authLimiter, async (req, res) => {
   try {
     const user = await User.findByPk(req.userId);
     const isValid = await bcrypt.compare(req.body.password || "", user.password);
