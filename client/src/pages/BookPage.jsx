@@ -9,6 +9,7 @@ import useSeoMeta from '../utils/useSeoMeta';
 import StarRatingInput from '../ui/StarRatingInput';
 import useFavorite from '../utils/useFavorite';
 import PageCard from '../ui/PageCard';
+import AddToListMenu from '../ui/AddToListMenu';
 
 export default function BookPage({ user, setUser }) {
   const { id } = useParams();
@@ -229,6 +230,7 @@ export default function BookPage({ user, setUser }) {
               <Button backgroundColor={isFavorite ? '#334d00' : '#6b7412'} color="white" onClick={handleFavorites}>
                 {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
               </Button>
+              <AddToListMenu user={user} bookId={book.id} />
               <Button
                 as="a"
                 href={openLibrarySearchUrl(book.title, book.author)}

@@ -21,6 +21,8 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const NewsPage = lazy(() => import("./pages/NewsPage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
+const ListsPage = lazy(() => import("./pages/ListsPage"));
+const ListDetailPage = lazy(() => import("./pages/ListDetailPage"));
 
 function RouteFallback() {
   return (
@@ -113,6 +115,8 @@ function App() {
           <Route path="/news" element={<NewsPage />} />
           <Route path="/users/:id" element={<PublicProfilePage />} />
           <Route path="/admin" element={<AdminPage user={user} />} />
+          <Route path="/lists" element={<ListsPage user={user} />} />
+          <Route path="/lists/:id" element={<ListDetailPage user={user} />} />
           <Route path="*" element={<ErrorPage />} />
         </Route>
       </Routes>

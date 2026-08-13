@@ -20,6 +20,7 @@ const router = require("./routes/router");
 const authRouter = require("./routes/authRouter");
 const tokensRouter = require("./routes/tokensRouter");
 const adminRouter = require("./routes/adminRouter");
+const listsRouter = require("./routes/listsRouter");
 
 const app = express();
 const { PORT } = process.env || 3000;
@@ -55,6 +56,7 @@ for (const prefix of ["/api", "/api/v1"]) {
   app.use(`${prefix}/auth`, authRouter);
   app.use(`${prefix}/tokens`, tokensRouter);
   app.use(`${prefix}/admin`, adminRouter);
+  app.use(`${prefix}/lists`, listsRouter);
 }
 
 if (process.env.SENTRY_DSN) {

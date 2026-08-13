@@ -34,7 +34,7 @@ export default function Footer() {
             </nav>
           </div>
         </div>
-        <div className="siteFooterCopy" style={{ marginTop: '28px', maxWidth: '120vh', marginLeft: 'auto', marginRight: 'auto' }}>
+        <div className="siteFooterCopy" style={{ marginTop: '28px', maxWidth: '1100px', marginLeft: 'auto', marginRight: 'auto' }}>
           © {new Date().getFullYear()} Mr Book Worm
         </div>
       </div>
