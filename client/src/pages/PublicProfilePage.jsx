@@ -2,13 +2,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
 import { Box, Center, Heading, Text, Stack, Avatar, Divider, Image, Flex, Button, Textarea, Badge, Skeleton, SkeletonCircle, SkeletonText, useToast } from '@chakra-ui/react';
-import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
 import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 import PageCard from '../ui/PageCard';
 import SpoilerText from '../ui/SpoilerText';
+import Breadcrumbs from '../ui/Breadcrumbs';
 import { withCount } from '../utils/pluralize';
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' });
@@ -114,11 +114,7 @@ export default function PublicProfilePage({ user }) {
 
   return (
     <PageCard>
-      <NavLink to="/">
-        <Button variant="link" mb="20px" sx={{ color: '#334d00' }}>
-          <ArrowBackIcon mr="6px" /> К каталогу
-        </Button>
-      </NavLink>
+      <Breadcrumbs items={[{ label: 'Главная', to: '/' }, { label: profile.name }]} />
 
       <Flex align="center" gap="16px" mb="10px" flexWrap="wrap">
         <Avatar name={profile.name} src={resolveAvatarUrl(profile.avatarUrl)} size="lg" />

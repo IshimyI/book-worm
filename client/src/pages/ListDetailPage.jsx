@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
 import { Box, Center, Heading, Text, SimpleGrid, Flex, Input, Textarea, Button, Image, Badge, useToast, Skeleton } from '@chakra-ui/react';
-import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
 import { coverThumbUrl } from '../utils/coverUrl';
 import PageCard from '../ui/PageCard';
+import Breadcrumbs from '../ui/Breadcrumbs';
 
 export default function ListDetailPage() {
   const { id } = useParams();
@@ -77,15 +77,11 @@ export default function ListDetailPage() {
   }
 
   const backTo = list.isCurated ? '/collections' : '/lists';
-  const backLabel = list.isCurated ? 'К подборкам' : 'К моим спискам';
+  const backLabel = list.isCurated ? 'Подборки' : 'Мои списки';
 
   return (
     <PageCard maxW="900px">
-      <NavLink to={backTo}>
-        <Button variant="link" mb="20px" sx={{ color: '#334d00' }}>
-          <ArrowBackIcon mr="6px" /> {backLabel}
-        </Button>
-      </NavLink>
+      <Breadcrumbs items={[{ label: 'Главная', to: '/' }, { label: backLabel, to: backTo }, { label: list.name }]} />
 
       {list.isCurated && (
         <Badge colorScheme="green" mb="10px">Подборка редакции</Badge>

@@ -2,7 +2,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
 import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textarea, Button, Select, useToast, Skeleton, SkeletonText, SkeletonCircle, useColorModeValue, Badge } from '@chakra-ui/react';
-import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
 import useSeoMeta from '../utils/useSeoMeta';
@@ -18,6 +17,7 @@ import { relativeTime } from '../utils/relativeTime';
 import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 import useConfirm from '../ui/useConfirm';
+import Breadcrumbs from '../ui/Breadcrumbs';
 import useUndoableAction from '../ui/useUndoableAction';
 
 export default function BookPage({ user, setUser }) {
@@ -301,11 +301,7 @@ export default function BookPage({ user, setUser }) {
   return (
     <PageCard maxW="1000px">
       {ConfirmDialog}
-      <NavLink to="/">
-        <Button variant="link" mb="20px" sx={{ color: '#334d00' }}>
-          <ArrowBackIcon mr="6px" /> К каталогу
-        </Button>
-      </NavLink>
+      <Breadcrumbs items={[{ label: 'Главная', to: '/' }, { label: book.title }]} />
 
       <Flex gap="30px" flexWrap="wrap">
         <Image src={book.img || './default.jpg'} alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
