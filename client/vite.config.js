@@ -7,8 +7,22 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      // generateSW can't run custom code in the worker — switched to
+      // injectManifest (own src/sw.js, precache manifest injected into it)
+      // so the push/notificationclick handlers below have somewhere to live.
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.js",
+      injectManifest: {
+        // The vendor chunk alone is >2MB uncompressed; default is 2MB.
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+      },
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "robots.txt"],
+      // The service worker (push/notificationclick handlers included) is
+      // otherwise skipped entirely in `vite dev` — needed here since that's
+      // the normal way this app gets run and tested locally.
+      devOptions: { enabled: true, type: "module" },
       manifest: {
         name: "Mr Book Worm",
         short_name: "Book Worm",
@@ -21,26 +35,6 @@ export default defineConfig({
           { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
           { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
           { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-        ],
-      },
-      workbox: {
-        // A live catalog, not offline-first content — API responses must
-        // always hit the network, never be served stale from cache.
-        navigateFallbackDenylist: [/^\/api/, /^\/uploads/],
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
-            handler: "NetworkOnly",
-          },
-          {
-            urlPattern: ({ url }) => url.hostname === "covers.openlibrary.org" || url.hostname.endsWith("archive.org"),
-            handler: "CacheFirst",
-            options: {
-              cacheName: "book-covers",
-              expiration: { maxEntries: 300, maxAgeSeconds: 30 * 24 * 60 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
         ],
       },
     }),

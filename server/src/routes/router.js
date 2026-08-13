@@ -1,5 +1,5 @@
 const express = require("express");
-const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, Notification, News } = require("../../db/models");
+const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, Notification, PushSubscription, News } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const fs = require("fs");
 const path = require("path");
@@ -8,6 +8,7 @@ const optionalAuth = require("../middlewares/optionalAuth");
 const { uploadAvatar, AVATAR_DIR } = require("../middlewares/uploadAvatar");
 const notify = require("../utils/notify");
 const { generateBookOgImage } = require("../utils/ogImage");
+const { isConfigured: pushConfigured } = require("../utils/webPush");
 const { containsProfanity } = require("../utils/moderation");
 const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRating");
 const cache = require("../utils/simpleCache");
@@ -244,6 +245,45 @@ router.post("/notifications/read-all", verifyAccessToken, async (req, res) => {
   try {
     await Notification.update({ isRead: true }, { where: { userId: req.userId, isRead: false } });
     res.status(200).json({ message: "Все уведомления отмечены как прочитанные" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.get("/push/vapid-public-key", (req, res) => {
+  res.status(200).json({ publicKey: pushConfigured ? process.env.VAPID_PUBLIC_KEY : null });
+});
+
+router.post("/push/subscribe", verifyAccessToken, async (req, res) => {
+  try {
+    const { endpoint, keys } = req.body;
+    if (!endpoint || !keys?.p256dh || !keys?.auth) {
+      return res.status(400).json({ message: "Некорректная подписка" });
+    }
+    const existing = await PushSubscription.findOne({ where: { endpoint } });
+    if (existing) {
+      existing.userId = req.userId;
+      existing.p256dh = keys.p256dh;
+      existing.auth = keys.auth;
+      await existing.save();
+    } else {
+      await PushSubscription.create({ userId: req.userId, endpoint, p256dh: keys.p256dh, auth: keys.auth });
+    }
+    res.status(200).json({ message: "Подписка сохранена" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.post("/push/unsubscribe", verifyAccessToken, async (req, res) => {
+  try {
+    const { endpoint } = req.body;
+    if (endpoint) {
+      await PushSubscription.destroy({ where: { endpoint, userId: req.userId } });
+    }
+    res.status(200).json({ message: "Подписка удалена" });
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);

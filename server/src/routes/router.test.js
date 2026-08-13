@@ -857,6 +857,64 @@ describe("reading status", () => {
   });
 });
 
+describe("web push subscriptions", () => {
+  it("reports push as unconfigured when no VAPID keys are set (test env)", async () => {
+    const res = await request(app).get("/api/push/vapid-public-key");
+    expect(res.status).toBe(200);
+    expect(res.body.publicKey).toBeNull();
+  });
+
+  it("requires authentication to subscribe", async () => {
+    const res = await request(app)
+      .post("/api/push/subscribe")
+      .send({ endpoint: "https://push.example.com/abc", keys: { p256dh: "key1", auth: "key2" } });
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects an incomplete subscription payload", async () => {
+    const { accessToken } = await signupAndLogin("push-invalid@example.com");
+    const res = await request(app)
+      .post("/api/push/subscribe")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ endpoint: "https://push.example.com/abc" });
+    expect(res.status).toBe(400);
+  });
+
+  it("saves a subscription and lets the owner remove it", async () => {
+    const { accessToken } = await signupAndLogin("push-user@example.com");
+    const endpoint = "https://push.example.com/unique-endpoint-1";
+
+    const subscribeRes = await request(app)
+      .post("/api/push/subscribe")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ endpoint, keys: { p256dh: "key1", auth: "key2" } });
+    expect(subscribeRes.status).toBe(200);
+
+    const unsubscribeRes = await request(app)
+      .post("/api/push/unsubscribe")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ endpoint });
+    expect(unsubscribeRes.status).toBe(200);
+  });
+
+  it("re-subscribing the same endpoint updates it instead of erroring on the unique index", async () => {
+    const { accessToken } = await signupAndLogin("push-resub@example.com");
+    const endpoint = "https://push.example.com/unique-endpoint-2";
+
+    const first = await request(app)
+      .post("/api/push/subscribe")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ endpoint, keys: { p256dh: "key1", auth: "key2" } });
+    expect(first.status).toBe(200);
+
+    const second = await request(app)
+      .post("/api/push/subscribe")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ endpoint, keys: { p256dh: "key1-updated", auth: "key2-updated" } });
+    expect(second.status).toBe(200);
+  });
+});
+
 describe("notifications", () => {
   it("requires authentication", async () => {
     const res = await request(app).get("/api/notifications");

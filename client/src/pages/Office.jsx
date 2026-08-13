@@ -9,6 +9,7 @@ import BookModal from "../ui/BookModal";
 import RecommendedBooks from "../ui/RecommendedBooks";
 import AvatarUpload from "../ui/AvatarUpload";
 import TwoFactorSettings from "../ui/TwoFactorSettings";
+import PushNotificationSettings from "../ui/PushNotificationSettings";
 import ReadingShelves from "../ui/ReadingShelves";
 
 const Office = ({ user, setUser }) => {
@@ -43,9 +44,14 @@ const Office = ({ user, setUser }) => {
             <AvatarUpload user={user} setUser={setUser} />
             <AddBook user={user} />
           </Flex>
-          <Box mb="30px">
-            <TwoFactorSettings user={user} setUser={setUser} />
-          </Box>
+          <Flex mb="30px" gap="16px" flexWrap="wrap" align="stretch">
+            <Box flex="1" minW="280px">
+              <TwoFactorSettings user={user} setUser={setUser} />
+            </Box>
+            <Box flex="1" minW="280px">
+              <PushNotificationSettings />
+            </Box>
+          </Flex>
           <Box mb="60px">
             <ReadingShelves handleBookClick={handleBookClick} />
           </Box>
