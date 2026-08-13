@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
-import { Box, Center, Heading, Text, Stack, Avatar, Divider, Image, Flex, Button, Skeleton, SkeletonCircle, SkeletonText, useToast } from '@chakra-ui/react';
+import { Box, Center, Heading, Text, Stack, Avatar, Divider, Image, Flex, Button, Textarea, Badge, Skeleton, SkeletonCircle, SkeletonText, useToast } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
@@ -17,6 +17,9 @@ export default function PublicProfilePage({ user }) {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [followBusy, setFollowBusy] = useState(false);
+  const [editingBio, setEditingBio] = useState(false);
+  const [bioInput, setBioInput] = useState('');
+  const [savingBio, setSavingBio] = useState(false);
   const toast = useToast();
 
   useSeoMeta({
@@ -73,6 +76,24 @@ export default function PublicProfilePage({ user }) {
 
   const isOwnProfile = user && user.id === profile.id;
 
+  const startEditingBio = () => {
+    setBioInput(profile.bio || '');
+    setEditingBio(true);
+  };
+
+  const saveBio = async () => {
+    setSavingBio(true);
+    try {
+      const res = await axiosInstance.patch('/users/me/bio', { bio: bioInput });
+      setProfile((prev) => ({ ...prev, bio: res.data.bio }));
+      setEditingBio(false);
+    } catch (error) {
+      toast({ title: error.response?.data?.message || 'Не удалось сохранить био', status: 'error', duration: 2500, isClosable: true });
+    } finally {
+      setSavingBio(false);
+    }
+  };
+
   const toggleFollow = async () => {
     if (!user) {
       toast({ title: 'Войдите, чтобы подписываться на пользователей', status: 'info', duration: 2500, isClosable: true });
@@ -122,6 +143,45 @@ export default function PublicProfilePage({ user }) {
           </Button>
         )}
       </Flex>
+
+      {editingBio ? (
+        <Box mb="20px">
+          <Textarea
+            value={bioInput}
+            onChange={(e) => setBioInput(e.target.value)}
+            placeholder="Расскажите немного о себе и своих читательских вкусах"
+            maxLength={500}
+            rows={3}
+            mb="8px"
+          />
+          <Button size="sm" isLoading={savingBio} onClick={saveBio} sx={{ backgroundColor: '#334d00', color: 'white' }} mr="8px">
+            Сохранить
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setEditingBio(false)}>Отмена</Button>
+        </Box>
+      ) : (
+        <Box mb="20px">
+          {profile.bio ? (
+            <Text whiteSpace="pre-wrap">{profile.bio}</Text>
+          ) : (
+            isOwnProfile && <Text color="bw.textMuted" fontSize="sm">Расскажите о себе — нажмите «Изменить», чтобы добавить био.</Text>
+          )}
+          {isOwnProfile && (
+            <Button size="xs" variant="link" mt="4px" sx={{ color: '#334d00' }} onClick={startEditingBio}>
+              Изменить
+            </Button>
+          )}
+        </Box>
+      )}
+
+      {profile.topGenres?.length > 0 && (
+        <Flex gap="6px" mb="20px" flexWrap="wrap">
+          <Text fontSize="sm" color="bw.textMuted">Любимые жанры:</Text>
+          {profile.topGenres.map((genre) => (
+            <Badge key={genre} colorScheme="green">{genre}</Badge>
+          ))}
+        </Flex>
+      )}
 
       <Divider my="20px" />
 

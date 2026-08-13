@@ -55,6 +55,58 @@ describe("GET /api/users/:id/profile", () => {
     const page2 = await request(app).get(`/api/users/${userId}/profile`).query({ pageSize: 10, page: 2 });
     expect(page2.body.reviews).toHaveLength(2);
   });
+
+  it("includes bio and the reviewer's most-reviewed genres", async () => {
+    const { userId, accessToken } = await signupAndLogin("genre-fan@example.com");
+    const romanBook1 = await Book.create({ title: "Roman 1", author: "A", genre: "Роман" });
+    const romanBook2 = await Book.create({ title: "Roman 2", author: "B", genre: "Роман" });
+    const horrorBook = await Book.create({ title: "Horror 1", author: "C", genre: "Хоррор" });
+    await Review.create({ bookId: romanBook1.id, userId, body: "r1", user_rating: 5 });
+    await Review.create({ bookId: romanBook2.id, userId, body: "r2", user_rating: 4 });
+    await Review.create({ bookId: horrorBook.id, userId, body: "r3", user_rating: 3 });
+
+    await request(app).patch("/api/users/me/bio").set("Authorization", `Bearer ${accessToken}`).send({ bio: "Люблю классику" });
+
+    const res = await request(app).get(`/api/users/${userId}/profile`);
+    expect(res.body.bio).toBe("Люблю классику");
+    expect(res.body.topGenres[0]).toBe("Роман");
+  });
+});
+
+describe("PATCH /api/users/me/bio", () => {
+  it("requires authentication", async () => {
+    const res = await request(app).patch("/api/users/me/bio").send({ bio: "Привет" });
+    expect(res.status).toBe(401);
+  });
+
+  it("sets and clears a bio", async () => {
+    const { userId, accessToken } = await signupAndLogin("bio-user@example.com");
+
+    const setRes = await request(app)
+      .patch("/api/users/me/bio")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ bio: "Читаю фантастику по вечерам" });
+    expect(setRes.status).toBe(200);
+    expect(setRes.body.bio).toBe("Читаю фантастику по вечерам");
+
+    const clearRes = await request(app)
+      .patch("/api/users/me/bio")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ bio: "" });
+    expect(clearRes.body.bio).toBeNull();
+
+    const profileRes = await request(app).get(`/api/users/${userId}/profile`);
+    expect(profileRes.body.bio).toBeNull();
+  });
+
+  it("rejects a bio over the length limit", async () => {
+    const { accessToken } = await signupAndLogin("bio-toolong@example.com");
+    const res = await request(app)
+      .patch("/api/users/me/bio")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ bio: "a".repeat(501) });
+    expect(res.status).toBe(400);
+  });
 });
 
 describe("GET /api/listAllBooks", () => {

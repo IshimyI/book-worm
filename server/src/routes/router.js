@@ -46,7 +46,7 @@ router.get("/users/:id/profile", optionalAuth, async (req, res) => {
   const { id } = req.params;
   const { page = 1, pageSize = 10 } = req.query;
   try {
-    const user = await User.findByPk(id, { attributes: ["id", "name", "createdAt", "avatarUrl"] });
+    const user = await User.findByPk(id, { attributes: ["id", "name", "createdAt", "avatarUrl", "bio"] });
     if (!user) {
       return res.status(404).send({ message: "Пользователь не найден" });
     }
@@ -63,21 +63,32 @@ router.get("/users/:id/profile", optionalAuth, async (req, res) => {
       offset,
     });
 
-    const [followerCount, followingCount, isFollowedByMe] = await Promise.all([
+    const [followerCount, followingCount, isFollowedByMe, topGenreRows] = await Promise.all([
       Follow.count({ where: { followingId: id } }),
       Follow.count({ where: { followerId: id } }),
       req.userId ? Follow.findOne({ where: { followerId: req.userId, followingId: id } }).then(Boolean) : false,
+      Review.findAll({
+        where: { userId: id, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
+        include: [{ model: Book, attributes: [] }],
+        attributes: [[Sequelize.col("Book.genre"), "genre"], [Sequelize.fn("COUNT", Sequelize.col("Review.id")), "count"]],
+        group: ["Book.genre"],
+        order: [[Sequelize.literal("count"), "DESC"]],
+        limit: 3,
+        raw: true,
+      }),
     ]);
 
     res.status(200).send({
       id: user.id,
       name: user.name,
       avatarUrl: user.avatarUrl,
+      bio: user.bio,
       memberSince: user.createdAt,
       reviewCount,
       followerCount,
       followingCount,
       isFollowedByMe,
+      topGenres: topGenreRows.map((r) => r.genre).filter(Boolean),
       page: Math.max(Number(page) || 1, 1),
       totalPages: Math.max(1, Math.ceil(reviewCount / limit)),
       reviews: reviews.map((r) => ({
@@ -120,6 +131,25 @@ router.post("/users/:id/follow", verifyAccessToken, async (req, res) => {
     }
     const followerCount = await Follow.count({ where: { followingId: targetId } });
     res.status(200).json({ following, followerCount });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+const BIO_MAX_LENGTH = 500;
+
+router.patch("/users/me/bio", verifyAccessToken, async (req, res) => {
+  try {
+    const bio = (req.body.bio || "").trim();
+    if (bio.length > BIO_MAX_LENGTH) {
+      return res.status(400).json({ message: `Слишком длинная биография (максимум ${BIO_MAX_LENGTH} символов)` });
+    }
+    if (containsProfanity(bio)) {
+      return res.status(400).json({ message: "Биография содержит недопустимые слова" });
+    }
+    await User.update({ bio: bio || null }, { where: { id: req.userId } });
+    res.status(200).json({ bio: bio || null });
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);

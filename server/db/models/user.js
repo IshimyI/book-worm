@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       refreshTokenRotatedAt: DataTypes.DATE,
       isAdmin: DataTypes.BOOLEAN,
       avatarUrl: DataTypes.STRING,
+      bio: DataTypes.TEXT,
       twoFactorSecret: DataTypes.STRING,
       twoFactorEnabled: DataTypes.BOOLEAN,
       twoFactorRecoveryCodes: DataTypes.TEXT,
