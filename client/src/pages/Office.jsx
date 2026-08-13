@@ -11,6 +11,7 @@ import AvatarUpload from "../ui/AvatarUpload";
 import TwoFactorSettings from "../ui/TwoFactorSettings";
 import PushNotificationSettings from "../ui/PushNotificationSettings";
 import ReadingShelves from "../ui/ReadingShelves";
+import ReadingChallenge from "../ui/ReadingChallenge";
 
 const Office = ({ user, setUser }) => {
   const [review, setReview] = useState([]);
@@ -50,6 +51,9 @@ const Office = ({ user, setUser }) => {
             </Box>
             <Box flex="1" minW="280px">
               <PushNotificationSettings />
+            </Box>
+            <Box flex="1" minW="280px">
+              <ReadingChallenge />
             </Box>
           </Flex>
           <Box mb="60px">

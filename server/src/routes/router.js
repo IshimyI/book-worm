@@ -1,6 +1,6 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, Notification, PushSubscription, PageView, News, Quote } = require("../../db/models");
+const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, ReadingChallenge, Notification, PushSubscription, PageView, News, Quote } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const fs = require("fs");
 const path = require("path");
@@ -747,6 +747,52 @@ router.get("/reading-status", verifyAccessToken, async (req, res) => {
       });
     }
     res.status(200).json(grouped);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+const CHALLENGE_MIN_GOAL = 1;
+const CHALLENGE_MAX_GOAL = 999;
+
+router.get("/reading-challenge", verifyAccessToken, async (req, res) => {
+  try {
+    const year = Number(req.query.year) || new Date().getFullYear();
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
+
+    const [challenge, completed] = await Promise.all([
+      ReadingChallenge.findOne({ where: { userId: req.userId, year } }),
+      ReadingStatus.count({
+        where: { userId: req.userId, status: "read", updatedAt: { [Sequelize.Op.gte]: yearStart, [Sequelize.Op.lt]: yearEnd } },
+      }),
+    ]);
+
+    res.status(200).json({ year, goal: challenge?.goal || null, completed });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.post("/reading-challenge", verifyAccessToken, async (req, res) => {
+  try {
+    const year = Number(req.body.year) || new Date().getFullYear();
+    const goal = Number(req.body.goal);
+    if (!Number.isInteger(goal) || goal < CHALLENGE_MIN_GOAL || goal > CHALLENGE_MAX_GOAL) {
+      return res.status(400).json({ message: `Цель должна быть числом от ${CHALLENGE_MIN_GOAL} до ${CHALLENGE_MAX_GOAL}` });
+    }
+
+    const [challenge] = await ReadingChallenge.findOrCreate({
+      where: { userId: req.userId, year },
+      defaults: { goal },
+    });
+    if (challenge.goal !== goal) {
+      challenge.goal = goal;
+      await challenge.save();
+    }
+    res.status(200).json({ year, goal: challenge.goal });
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);

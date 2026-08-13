@@ -885,6 +885,49 @@ describe("reading status", () => {
   });
 });
 
+describe("reading challenge", () => {
+  it("requires authentication", async () => {
+    const res = await request(app).get("/api/reading-challenge");
+    expect(res.status).toBe(401);
+  });
+
+  it("has no goal set by default", async () => {
+    const { accessToken } = await signupAndLogin("challenge1@example.com");
+    const res = await request(app).get("/api/reading-challenge").set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.goal).toBeNull();
+    expect(res.body.completed).toBe(0);
+    expect(res.body.year).toBe(new Date().getFullYear());
+  });
+
+  it("rejects a non-positive or absurdly large goal", async () => {
+    const { accessToken } = await signupAndLogin("challenge2@example.com");
+    const zero = await request(app).post("/api/reading-challenge").set("Authorization", `Bearer ${accessToken}`).send({ goal: 0 });
+    expect(zero.status).toBe(400);
+    const huge = await request(app).post("/api/reading-challenge").set("Authorization", `Bearer ${accessToken}`).send({ goal: 10000 });
+    expect(huge.status).toBe(400);
+  });
+
+  it("sets a goal, updates it, and counts books finished this year", async () => {
+    const { accessToken } = await signupAndLogin("challenge3@example.com");
+    const setRes = await request(app).post("/api/reading-challenge").set("Authorization", `Bearer ${accessToken}`).send({ goal: 12 });
+    expect(setRes.status).toBe(200);
+    expect(setRes.body.goal).toBe(12);
+
+    const updateRes = await request(app).post("/api/reading-challenge").set("Authorization", `Bearer ${accessToken}`).send({ goal: 20 });
+    expect(updateRes.body.goal).toBe(20);
+
+    const book1 = await Book.create({ title: "Challenge Book 1", author: "A", genre: "Роман" });
+    const book2 = await Book.create({ title: "Challenge Book 2", author: "B", genre: "Роман" });
+    await request(app).post(`/api/book/${book1.id}/reading-status`).set("Authorization", `Bearer ${accessToken}`).send({ status: "read" });
+    await request(app).post(`/api/book/${book2.id}/reading-status`).set("Authorization", `Bearer ${accessToken}`).send({ status: "reading" });
+
+    const res = await request(app).get("/api/reading-challenge").set("Authorization", `Bearer ${accessToken}`);
+    expect(res.body.goal).toBe(20);
+    expect(res.body.completed).toBe(1);
+  });
+});
+
 describe("web push subscriptions", () => {
   it("reports push as unconfigured when no VAPID keys are set (test env)", async () => {
     const res = await request(app).get("/api/push/vapid-public-key");
