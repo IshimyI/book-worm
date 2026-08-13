@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
+    "start": "node ./src/app.js",
     "dev": "nodemon --env-file=.env ./src/app.js --ext js,jsx",
     "cleanup": "node --env-file=.env ./scripts/cleanupOldData.js",
     "dbCreate": "npx sequelize db:create",

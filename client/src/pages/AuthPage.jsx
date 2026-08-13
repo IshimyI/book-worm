@@ -24,14 +24,18 @@ export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoF
   const [verifying, setVerifying] = useState(false);
   const toast = useToast();
 
-  const handleCorrect = (e) => {
+  const handleCorrect = async (e) => {
     e.preventDefault();
     if (firstPassword !== secondPassword) {
       alert("Ваши пароли не совпадают");
       return;
     }
-    handleSignUp(e);
-    navigate("/confirm-email");
+    try {
+      await handleSignUp(e);
+      navigate("/confirm-email");
+    } catch (error) {
+      toast({ title: error.response?.data?.message || 'Не удалось зарегистрироваться', status: 'error', duration: 2500, isClosable: true });
+    }
   };
 
   const onLoginSubmit = async (e) => {
