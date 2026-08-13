@@ -5,6 +5,7 @@ import {
 } from '@chakra-ui/react';
 import { DeleteIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
+import useUndoableAction from './useUndoableAction';
 
 export default function BookQuotes({ bookId, user }) {
   const [quotes, setQuotes] = useState([]);
@@ -13,6 +14,7 @@ export default function BookQuotes({ bookId, user }) {
   const [page, setPage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
+  const runUndoable = useUndoableAction();
 
   const load = () => {
     axiosInstance
@@ -44,13 +46,30 @@ export default function BookQuotes({ bookId, user }) {
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await axiosInstance.delete(`/quotes/${id}`);
-      setQuotes((prev) => prev.filter((q) => q.id !== id));
-    } catch (error) {
-      toast({ title: error.response?.data?.message || 'Не удалось удалить цитату', status: 'error', duration: 2500, isClosable: true });
-    }
+  const handleDelete = (id) => {
+    const removedIndex = quotes.findIndex((q) => q.id === id);
+    const removed = quotes[removedIndex];
+    setQuotes((prev) => prev.filter((q) => q.id !== id));
+
+    const restore = () => setQuotes((prev) => {
+      if (prev.some((q) => q.id === id)) return prev;
+      const next = [...prev];
+      next.splice(Math.min(removedIndex, next.length), 0, removed);
+      return next;
+    });
+
+    runUndoable({
+      message: 'Цитата удалена',
+      onUndo: restore,
+      onCommit: async () => {
+        try {
+          await axiosInstance.delete(`/quotes/${id}`);
+        } catch (error) {
+          restore();
+          toast({ title: error.response?.data?.message || 'Не удалось удалить цитату', status: 'error', duration: 2500, isClosable: true });
+        }
+      },
+    });
   };
 
   return (

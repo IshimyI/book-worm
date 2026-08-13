@@ -18,6 +18,7 @@ import { relativeTime } from '../utils/relativeTime';
 import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 import useConfirm from '../ui/useConfirm';
+import useUndoableAction from '../ui/useUndoableAction';
 
 export default function BookPage({ user, setUser }) {
   const { id } = useParams();
@@ -31,6 +32,7 @@ export default function BookPage({ user, setUser }) {
   const { isFavorite, toggle: toggleFavorite } = useFavorite(user, setUser, book?.id);
   const toast = useToast();
   const { confirm, ConfirmDialog } = useConfirm();
+  const runUndoable = useUndoableAction();
 
   useEffect(() => {
     setLoading(true);
@@ -112,13 +114,29 @@ export default function BookPage({ user, setUser }) {
 
   const deleteReview = async () => {
     if (!myReview || !(await confirm('Удалить вашу рецензию?'))) return;
-    try {
-      await axiosInstance.delete(`/review/${myReview.id}`);
-      setReviews((prev) => prev.filter((r) => r.id !== myReview.id));
-      toast({ title: 'Рецензия удалена', status: 'success', duration: 2000, isClosable: true });
-    } catch (error) {
-      toast({ title: error.response?.data?.message || 'Не удалось удалить рецензию', status: 'error', duration: 2500, isClosable: true });
-    }
+    const removed = myReview;
+    const removedIndex = reviews.findIndex((r) => r.id === removed.id);
+    setReviews((prev) => prev.filter((r) => r.id !== removed.id));
+
+    const restore = () => setReviews((prev) => {
+      if (prev.some((r) => r.id === removed.id)) return prev;
+      const next = [...prev];
+      next.splice(Math.min(removedIndex, next.length), 0, removed);
+      return next;
+    });
+
+    runUndoable({
+      message: 'Рецензия удалена',
+      onUndo: restore,
+      onCommit: async () => {
+        try {
+          await axiosInstance.delete(`/review/${removed.id}`);
+        } catch (error) {
+          restore();
+          toast({ title: error.response?.data?.message || 'Не удалось удалить рецензию', status: 'error', duration: 2500, isClosable: true });
+        }
+      },
+    });
   };
 
   const toggleHelpful = async (review) => {
