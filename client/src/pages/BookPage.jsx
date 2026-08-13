@@ -12,6 +12,7 @@ import PageCard from '../ui/PageCard';
 import AddToListMenu from '../ui/AddToListMenu';
 import ReadingStatusSelect from '../ui/ReadingStatusSelect';
 import ReviewComments from '../ui/ReviewComments';
+import BookQuotes from '../ui/BookQuotes';
 import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 
@@ -290,6 +291,10 @@ export default function BookPage({ user, setUser }) {
             </Flex>
           </Box>
         </Flex>
+
+        <Divider my="30px" />
+
+        <BookQuotes bookId={book.id} user={user} />
 
         <Divider my="30px" />
 

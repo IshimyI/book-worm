@@ -1023,3 +1023,77 @@ describe("notifications", () => {
     expect(afterRes.body.unreadCount).toBe(0);
   });
 });
+
+describe("book quotes", () => {
+  async function makeBook() {
+    return Book.create({ title: "Quoted Book", author: "A", genre: "Роман" });
+  }
+
+  it("lists quotes for a book, newest first, without authentication", async () => {
+    const book = await makeBook();
+    const { accessToken } = await signupAndLogin("quoter1@example.com");
+    await request(app)
+      .post(`/api/book/${book.id}/quotes`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ text: "Первая цитата" });
+    await request(app)
+      .post(`/api/book/${book.id}/quotes`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ text: "Вторая цитата", page: 42 });
+
+    const res = await request(app).get(`/api/book/${book.id}/quotes`);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(2);
+    expect(res.body[0].text).toBe("Вторая цитата");
+    expect(res.body[0].page).toBe(42);
+    expect(res.body[0].author.name).toBe("Reviewer");
+  });
+
+  it("requires authentication to add a quote", async () => {
+    const book = await makeBook();
+    const res = await request(app).post(`/api/book/${book.id}/quotes`).send({ text: "Цитата" });
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects an empty quote", async () => {
+    const book = await makeBook();
+    const { accessToken } = await signupAndLogin("quoter2@example.com");
+    const res = await request(app)
+      .post(`/api/book/${book.id}/quotes`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ text: "   " });
+    expect(res.status).toBe(400);
+  });
+
+  it("404s when adding a quote to a book that doesn't exist", async () => {
+    const { accessToken } = await signupAndLogin("quoter3@example.com");
+    const res = await request(app)
+      .post(`/api/book/999999/quotes`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ text: "Цитата" });
+    expect(res.status).toBe(404);
+  });
+
+  it("lets the author delete their own quote, but not someone else's", async () => {
+    const book = await makeBook();
+    const owner = await signupAndLogin("quoter4@example.com");
+    const other = await signupAndLogin("quoter5@example.com");
+    const created = await request(app)
+      .post(`/api/book/${book.id}/quotes`)
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .send({ text: "Моя цитата" });
+
+    const forbidden = await request(app)
+      .delete(`/api/quotes/${created.body.id}`)
+      .set("Authorization", `Bearer ${other.accessToken}`);
+    expect(forbidden.status).toBe(403);
+
+    const ok = await request(app)
+      .delete(`/api/quotes/${created.body.id}`)
+      .set("Authorization", `Bearer ${owner.accessToken}`);
+    expect(ok.status).toBe(200);
+
+    const list = await request(app).get(`/api/book/${book.id}/quotes`);
+    expect(list.body).toHaveLength(0);
+  });
+});

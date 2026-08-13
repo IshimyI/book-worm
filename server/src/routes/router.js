@@ -1,6 +1,6 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, Notification, PushSubscription, PageView, News } = require("../../db/models");
+const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, Notification, PushSubscription, PageView, News, Quote } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const fs = require("fs");
 const path = require("path");
@@ -551,6 +551,85 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
       readingStatus,
       reviews: book.Reviews.map((r) => mapReview(r, votedReviewIds)),
     });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+const QUOTE_MAX_LENGTH = 1000;
+
+router.get("/book/:id/quotes", async (req, res) => {
+  try {
+    const quotes = await Quote.findAll({
+      where: { bookId: req.params.id },
+      order: [["createdAt", "DESC"]],
+      include: [{ model: User, attributes: ["id", "name", "avatarUrl"] }],
+    });
+    res.status(200).json(
+      quotes.map((q) => ({
+        id: q.id,
+        text: q.text,
+        page: q.page,
+        createdAt: q.createdAt,
+        author: { id: q.User.id, name: q.User.name, avatarUrl: q.User.avatarUrl },
+      }))
+    );
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.post("/book/:id/quotes", verifyAccessToken, async (req, res) => {
+  try {
+    const { text, page } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: "Цитата не может быть пустой" });
+    }
+    if (text.length > QUOTE_MAX_LENGTH) {
+      return res.status(400).json({ message: `Слишком длинная цитата (максимум ${QUOTE_MAX_LENGTH} символов)` });
+    }
+    if (containsProfanity(text)) {
+      return res.status(400).json({ message: "Цитата содержит недопустимые слова" });
+    }
+    const book = await Book.findByPk(req.params.id);
+    if (!book) {
+      return res.status(404).json({ message: "Книга не найдена" });
+    }
+
+    const quote = await Quote.create({
+      bookId: book.id,
+      userId: req.userId,
+      text: text.trim(),
+      page: page ? Number(page) : null,
+    });
+    const author = await User.findByPk(req.userId, { attributes: ["id", "name", "avatarUrl"] });
+
+    res.status(201).json({
+      id: quote.id,
+      text: quote.text,
+      page: quote.page,
+      createdAt: quote.createdAt,
+      author: { id: author.id, name: author.name, avatarUrl: author.avatarUrl },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.delete("/quotes/:id", verifyAccessToken, async (req, res) => {
+  try {
+    const quote = await Quote.findByPk(req.params.id);
+    if (!quote) {
+      return res.status(404).json({ message: "Цитата не найдена" });
+    }
+    if (quote.userId !== req.userId) {
+      return res.status(403).json({ message: "Можно удалять только свои цитаты" });
+    }
+    await quote.destroy();
+    res.status(200).json({ message: "Цитата удалена" });
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);
