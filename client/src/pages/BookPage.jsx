@@ -112,6 +112,28 @@ export default function BookPage({ user, setUser }) {
     document.getElementById('reviewForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  const draftKey = book ? `bw_draft_review_${book.id}` : null;
+
+  // Restore an unsaved draft once the book (and whether the user already
+  // has a review to edit instead) is known — only for the "write a new
+  // review" case, so it never clobbers the pre-filled edit form above.
+  useEffect(() => {
+    if (!draftKey || isEditing) return;
+    const draft = localStorage.getItem(draftKey);
+    if (draft) setInputBody(draft);
+  }, [draftKey, isEditing]);
+
+  // ...and keep saving it as they type, so navigating away by accident
+  // doesn't lose a half-written review.
+  useEffect(() => {
+    if (!draftKey || isEditing) return;
+    if (inputBody) {
+      localStorage.setItem(draftKey, inputBody);
+    } else {
+      localStorage.removeItem(draftKey);
+    }
+  }, [draftKey, isEditing, inputBody]);
+
   const deleteReview = async () => {
     if (!myReview || !(await confirm('Удалить вашу рецензию?'))) return;
     const removed = myReview;
