@@ -1,5 +1,6 @@
 const express = require("express");
 const { Review, Book, User, PageView, SecurityEvent } = require("../../db/models");
+const cache = require("../utils/simpleCache");
 const { Sequelize } = require("sequelize");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
 const requireAdmin = require("../middlewares/requireAdmin");
@@ -196,6 +197,71 @@ adminRouter.get("/stats", async (req, res) => {
         })
         .filter(Boolean),
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+adminRouter.get("/pending-books", async (req, res) => {
+  try {
+    const books = await Book.findAll({
+      where: { status: "pending" },
+      order: [["createdAt", "ASC"]],
+      include: [{ model: Review, attributes: ["id", "body", "user_rating"], include: [{ model: User, attributes: ["id", "name", "email"] }] }],
+    });
+
+    res.status(200).json(
+      books.map((b) => {
+        const submitter = b.Reviews?.[0]?.User;
+        return {
+          id: b.id,
+          title: b.title,
+          author: b.author,
+          genre: b.genre,
+          annotation: b.annotation,
+          img: b.img,
+          year: b.year,
+          createdAt: b.createdAt,
+          submittedBy: submitter ? { id: submitter.id, name: submitter.name, email: submitter.email } : null,
+        };
+      })
+    );
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+adminRouter.post("/books/:id/approve", async (req, res) => {
+  try {
+    const book = await Book.findByPk(req.params.id);
+    if (!book) {
+      return res.status(404).json({ message: "Книга не найдена" });
+    }
+    book.status = "approved";
+    await book.save();
+    cache.clearPrefix("listAllBooks:");
+    res.status(200).json({ message: "Книга одобрена" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+adminRouter.delete("/books/:id", async (req, res) => {
+  try {
+    const book = await Book.findByPk(req.params.id);
+    if (!book) {
+      return res.status(404).json({ message: "Книга не найдена" });
+    }
+    // Reviews are soft-deleted (paranoid) elsewhere, but a plain destroy()
+    // would leave the row (and its bookId FK) in place — force a real
+    // delete so the book itself can be removed. Votes/comments on those
+    // reviews cascade automatically.
+    await Review.destroy({ where: { bookId: book.id }, force: true });
+    await book.destroy();
+    res.status(200).json({ message: "Книга отклонена и удалена" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Ошибка сервера" });

@@ -24,4 +24,13 @@ function set(key, value, ttlMs) {
   store.set(key, { value, expiresAt: Date.now() + ttlMs });
 }
 
-module.exports = { get, set };
+// Wipes every entry whose key starts with the given prefix — used when a
+// write should be reflected immediately (e.g. approving a book) instead of
+// waiting out the TTL.
+function clearPrefix(prefix) {
+  for (const key of store.keys()) {
+    if (key.startsWith(prefix)) store.delete(key);
+  }
+}
+
+module.exports = { get, set, clearPrefix };

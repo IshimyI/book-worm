@@ -425,7 +425,7 @@ router.get("/listAllBooks", async (req, res) => {
     // comparison, not a numeric one — cast it explicitly instead.
     const ratingAsFloat = Sequelize.cast(Sequelize.col("rating"), "FLOAT");
 
-    const andConditions = [];
+    const andConditions = [{ status: "approved" }];
     if (genre) {
       // additionalGenres is varchar[]; array-operator comparisons need an
       // explicit cast or Postgres can't match it against the text[] literal
@@ -469,7 +469,7 @@ router.get("/listAllBooks", async (req, res) => {
         limit,
         offset,
       }),
-      Book.findAll({ attributes: ["genre", "additionalGenres", "author", "year"], raw: true }),
+      Book.findAll({ where: { status: "approved" }, attributes: ["genre", "additionalGenres", "author", "year"], raw: true }),
     ]);
 
     const payload = {
@@ -548,6 +548,7 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
       genre: book.genre,
       additionalGenres: book.additionalGenres,
       year: book.year,
+      status: book.status,
       readingStatus,
       reviews: book.Reviews.map((r) => mapReview(r, votedReviewIds)),
     });
@@ -678,6 +679,7 @@ router.get("/book/:id/recommendations", async (req, res) => {
     const recommendations = await Book.findAll({
       where: {
         id: { [Sequelize.Op.ne]: book.id },
+        status: "approved",
         [Sequelize.Op.or]: [
           { genre: { [Sequelize.Op.in]: bookGenres } },
           Sequelize.where(Sequelize.cast(Sequelize.col("additionalGenres"), "text[]"), { [Sequelize.Op.overlap]: bookGenres }),
@@ -816,6 +818,7 @@ router.get("/recommendations", verifyAccessToken, async (req, res) => {
       : null;
 
     const where = {
+      status: "approved",
       ...(reviewedBookIds.length ? { id: { [Sequelize.Op.notIn]: reviewedBookIds } } : {}),
       ...(topGenreRow ? { genre: topGenreRow.genre } : {}),
     };
@@ -926,7 +929,11 @@ router.post("/book/new", verifyAccessToken, async (req, res) => {
   try {
     const [newBook] = await Book.findOrCreate({
       where: { title, author },
-      defaults: { genre, additionalGenres: sanitizeAdditionalGenres(additionalGenres, genre), year, annotation, img },
+      // Newly-submitted books start pending — kept out of the public
+      // catalog/recommendations until an admin approves them. A book that
+      // already exists (this is just a second review on it) keeps its
+      // current status untouched.
+      defaults: { genre, additionalGenres: sanitizeAdditionalGenres(additionalGenres, genre), year, annotation, img, status: "pending" },
     });
 
     const [review, reviewCreated] = await Review.findOrCreate({

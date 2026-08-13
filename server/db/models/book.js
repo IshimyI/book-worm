@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       genre: DataTypes.STRING,
       additionalGenres: DataTypes.ARRAY(DataTypes.STRING),
       year: DataTypes.INTEGER,
+      status: DataTypes.STRING,
     },
     {
       sequelize,

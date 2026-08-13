@@ -7,10 +7,12 @@ import PageCard from '../ui/PageCard';
 import AnalyticsSummary from '../ui/AnalyticsSummary';
 import SecurityEventLog from '../ui/SecurityEventLog';
 import StatsSummary from '../ui/StatsSummary';
+import PendingBooks from '../ui/PendingBooks';
 
 export default function AdminPage({ user }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
   const toast = useToast();
 
   const load = () => {
@@ -70,6 +72,7 @@ export default function AdminPage({ user }) {
       <Tabs colorScheme="green">
         <TabList>
           <Tab>Жалобы {reviews.length > 0 && `(${reviews.length})`}</Tab>
+          <Tab>На модерации {pendingCount > 0 && `(${pendingCount})`}</Tab>
           <Tab>Статистика</Tab>
           <Tab>Аналитика</Tab>
           <Tab>Журнал безопасности</Tab>
@@ -113,6 +116,9 @@ export default function AdminPage({ user }) {
                 ))}
               </Stack>
             )}
+          </TabPanel>
+          <TabPanel px={0}>
+            <PendingBooks onCountChange={setPendingCount} />
           </TabPanel>
           <TabPanel px={0}>
             <StatsSummary />

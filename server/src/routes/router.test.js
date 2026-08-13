@@ -220,6 +220,22 @@ describe("POST /api/book/new", () => {
     expect(res.body.review.user_rating).toBe(5);
   });
 
+  it("marks a newly submitted book as pending, hidden from the public catalog until approved", async () => {
+    const { userId, accessToken } = await signupAndLogin("author-pending@example.com");
+
+    const created = await request(app)
+      .post("/api/book/new")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ user_id: userId, title: "Unmoderated Book", author: "Someone", body: "Great read", user_rating: 5 });
+    expect(created.body.book.status).toBe("pending");
+
+    const listRes = await request(app).get("/api/listAllBooks").query({ search: "Unmoderated Book" });
+    expect(listRes.body.books.map((b) => b.title)).not.toContain("Unmoderated Book");
+
+    const bookRes = await request(app).get(`/api/book/${created.body.book.id}`);
+    expect(bookRes.body.status).toBe("pending");
+  });
+
   it("sanitizes additionalGenres: dedupes, drops a value matching the primary genre, and caps the count", async () => {
     const { userId, accessToken } = await signupAndLogin("author-genres@example.com");
 

@@ -207,3 +207,58 @@ describe("site stats", () => {
     expect(res.body.topBooks[0]).toMatchObject({ id: bookA.id, title: "Popular Book", reviewCount: 2 });
   });
 });
+
+describe("book moderation queue", () => {
+  async function submitPendingBook(email) {
+    const { userId, accessToken } = await signupAndLogin(email);
+    const res = await request(app)
+      .post("/api/book/new")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ user_id: userId, title: `Pending Book ${email}`, author: "Someone", body: "Отзыв", user_rating: 4 });
+    return { book: res.body.book, submitterEmail: email };
+  }
+
+  it("blocks non-admins", async () => {
+    const { accessToken } = await signupAndLogin("regular5@example.com");
+    const res = await request(app).get("/api/admin/pending-books").set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("lists pending books with the submitter's info", async () => {
+    const { book, submitterEmail } = await submitPendingBook("pending-submitter@example.com");
+    const admin = await signupAndLogin("pending-admin1@example.com", true);
+
+    const res = await request(app).get("/api/admin/pending-books").set("Authorization", `Bearer ${admin.accessToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].id).toBe(book.id);
+    expect(res.body[0].submittedBy.email).toBe(submitterEmail);
+  });
+
+  it("approves a pending book, making it visible in the public catalog", async () => {
+    const { book } = await submitPendingBook("pending-submitter2@example.com");
+    const admin = await signupAndLogin("pending-admin2@example.com", true);
+
+    const approveRes = await request(app)
+      .post(`/api/admin/books/${book.id}/approve`)
+      .set("Authorization", `Bearer ${admin.accessToken}`);
+    expect(approveRes.status).toBe(200);
+
+    const updated = await Book.findByPk(book.id);
+    expect(updated.status).toBe("approved");
+
+    const listRes = await request(app).get("/api/listAllBooks");
+    expect(listRes.body.books.map((b) => b.id)).toContain(book.id);
+  });
+
+  it("rejects (deletes) a pending book", async () => {
+    const { book } = await submitPendingBook("pending-submitter3@example.com");
+    const admin = await signupAndLogin("pending-admin3@example.com", true);
+
+    const res = await request(app)
+      .delete(`/api/admin/books/${book.id}`)
+      .set("Authorization", `Bearer ${admin.accessToken}`);
+    expect(res.status).toBe(200);
+    expect(await Book.findByPk(book.id)).toBeNull();
+  });
+});

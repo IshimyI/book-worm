@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
-import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textarea, Button, Select, useToast, Skeleton, SkeletonText, SkeletonCircle, useColorModeValue } from '@chakra-ui/react';
+import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textarea, Button, Select, useToast, Skeleton, SkeletonText, SkeletonCircle, useColorModeValue, Badge } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
@@ -257,7 +257,12 @@ export default function BookPage({ user, setUser }) {
       <Flex gap="30px" flexWrap="wrap">
         <Image src={book.img || './default.jpg'} alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
         <Box flex="1" minW="250px">
-          <Heading as="h1" size="lg" mb="10px">{book.title}</Heading>
+          <Heading as="h1" size="lg" mb="10px">
+            {book.title}
+            {book.status === 'pending' && (
+              <Badge ml="10px" colorScheme="yellow" verticalAlign="middle">На модерации</Badge>
+            )}
+          </Heading>
           <Text color="bw.textMuted" mb="10px">{book.author}</Text>
             <Stack spacing={2} mb="20px">
               <Text fontSize="sm">
