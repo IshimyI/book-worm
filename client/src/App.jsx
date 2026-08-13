@@ -72,10 +72,22 @@ function App() {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData);
     const res = await axiosInstance.post("/auth/login", data);
+    if (res.data.requiresTwoFactor) {
+      // Don't set the user/navigate yet — wait for the 2FA code.
+      return res.data;
+    }
     if (res.status === 200) {
       setUser(res.data.user);
       setAccessToken(res.data.accessToken);
     }
+    navigate("/");
+    return res.data;
+  };
+
+  const handleVerifyTwoFactor = async (challengeToken, token) => {
+    const res = await axiosInstance.post("/auth/2fa/verify-login", { challengeToken, token });
+    setUser(res.data.user);
+    setAccessToken(res.data.accessToken);
     navigate("/");
   };
 
@@ -99,7 +111,7 @@ function App() {
           <Route
             path="/auth"
             element={
-              <AuthPage handleSignUp={handleSignUp} handleLogin={handleLogin} />
+              <AuthPage handleSignUp={handleSignUp} handleLogin={handleLogin} handleVerifyTwoFactor={handleVerifyTwoFactor} />
             }
           ></Route>
           <Route path="/office" element={<Office user={user} setUser={setUser} />} />

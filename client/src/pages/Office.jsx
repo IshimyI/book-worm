@@ -8,6 +8,7 @@ import AddBook from "../ui/AddBook";
 import BookModal from "../ui/BookModal";
 import RecommendedBooks from "../ui/RecommendedBooks";
 import AvatarUpload from "../ui/AvatarUpload";
+import TwoFactorSettings from "../ui/TwoFactorSettings";
 
 const Office = ({ user, setUser }) => {
   const [review, setReview] = useState([]);
@@ -41,6 +42,9 @@ const Office = ({ user, setUser }) => {
             <AvatarUpload user={user} setUser={setUser} />
             <AddBook user={user} />
           </Flex>
+          <Box mb="30px">
+            <TwoFactorSettings user={user} setUser={setUser} />
+          </Box>
           <ReviewProfile
             reviewBooks={review}
             handleBookClick={handleBookClick}

@@ -9,6 +9,8 @@ function sanitizeUser(user) {
     currentRefreshTokenId,
     previousRefreshTokenId,
     refreshTokenRotatedAt,
+    twoFactorSecret,
+    twoFactorRecoveryCodes,
     ...safe
   } = user;
   return safe;

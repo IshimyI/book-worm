@@ -1,22 +1,28 @@
 import {
   Box,
   Heading,
+  Text,
   FormControl,
   Input,
   Button,
   Link,
   Flex,
+  useToast,
 } from "@chakra-ui/react";
 /* eslint-disable react/prop-types */
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router";
 
-export default function SignUpPage({ handleSignUp, handleLogin }) {
+export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoFactor }) {
   const navigate = useNavigate();
   const [firstPassword, setFirstPassword] = useState("");
   const [secondPassword, setSecondPassword] = useState("");
   const [bool, setBool] = useState(false);
   const [formRenderedAt] = useState(() => Date.now());
+  const [challengeToken, setChallengeToken] = useState(null);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const toast = useToast();
 
   const handleCorrect = (e) => {
     e.preventDefault();
@@ -26,6 +32,31 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
     }
     handleSignUp(e);
     navigate("/confirm-email");
+  };
+
+  const onLoginSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const result = await handleLogin(e);
+      if (result?.requiresTwoFactor) {
+        setChallengeToken(result.challengeToken);
+      }
+    } catch (error) {
+      toast({ title: error.response?.data?.message || 'Не удалось войти', status: 'error', duration: 2500, isClosable: true });
+    }
+  };
+
+  const onVerifyTwoFactor = async (e) => {
+    e.preventDefault();
+    if (!twoFactorCode.trim()) return;
+    setVerifying(true);
+    try {
+      await handleVerifyTwoFactor(challengeToken, twoFactorCode.trim());
+    } catch (error) {
+      toast({ title: error.response?.data?.message || 'Неверный код', status: 'error', duration: 2500, isClosable: true });
+    } finally {
+      setVerifying(false);
+    }
   };
 
   return (
@@ -40,7 +71,43 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
         borderRadius="25px"
         boxShadow="md"
       >
-        {bool ? (
+        {challengeToken ? (
+          <form onSubmit={onVerifyTwoFactor}>
+            <Heading as="h2" size="md" textAlign="center" mb={2}>
+              Код подтверждения
+            </Heading>
+            <Text fontSize="sm" color="bw.textMuted" textAlign="center" mb={6}>
+              Введите код из приложения-аутентификатора или один из резервных кодов
+            </Text>
+            <FormControl mb={10}>
+              <Input
+                placeholder="123456"
+                value={twoFactorCode}
+                onChange={(e) => setTwoFactorCode(e.target.value)}
+                autoFocus
+              />
+            </FormControl>
+            <Button
+              sx={{ backgroundColor: "#334d00", color: "white" }}
+              width="100%"
+              mb={1}
+              type="submit"
+              size="sm"
+              isLoading={verifying}
+            >
+              Подтвердить
+            </Button>
+            <Button
+              m={"0 auto"}
+              variant="link"
+              sx={{ color: "#334d00" }}
+              onClick={() => setChallengeToken(null)}
+              size="sm"
+            >
+              Назад
+            </Button>
+          </form>
+        ) : bool ? (
           <form onSubmit={handleCorrect}>
             <Heading as="h2" size="md" textAlign="center" mb={2}>
               Регистрация
@@ -126,7 +193,7 @@ export default function SignUpPage({ handleSignUp, handleLogin }) {
             </Button>
           </form>
         ) : (
-          <form onSubmit={handleLogin}>
+          <form onSubmit={onLoginSubmit}>
             <Heading as="h2" size="md" textAlign="center" mb={6}>
               Вход
             </Heading>

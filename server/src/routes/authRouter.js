@@ -9,7 +9,11 @@ const sendEmail = require("../utils/emailService");
 const { confirmationEmailHtml, resetPasswordEmailHtml } = require("../utils/emailTemplates");
 const logSecurityEvent = require("../utils/securityLog");
 const sanitizeUser = require("../utils/sanitizeUser");
+const verifyAccessToken = require("../middlewares/verifyAccessToken");
+const twoFactor = require("../utils/twoFactor");
 const authRouter = express.Router();
+
+const TWO_FACTOR_CHALLENGE_PURPOSE = "2fa_challenge";
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
@@ -243,6 +247,15 @@ authRouter.post("/login", authLimiter, async (req, res) => {
     return res.sendStatus(400);
   }
 
+  if (foundUser.twoFactorEnabled) {
+    const challengeToken = jwt.sign(
+      { userId: foundUser.id, purpose: TWO_FACTOR_CHALLENGE_PURPOSE },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: "5m" }
+    );
+    return res.status(200).json({ requiresTwoFactor: true, challengeToken });
+  }
+
   const user = sanitizeUser(foundUser.get());
   const { accessToken, refreshToken, refreshTokenId } = generateTokens({ user });
   foundUser.currentRefreshTokenId = refreshTokenId;
@@ -269,6 +282,121 @@ authRouter.post("/logout", async (req, res) => {
     // Token already invalid/expired — nothing server-side to revoke.
   }
   res.clearCookie("refreshToken").sendStatus(200);
+});
+
+authRouter.post("/2fa/setup", verifyAccessToken, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.userId);
+    if (user.twoFactorEnabled) {
+      return res.status(400).json({ message: "Двухфакторная аутентификация уже включена" });
+    }
+    // Not enabled yet — enable happens only after the user proves they can
+    // generate a valid code with it, in /2fa/enable below.
+    const { secret, otpauthUrl } = twoFactor.generateSecret(user.email);
+    user.twoFactorSecret = secret;
+    await user.save();
+
+    const payload = await twoFactor.buildSetupPayload(secret, otpauthUrl);
+    res.status(200).json(payload);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+authRouter.post("/2fa/enable", verifyAccessToken, authLimiter, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.userId);
+    if (!user.twoFactorSecret) {
+      return res.status(400).json({ message: "Сначала начните настройку 2FA" });
+    }
+    if (!twoFactor.verifyToken(req.body.token || "", user.twoFactorSecret)) {
+      logSecurityEvent({ type: "2fa_enable_failed", email: user.email, ip: req.ip });
+      return res.status(400).json({ message: "Неверный код" });
+    }
+
+    const { plainCodes, hashedCodes } = await twoFactor.generateRecoveryCodes();
+    user.twoFactorEnabled = true;
+    user.twoFactorRecoveryCodes = JSON.stringify(hashedCodes);
+    await user.save();
+
+    logSecurityEvent({ type: "2fa_enabled", email: user.email, ip: req.ip });
+    res.status(200).json({ message: "Двухфакторная аутентификация включена", recoveryCodes: plainCodes });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+authRouter.post("/2fa/disable", verifyAccessToken, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.userId);
+    const isValid = await bcrypt.compare(req.body.password || "", user.password);
+    if (!isValid) {
+      return res.status(400).json({ message: "Неверный пароль" });
+    }
+
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = null;
+    user.twoFactorRecoveryCodes = null;
+    await user.save();
+
+    logSecurityEvent({ type: "2fa_disabled", email: user.email, ip: req.ip });
+    res.status(200).json({ message: "Двухфакторная аутентификация отключена" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+authRouter.post("/2fa/verify-login", authLimiter, async (req, res) => {
+  const { challengeToken, token } = req.body;
+  if (!challengeToken || !token) {
+    return res.status(400).json({ message: "Не хватает данных" });
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(challengeToken, process.env.ACCESS_TOKEN_SECRET);
+  } catch {
+    return res.status(401).json({ message: "Сессия входа истекла, попробуйте снова" });
+  }
+  if (decoded.purpose !== TWO_FACTOR_CHALLENGE_PURPOSE) {
+    return res.status(401).json({ message: "Недействительный токен" });
+  }
+
+  try {
+    const foundUser = await User.findByPk(decoded.userId);
+    if (!foundUser || !foundUser.twoFactorEnabled) {
+      return res.status(400).json({ message: "Двухфакторная аутентификация не включена" });
+    }
+
+    let authenticated = twoFactor.verifyToken(token, foundUser.twoFactorSecret);
+    if (!authenticated) {
+      // Fall back to a recovery code — consuming it (one-time use) only if it matches.
+      const { valid, remaining } = await twoFactor.consumeRecoveryCode(token, foundUser.twoFactorRecoveryCodes);
+      if (valid) {
+        authenticated = true;
+        foundUser.twoFactorRecoveryCodes = remaining;
+      }
+    }
+
+    if (!authenticated) {
+      logSecurityEvent({ type: "2fa_verify_failed", email: foundUser.email, ip: req.ip });
+      return res.status(400).json({ message: "Неверный код" });
+    }
+
+    const user = sanitizeUser(foundUser.get());
+    const { accessToken, refreshToken, refreshTokenId } = generateTokens({ user });
+    foundUser.currentRefreshTokenId = refreshTokenId;
+    foundUser.refreshTokenRotatedAt = new Date();
+    await foundUser.save();
+
+    res.status(200).cookie("refreshToken", refreshToken, cookieConfig).json({ accessToken, user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
 });
 
 module.exports = authRouter;
