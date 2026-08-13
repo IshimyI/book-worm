@@ -16,7 +16,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@sentry/react": "^10.70.0",
-    "axios": "^1.8.1",
+    "axios": "^1.19.0",
     "framer-motion": "^12.4.7",
     "nodemailer": "^6.10.0",
     "react": "^19.0.0",
