@@ -579,3 +579,70 @@ describe("POST /api/users/me/avatar", () => {
     expect(fs.existsSync(firstPath)).toBe(false);
   });
 });
+
+describe("reading status", () => {
+  it("requires authentication to set a status", async () => {
+    const book = await Book.create({ title: "Status Book", author: "A", genre: "Роман" });
+    const res = await request(app).post(`/api/book/${book.id}/reading-status`).send({ status: "reading" });
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects an invalid status value", async () => {
+    const { accessToken } = await signupAndLogin("status1@example.com");
+    const book = await Book.create({ title: "Status Book 2", author: "A", genre: "Роман" });
+    const res = await request(app)
+      .post(`/api/book/${book.id}/reading-status`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ status: "on_fire" });
+    expect(res.status).toBe(400);
+  });
+
+  it("sets, changes, and clears a reading status", async () => {
+    const { accessToken } = await signupAndLogin("status2@example.com");
+    const book = await Book.create({ title: "Status Book 3", author: "A", genre: "Роман" });
+
+    const setRes = await request(app)
+      .post(`/api/book/${book.id}/reading-status`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ status: "want_to_read" });
+    expect(setRes.status).toBe(200);
+    expect(setRes.body.status).toBe("want_to_read");
+
+    const changeRes = await request(app)
+      .post(`/api/book/${book.id}/reading-status`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ status: "reading" });
+    expect(changeRes.body.status).toBe("reading");
+
+    const bookRes = await request(app)
+      .get(`/api/book/${book.id}`)
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(bookRes.body.readingStatus).toBe("reading");
+
+    const clearRes = await request(app)
+      .post(`/api/book/${book.id}/reading-status`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ status: null });
+    expect(clearRes.body.status).toBeNull();
+
+    const anonBookRes = await request(app).get(`/api/book/${book.id}`);
+    expect(anonBookRes.body.readingStatus).toBeNull();
+  });
+
+  it("groups a user's books by status", async () => {
+    const { accessToken } = await signupAndLogin("status3@example.com");
+    const wantBook = await Book.create({ title: "Want Book", author: "A", genre: "Роман" });
+    const readingBook = await Book.create({ title: "Reading Book", author: "B", genre: "Роман" });
+    const readBook = await Book.create({ title: "Read Book", author: "C", genre: "Роман" });
+
+    await request(app).post(`/api/book/${wantBook.id}/reading-status`).set("Authorization", `Bearer ${accessToken}`).send({ status: "want_to_read" });
+    await request(app).post(`/api/book/${readingBook.id}/reading-status`).set("Authorization", `Bearer ${accessToken}`).send({ status: "reading" });
+    await request(app).post(`/api/book/${readBook.id}/reading-status`).set("Authorization", `Bearer ${accessToken}`).send({ status: "read" });
+
+    const res = await request(app).get("/api/reading-status").set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.want_to_read.map((b) => b.id)).toEqual([wantBook.id]);
+    expect(res.body.reading.map((b) => b.id)).toEqual([readingBook.id]);
+    expect(res.body.read.map((b) => b.id)).toEqual([readBook.id]);
+  });
+});

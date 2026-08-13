@@ -9,6 +9,7 @@ import BookModal from "../ui/BookModal";
 import RecommendedBooks from "../ui/RecommendedBooks";
 import AvatarUpload from "../ui/AvatarUpload";
 import TwoFactorSettings from "../ui/TwoFactorSettings";
+import ReadingShelves from "../ui/ReadingShelves";
 
 const Office = ({ user, setUser }) => {
   const [review, setReview] = useState([]);
@@ -44,6 +45,9 @@ const Office = ({ user, setUser }) => {
           </Flex>
           <Box mb="30px">
             <TwoFactorSettings user={user} setUser={setUser} />
+          </Box>
+          <Box mb="60px">
+            <ReadingShelves handleBookClick={handleBookClick} />
           </Box>
           <ReviewProfile
             reviewBooks={review}

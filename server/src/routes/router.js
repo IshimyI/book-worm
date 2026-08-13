@@ -1,5 +1,5 @@
 const express = require("express");
-const { User, Book, Review, ReviewVote, ReviewComment, Follow, News } = require("../../db/models");
+const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, News } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const fs = require("fs");
 const path = require("path");
@@ -337,12 +337,17 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
     }
 
     let votedReviewIds = new Set();
+    let readingStatus = null;
     if (req.userId) {
-      const votes = await ReviewVote.findAll({
-        where: { userId: req.userId, reviewId: book.Reviews.map((r) => r.id) },
-        attributes: ["reviewId"],
-      });
+      const [votes, statusRow] = await Promise.all([
+        ReviewVote.findAll({
+          where: { userId: req.userId, reviewId: book.Reviews.map((r) => r.id) },
+          attributes: ["reviewId"],
+        }),
+        ReadingStatus.findOne({ where: { userId: req.userId, bookId: book.id }, attributes: ["status"] }),
+      ]);
       votedReviewIds = new Set(votes.map((v) => v.reviewId));
+      readingStatus = statusRow?.status || null;
     }
 
     res.status(200).send({
@@ -355,6 +360,7 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
       img: book.img,
       genre: book.genre,
       year: book.year,
+      readingStatus,
       reviews: book.Reviews.map((r) => mapReview(r, votedReviewIds)),
     });
   } catch (error) {
@@ -381,6 +387,65 @@ router.get("/book/:id/recommendations", async (req, res) => {
     });
 
     res.status(200).send(recommendations);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+const READING_STATUSES = ["want_to_read", "reading", "read"];
+
+router.post("/book/:id/reading-status", verifyAccessToken, async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  try {
+    if (status !== null && !READING_STATUSES.includes(status)) {
+      return res.status(400).json({ message: "Недопустимый статус" });
+    }
+    const book = await Book.findByPk(id, { attributes: ["id"] });
+    if (!book) {
+      return res.status(404).json({ message: "Книга не найдена" });
+    }
+
+    if (status === null) {
+      await ReadingStatus.destroy({ where: { userId: req.userId, bookId: id } });
+      return res.status(200).json({ status: null });
+    }
+
+    const [row] = await ReadingStatus.findOrCreate({
+      where: { userId: req.userId, bookId: id },
+      defaults: { status },
+    });
+    if (row.status !== status) {
+      row.status = status;
+      await row.save();
+    }
+    res.status(200).json({ status: row.status });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.get("/reading-status", verifyAccessToken, async (req, res) => {
+  try {
+    const rows = await ReadingStatus.findAll({
+      where: { userId: req.userId },
+      include: [{ model: Book, attributes: ["id", "title", "author", "img"] }],
+      order: [["updatedAt", "DESC"]],
+    });
+
+    const grouped = { want_to_read: [], reading: [], read: [] };
+    for (const row of rows) {
+      if (!row.Book) continue;
+      grouped[row.status].push({
+        id: row.Book.id,
+        title: row.Book.title,
+        author: row.Book.author,
+        img: row.Book.img,
+      });
+    }
+    res.status(200).json(grouped);
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);

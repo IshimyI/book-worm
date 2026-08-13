@@ -10,6 +10,7 @@ import StarRatingInput from '../ui/StarRatingInput';
 import useFavorite from '../utils/useFavorite';
 import PageCard from '../ui/PageCard';
 import AddToListMenu from '../ui/AddToListMenu';
+import ReadingStatusSelect from '../ui/ReadingStatusSelect';
 import ReviewComments from '../ui/ReviewComments';
 import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
@@ -263,6 +264,12 @@ export default function BookPage({ user, setUser }) {
                 {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
               </Button>
               <AddToListMenu user={user} bookId={book.id} />
+              <ReadingStatusSelect
+                user={user}
+                bookId={book.id}
+                status={book.readingStatus}
+                onChange={(status) => setBook((prev) => ({ ...prev, readingStatus: status }))}
+              />
               <Button
                 as="a"
                 href={openLibrarySearchUrl(book.title, book.author)}
