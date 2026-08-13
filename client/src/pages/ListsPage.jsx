@@ -20,6 +20,7 @@ import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
 import PageCard from '../ui/PageCard';
 import { withCount } from '../utils/pluralize';
+import useConfirm from '../ui/useConfirm';
 
 export default function ListsPage({ user }) {
   const [lists, setLists] = useState([]);
@@ -28,6 +29,7 @@ export default function ListsPage({ user }) {
   const [newIsCurated, setNewIsCurated] = useState(false);
   const [creating, setCreating] = useState(false);
   const toast = useToast();
+  const { confirm, ConfirmDialog } = useConfirm();
 
   useSeoMeta({ title: 'Мои списки чтения' });
 
@@ -62,7 +64,7 @@ export default function ListsPage({ user }) {
   };
 
   const removeList = async (id) => {
-    if (!window.confirm('Удалить этот список?')) return;
+    if (!(await confirm('Удалить этот список?'))) return;
     try {
       await axiosInstance.delete(`/lists/${id}`);
       setLists((prev) => prev.filter((l) => l.id !== id));
@@ -84,6 +86,7 @@ export default function ListsPage({ user }) {
 
   return (
     <PageCard maxW="900px">
+      {ConfirmDialog}
       <Heading as="h1" size="lg" mb="20px">Мои списки</Heading>
 
       <Flex gap="10px" mb={user.isAdmin ? '10px' : '30px'}>

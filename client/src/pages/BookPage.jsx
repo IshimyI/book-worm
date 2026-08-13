@@ -17,6 +17,7 @@ import SpoilerText from '../ui/SpoilerText';
 import { relativeTime } from '../utils/relativeTime';
 import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
+import useConfirm from '../ui/useConfirm';
 
 export default function BookPage({ user, setUser }) {
   const { id } = useParams();
@@ -29,6 +30,7 @@ export default function BookPage({ user, setUser }) {
   const [recommendations, setRecommendations] = useState([]);
   const { isFavorite, toggle: toggleFavorite } = useFavorite(user, setUser, book?.id);
   const toast = useToast();
+  const { confirm, ConfirmDialog } = useConfirm();
 
   useEffect(() => {
     setLoading(true);
@@ -109,7 +111,7 @@ export default function BookPage({ user, setUser }) {
   };
 
   const deleteReview = async () => {
-    if (!myReview || !window.confirm('Удалить вашу рецензию?')) return;
+    if (!myReview || !(await confirm('Удалить вашу рецензию?'))) return;
     try {
       await axiosInstance.delete(`/review/${myReview.id}`);
       setReviews((prev) => prev.filter((r) => r.id !== myReview.id));
@@ -258,6 +260,7 @@ export default function BookPage({ user, setUser }) {
 
   return (
     <PageCard maxW="1000px">
+      {ConfirmDialog}
       <NavLink to="/">
         <Button variant="link" mb="20px" sx={{ color: '#334d00' }}>
           <ArrowBackIcon mr="6px" /> К каталогу

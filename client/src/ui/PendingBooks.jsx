@@ -3,11 +3,13 @@ import { useEffect, useState } from 'react';
 import { Box, Text, Stack, Flex, Button, Center, Spinner, Image, useToast } from '@chakra-ui/react';
 import { NavLink } from 'react-router-dom';
 import axiosInstance from '../axiosInstance';
+import useConfirm from './useConfirm';
 
 export default function PendingBooks({ onCountChange }) {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
+  const { confirm, ConfirmDialog } = useConfirm();
 
   const load = () => {
     setLoading(true);
@@ -41,7 +43,7 @@ export default function PendingBooks({ onCountChange }) {
   };
 
   const reject = async (id) => {
-    if (!window.confirm('Отклонить и удалить эту книгу вместе с рецензией?')) return;
+    if (!(await confirm('Отклонить и удалить эту книгу вместе с рецензией?', { confirmLabel: 'Отклонить' }))) return;
     try {
       await axiosInstance.delete(`/admin/books/${id}`);
       setBooks((prev) => {
@@ -59,10 +61,16 @@ export default function PendingBooks({ onCountChange }) {
     return <Center py="60px"><Spinner size="xl" /></Center>;
   }
   if (books.length === 0) {
-    return <Text color="bw.textMuted" textAlign="center" py="40px">Книг на модерации нет.</Text>;
+    return (
+      <>
+        <Text color="bw.textMuted" textAlign="center" py="40px">Книг на модерации нет.</Text>
+        {ConfirmDialog}
+      </>
+    );
   }
 
   return (
+    <>
     <Stack spacing={4}>
       {books.map((book) => (
         <Box key={book.id} p="4" border="1px solid" borderColor="bw.border" borderRadius="md">
@@ -95,5 +103,7 @@ export default function PendingBooks({ onCountChange }) {
         </Box>
       ))}
     </Stack>
+    {ConfirmDialog}
+    </>
   );
 }

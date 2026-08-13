@@ -9,6 +9,7 @@ import SecurityEventLog from '../ui/SecurityEventLog';
 import StatsSummary from '../ui/StatsSummary';
 import PendingBooks from '../ui/PendingBooks';
 import { withCount } from '../utils/pluralize';
+import useConfirm from '../ui/useConfirm';
 
 export default function AdminPage({ user }) {
   const [reviews, setReviews] = useState([]);
@@ -17,6 +18,7 @@ export default function AdminPage({ user }) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkBusy, setBulkBusy] = useState(false);
   const toast = useToast();
+  const { confirm, ConfirmDialog } = useConfirm();
 
   const load = () => {
     setLoading(true);
@@ -43,7 +45,7 @@ export default function AdminPage({ user }) {
   };
 
   const remove = async (id) => {
-    if (!window.confirm('Удалить эту рецензию окончательно?')) return;
+    if (!(await confirm('Удалить эту рецензию окончательно?'))) return;
     try {
       await axiosInstance.delete(`/admin/reviews/${id}`);
       setReviews((prev) => prev.filter((r) => r.id !== id));
@@ -77,7 +79,7 @@ export default function AdminPage({ user }) {
   };
 
   const bulkRemove = async () => {
-    if (!window.confirm(`Удалить ${selectedIds.length} рецензий окончательно?`)) return;
+    if (!(await confirm(`Удалить ${selectedIds.length} рецензий окончательно?`))) return;
     setBulkBusy(true);
     try {
       await axiosInstance.post('/admin/reviews/bulk-delete', { ids: selectedIds });
@@ -109,6 +111,7 @@ export default function AdminPage({ user }) {
 
   return (
     <PageCard maxW="900px">
+      {ConfirmDialog}
       <Heading as="h1" size="lg" mb="20px">Администрирование</Heading>
 
       <Tabs colorScheme="green">
