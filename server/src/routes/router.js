@@ -83,6 +83,45 @@ function mapReview(review, votedReviewIds = new Set()) {
   };
 }
 
+router.get("/trending", async (req, res) => {
+  try {
+    const cacheKey = "trending";
+    const cached = cache.get(cacheKey);
+    if (cached) return res.status(200).json(cached);
+
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const rows = await PageView.findAll({
+      where: {
+        createdAt: { [Sequelize.Op.gte]: since },
+        path: { [Sequelize.Op.regexp]: "^/books/[0-9]+$" },
+      },
+      attributes: ["path", [Sequelize.fn("COUNT", "*"), "count"]],
+      group: ["path"],
+      order: [[Sequelize.literal("count"), "DESC"]],
+      limit: 20,
+      raw: true,
+    });
+
+    const countByBookId = new Map();
+    for (const row of rows) {
+      const bookId = Number(row.path.match(/^\/books\/(\d+)$/)?.[1]);
+      if (bookId) countByBookId.set(bookId, Number(row.count));
+    }
+
+    const books = await Book.findAll({ where: { id: [...countByBookId.keys()], status: "approved" } });
+    const trending = books
+      .map((b) => ({ ...b.get({ plain: true }), viewCount: countByBookId.get(b.id) }))
+      .sort((a, b) => b.viewCount - a.viewCount)
+      .slice(0, 8);
+
+    cache.set(cacheKey, trending, 30 * 60 * 1000);
+    res.status(200).json(trending);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
 router.get("/news", async (req, res) => {
   try {
     const cached = cache.get("news");

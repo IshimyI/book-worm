@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const request = require("supertest");
 const app = require("../app");
-const { sequelize, User, Book, Review, Quote } = require("../../db/models");
+const { sequelize, User, Book, Review, Quote, PageView } = require("../../db/models");
 const { AVATAR_DIR } = require("../middlewares/uploadAvatar");
 const { AVATAR_SIZE } = require("../utils/avatarImage");
 const { loadImage } = require("@napi-rs/canvas");
@@ -179,6 +179,32 @@ describe("GET /api/book/random", () => {
     const res = await request(app).get("/api/book/random");
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(approved.id);
+  });
+});
+
+describe("GET /api/trending", () => {
+  it("ranks books by pageviews in the last 7 days, excluding pending books and old views", async () => {
+    const popular = await Book.create({ title: "Popular Book", author: "A", genre: "Роман", status: "approved" });
+    const lessPopular = await Book.create({ title: "Less Popular Book", author: "B", genre: "Роман", status: "approved" });
+    const pending = await Book.create({ title: "Pending Book", author: "C", genre: "Роман", status: "pending" });
+
+    for (let i = 0; i < 3; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await request(app).post("/api/analytics/pageview").send({ path: `/books/${popular.id}` });
+    }
+    await request(app).post("/api/analytics/pageview").send({ path: `/books/${lessPopular.id}` });
+    await request(app).post("/api/analytics/pageview").send({ path: `/books/${pending.id}` });
+    // An old view outside the 7-day window shouldn't count.
+    const oldView = await PageView.create({ path: `/books/${lessPopular.id}` });
+    await oldView.update({ createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) });
+
+    const res = await request(app).get("/api/trending");
+    expect(res.status).toBe(200);
+    const ids = res.body.map((b) => b.id);
+    expect(ids[0]).toBe(popular.id);
+    expect(ids).toContain(lessPopular.id);
+    expect(ids).not.toContain(pending.id);
+    expect(res.body.find((b) => b.id === popular.id).viewCount).toBe(3);
   });
 });
 

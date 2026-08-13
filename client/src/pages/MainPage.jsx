@@ -20,6 +20,7 @@ import axiosInstance from "../axiosInstance";
 import useSeoMeta from "../utils/useSeoMeta";
 import { coverThumbUrl } from "../utils/coverUrl";
 import RecentlyViewedStrip from "../ui/RecentlyViewedStrip";
+import TrendingStrip from "../ui/TrendingStrip";
 
 const EMPTY_FILTERS = {
   genre: "",
@@ -135,6 +136,7 @@ export default function MainPage({ user, setUser }) {
               Авторизуйтесь прямо сейчас!
             </Alert>
           )}
+          <TrendingStrip />
           <RecentlyViewedStrip />
           <div className="lineTwo">
             <Box
