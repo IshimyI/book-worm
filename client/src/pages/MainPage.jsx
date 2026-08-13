@@ -101,6 +101,8 @@ export default function MainPage({ user, setUser }) {
           <div className="lineTwo">
             <Box
               className="blockFillter"
+              bg="bw.cardBg"
+              color="bw.text"
               borderWidth="1px"
               borderRadius="lg"
               overflow="hidden"
@@ -196,13 +198,13 @@ export default function MainPage({ user, setUser }) {
                 <Input
                   w={"100%"}
                   placeholder="Поиск по названию"
-                  bg={"white"}
+                  bg="bw.cardBg"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                 />
                 <Select
                   w={200}
-                  bg={"white"}
+                  bg="bw.cardBg"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                 >
@@ -213,7 +215,7 @@ export default function MainPage({ user, setUser }) {
                 </Select>
                 <Select
                   w={140}
-                  bg={"white"}
+                  bg="bw.cardBg"
                   value={sortDir}
                   onChange={(e) => setSortDir(e.target.value)}
                 >
@@ -222,14 +224,14 @@ export default function MainPage({ user, setUser }) {
                 </Select>
               </div>
 
-              <Text textAlign="left" color="gray.600" fontSize="sm" mb="12px">
+              <Text textAlign="left" color="bw.textMuted" fontSize="sm" mb="12px">
                 Найдено книг: {total}
               </Text>
 
               {loading ? (
                 [...Array(4)].map((_, i) => (
                   <Box
-                    bg="white"
+                    bg="bw.cardBg"
                     key={i}
                     borderWidth="1px"
                     borderRadius="lg"
@@ -253,7 +255,7 @@ export default function MainPage({ user, setUser }) {
               ) : (
                 books.map((book) => (
                   <Box
-                    bg={"white"}
+                    bg="bw.cardBg"
                     key={book.id}
                     borderWidth="1px"
                     borderRadius="lg"
@@ -283,20 +285,20 @@ export default function MainPage({ user, setUser }) {
                             {book.title}
                           </Heading>
                         </NavLink>
-                        <Text color="gray.500" fontSize="sm" mb={2}>
+                        <Text color="bw.textMuted" fontSize="sm" mb={2}>
                           {book.author}
                         </Text>
-                        <Text fontSize="xs" color="gray.600" mb={2}>
+                        <Text fontSize="xs" color="bw.textMuted" mb={2}>
                           {book.genre}
                         </Text>
-                        <Text fontSize="xs" color="gray.600" mb={2}>
+                        <Text fontSize="xs" color="bw.textMuted" mb={2}>
                           {book.year}
                         </Text>
                         <Flex alignItems="center" mt={"30px"} columnGap="10px" flexWrap="wrap">
                           <Text fontWeight="bold" mr={2}>
                             {book.rating == null ? 0 : book.rating} ⭐
                           </Text>
-                          <Text fontSize="xs" color="gray.600">
+                          <Text fontSize="xs" color="bw.textMuted">
                             ({book.quantity_rate == null ? 0 : book.quantity_rate}{" "}
                             отзывов)
                           </Text>
@@ -331,7 +333,7 @@ export default function MainPage({ user, setUser }) {
                   >
                     ← Назад
                   </Button>
-                  <Text fontSize="sm" color="gray.600">
+                  <Text fontSize="sm" color="bw.textMuted">
                     Страница {page} из {totalPages}
                   </Text>
                   <Button

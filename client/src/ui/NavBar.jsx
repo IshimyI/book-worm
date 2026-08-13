@@ -1,9 +1,10 @@
 /* eslint-disable react/prop-types */
 import { NavLink } from "react-router";
-// import React from "react";
-import { Flex } from "@chakra-ui/react";
+import { Flex, IconButton, useColorMode } from "@chakra-ui/react";
+import { SunIcon, MoonIcon } from "@chakra-ui/icons";
 
 export default function NavBar({ user, handleLogout }) {
+  const { colorMode, toggleColorMode } = useColorMode();
   return (
     <div className="navbar">
 
@@ -30,9 +31,15 @@ export default function NavBar({ user, handleLogout }) {
             ) : null}
           </nav>
           <div className="navFlexBlock2">
-            {/* <div>
-              {user && user.isEmailConfirmed ? `Привет, ${user.name}` : null}
-            </div> */}
+            <IconButton
+              aria-label={colorMode === "light" ? "Включить тёмную тему" : "Включить светлую тему"}
+              icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
+              onClick={toggleColorMode}
+              size="sm"
+              variant="ghost"
+              color="#f5f0dc"
+              _hover={{ bg: "whiteAlpha.200" }}
+            />
             {user && user.isEmailConfirmed ? (
               <NavLink to="/office">
                 <button className="btnMain" type="button">

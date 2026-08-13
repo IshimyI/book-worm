@@ -93,7 +93,13 @@ html, body {
   margin: 0 auto;
   width: 100%;
   max-width: 1100px;
-  background-color: #fffdf7;
+  /* Chakra exposes theme (incl. semantic) tokens as CSS vars on :root,
+     swapped automatically with color mode — reuse the same bw.pageBg
+     token PageCard-based pages use, so this plain-CSS wrapper (Main/
+     Office pages predate PageCard and use a raw div instead) stays in
+     sync with dark mode without duplicating the color pair here. */
+  background-color: var(--chakra-colors-bw-pageBg, #fffdf7);
+  color: var(--chakra-colors-bw-text, inherit);
   padding-left: 20px;
   padding-right: 20px;
   box-shadow: 0 0 40px rgba(47, 42, 31, 0.15);
@@ -193,7 +199,6 @@ html, body {
   width: 260px;
   flex-shrink: 0;
   height: 320px;
-  background-color: white;
 }
 *{
   font-family: "Lato", sans-serif;
@@ -204,7 +209,8 @@ html, body {
 }
 .authFormBox{
   text-align: center;
-  background-color: white;
+  background-color: var(--chakra-colors-bw-cardBg, white);
+  color: var(--chakra-colors-bw-text, inherit);
 }
 .bookInfoRow{
   column-gap: 20px;

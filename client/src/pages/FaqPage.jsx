@@ -1,5 +1,6 @@
-import { Box, Center, Heading, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Text } from '@chakra-ui/react';
+import { Box, Heading, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Text } from '@chakra-ui/react';
 import useSeoMeta from '../utils/useSeoMeta';
+import PageCard from '../ui/PageCard';
 
 const FAQ = [
   {
@@ -47,28 +48,26 @@ export default function FaqPage() {
   });
 
   return (
-    <Center py="40px" px="20px">
-      <Box maxW="800px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">
-        <Heading as="h1" size="lg" mb="10px">Частые вопросы</Heading>
-        <Text color="gray.600" mb="24px">Не нашли ответ — напишите на ivanborisenko.msk@gmail.com</Text>
-        <Accordion allowToggle>
-          {FAQ.map((item, i) => (
-            <AccordionItem key={i}>
-              <h2>
-                <AccordionButton py="16px">
-                  <Box as="span" flex="1" textAlign="left" fontWeight="600">
-                    {item.q}
-                  </Box>
-                  <AccordionIcon />
-                </AccordionButton>
-              </h2>
-              <AccordionPanel pb="16px" color="gray.700">
-                {item.a}
-              </AccordionPanel>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </Box>
-    </Center>
+    <PageCard>
+      <Heading as="h1" size="lg" mb="10px">Частые вопросы</Heading>
+      <Text color="bw.textMuted" mb="24px">Не нашли ответ — напишите на ivanborisenko.msk@gmail.com</Text>
+      <Accordion allowToggle>
+        {FAQ.map((item, i) => (
+          <AccordionItem key={i}>
+            <h2>
+              <AccordionButton py="16px">
+                <Box as="span" flex="1" textAlign="left" fontWeight="600">
+                  {item.q}
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb="16px" color="bw.textMuted">
+              {item.a}
+            </AccordionPanel>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </PageCard>
   );
 }

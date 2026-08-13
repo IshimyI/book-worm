@@ -9,7 +9,7 @@ const ReviewProfile = ({ reviewBooks, handleBookClick }) => {
         Мои рецензии на книги
       </Text>
       {reviewBooks.length === 0 && (
-        <Text color="gray.500">Вы ещё не оставляли рецензий — самое время начать.</Text>
+        <Text color="bw.textMuted">Вы ещё не оставляли рецензий — самое время начать.</Text>
       )}
       <SimpleGrid columns={{ base: 2, sm: 3, md: 5 }} spacing="20px">
         {reviewBooks.map((book) => (

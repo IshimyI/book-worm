@@ -1,13 +1,14 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
-import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textarea, Button, Select, useToast, Skeleton, SkeletonText, SkeletonCircle } from '@chakra-ui/react';
+import { Box, Center, Flex, Image, Text, Heading, Stack, Divider, Avatar, Textarea, Button, Select, useToast, Skeleton, SkeletonText, SkeletonCircle, useColorModeValue } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
 import useSeoMeta from '../utils/useSeoMeta';
 import StarRatingInput from '../ui/StarRatingInput';
 import useFavorite from '../utils/useFavorite';
+import PageCard from '../ui/PageCard';
 
 export default function BookPage({ user, setUser }) {
   const { id } = useParams();
@@ -166,29 +167,31 @@ export default function BookPage({ user, setUser }) {
     return list;
   }, [reviews, reviewSort, user]);
 
+  const reviewCardBg = useColorModeValue('white', '#25251c');
+  const ownReviewBg = useColorModeValue('#f7f8ef', '#33361f');
+  const skeletonBorder = useColorModeValue('#eee', '#3a3a30');
+
   if (loading) {
     return (
-      <Center py="40px" px="20px">
-        <Box maxW="1000px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">
-          <Flex gap="30px" flexWrap="wrap">
-            <Skeleton width="250px" height="350px" borderRadius="md" />
-            <Box flex="1" minW="250px">
-              <Skeleton height="32px" width="70%" mb="14px" />
-              <Skeleton height="16px" width="40%" mb="20px" />
-              <SkeletonText noOfLines={4} spacing="3" mb="20px" />
-              <Skeleton height="40px" width="180px" />
-            </Box>
+      <PageCard maxW="1000px">
+        <Flex gap="30px" flexWrap="wrap">
+          <Skeleton width="250px" height="350px" borderRadius="md" />
+          <Box flex="1" minW="250px">
+            <Skeleton height="32px" width="70%" mb="14px" />
+            <Skeleton height="16px" width="40%" mb="20px" />
+            <SkeletonText noOfLines={4} spacing="3" mb="20px" />
+            <Skeleton height="40px" width="180px" />
+          </Box>
+        </Flex>
+        <Divider my="30px" />
+        <Skeleton height="24px" width="150px" mb="20px" />
+        {[...Array(3)].map((_, i) => (
+          <Flex key={i} gap="14px" p="12px" mb="12px" border="1px solid" borderColor={skeletonBorder} borderRadius="md">
+            <SkeletonCircle size="10" />
+            <Box flex="1"><SkeletonText noOfLines={2} spacing="2" /></Box>
           </Flex>
-          <Divider my="30px" />
-          <Skeleton height="24px" width="150px" mb="20px" />
-          {[...Array(3)].map((_, i) => (
-            <Flex key={i} gap="14px" p="12px" mb="12px" border="1px solid #eee" borderRadius="md">
-              <SkeletonCircle size="10" />
-              <Box flex="1"><SkeletonText noOfLines={2} spacing="2" /></Box>
-            </Flex>
-          ))}
-        </Box>
-      </Center>
+        ))}
+      </PageCard>
     );
   }
 
@@ -204,19 +207,18 @@ export default function BookPage({ user, setUser }) {
   }
 
   return (
-    <Center py="40px" px="20px">
-      <Box maxW="1000px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">
-        <NavLink to="/">
-          <Button variant="link" mb="20px" sx={{ color: '#334d00' }}>
-            <ArrowBackIcon mr="6px" /> К каталогу
-          </Button>
-        </NavLink>
+    <PageCard maxW="1000px">
+      <NavLink to="/">
+        <Button variant="link" mb="20px" sx={{ color: '#334d00' }}>
+          <ArrowBackIcon mr="6px" /> К каталогу
+        </Button>
+      </NavLink>
 
-        <Flex gap="30px" flexWrap="wrap">
-          <Image src={book.img || './default.jpg'} alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
-          <Box flex="1" minW="250px">
-            <Heading as="h1" size="lg" mb="10px">{book.title}</Heading>
-            <Text color="gray.600" mb="10px">{book.author}</Text>
+      <Flex gap="30px" flexWrap="wrap">
+        <Image src={book.img || './default.jpg'} alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
+        <Box flex="1" minW="250px">
+          <Heading as="h1" size="lg" mb="10px">{book.title}</Heading>
+          <Text color="bw.textMuted" mb="10px">{book.author}</Text>
             <Stack spacing={2} mb="20px">
               <Text fontSize="sm"><b>Жанр:</b> {book.genre}</Text>
               <Text fontSize="sm"><b>Год:</b> {book.year}</Text>
@@ -259,8 +261,9 @@ export default function BookPage({ user, setUser }) {
                 <Box
                   key={review.id}
                   p="3"
-                  border={isMine ? '2px solid #4b5320' : '1px solid #ddd'}
-                  bg={isMine ? '#f7f8ef' : 'white'}
+                  border={isMine ? '2px solid' : '1px solid'}
+                  borderColor={isMine ? 'bw.accent' : 'bw.border'}
+                  bg={isMine ? ownReviewBg : reviewCardBg}
                   borderRadius="md"
                   mb="3"
                 >
@@ -285,7 +288,7 @@ export default function BookPage({ user, setUser }) {
                             </Button>
                           </Flex>
                         ) : (
-                          <Button size="xs" variant="link" color="gray.500" onClick={() => reportReview(review)}>
+                          <Button size="xs" variant="link" color="bw.textMuted" onClick={() => reportReview(review)}>
                             Пожаловаться
                           </Button>
                         )}
@@ -299,7 +302,7 @@ export default function BookPage({ user, setUser }) {
               );
             })
           ) : (
-            <Text color="gray.500" textAlign="center" py="6">
+            <Text color="bw.textMuted" textAlign="center" py="6">
               Пока нет рецензий — будьте первым
             </Text>
           )}
@@ -317,7 +320,6 @@ export default function BookPage({ user, setUser }) {
             {isEditing ? 'Обновить рецензию' : 'Добавить рецензию'}
           </Button>
         </Box>
-      </Box>
-    </Center>
+    </PageCard>
   );
 }

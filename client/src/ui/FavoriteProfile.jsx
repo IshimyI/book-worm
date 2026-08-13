@@ -25,7 +25,7 @@ const FavoriteProfile = ({
         Мои избранные книги
       </Text>
       {favoriteBooks.length === 0 && (
-        <Text color="gray.500">Пока нет избранных книг — добавьте их из каталога.</Text>
+        <Text color="bw.textMuted">Пока нет избранных книг — добавьте их из каталога.</Text>
       )}
       <SimpleGrid columns={{ base: 2, sm: 3, md: 5 }} spacing="20px">
         {favoriteBooks.map((book) => (

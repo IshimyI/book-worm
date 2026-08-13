@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Box, Center, Heading, Text, Stack, Flex, Button, Badge, useToast, Spinner } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
+import PageCard from '../ui/PageCard';
 
 export default function AdminPage({ user }) {
   const [reviews, setReviews] = useState([]);
@@ -60,48 +61,46 @@ export default function AdminPage({ user }) {
   }
 
   return (
-    <Center py="40px" px="20px">
-      <Box maxW="900px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">
-        <Heading as="h1" size="lg" mb="20px">Модерация жалоб</Heading>
+    <PageCard maxW="900px">
+      <Heading as="h1" size="lg" mb="20px">Модерация жалоб</Heading>
 
-        {loading ? (
-          <Center py="60px"><Spinner size="xl" /></Center>
-        ) : reviews.length === 0 ? (
-          <Text color="gray.500" textAlign="center" py="40px">Жалоб нет — всё чисто.</Text>
-        ) : (
-          <Stack spacing={4}>
-            {reviews.map((review) => (
-              <Box key={review.id} p="4" border="1px solid #ddd" borderRadius="md">
-                <Flex justify="space-between" align="flex-start" mb="2" flexWrap="wrap" gap="8px">
-                  <Box>
-                    <NavLink to={`/books/${review.book.id}`}>
-                      <Text fontWeight="bold" _hover={{ textDecoration: 'underline' }}>{review.book.title}</Text>
-                    </NavLink>
-                    <Text fontSize="sm" color="gray.600">
-                      Автор:{' '}
-                      <NavLink to={`/users/${review.author.id}`} style={{ textDecoration: 'underline' }}>
-                        {review.author.name}
-                      </NavLink>{' '}
-                      ({review.author.email})
-                    </Text>
-                  </Box>
-                  <Badge colorScheme="red" fontSize="0.9em">{review.reportCount} жалоб</Badge>
-                </Flex>
-                <Text mb="3">{review.body}</Text>
-                <Text fontSize="sm" color="gray.600" mb="3">Оценка: {review.rating} ⭐</Text>
-                <Flex gap="10px">
-                  <Button size="sm" backgroundColor="#334d00" color="white" onClick={() => dismiss(review.id)}>
-                    Сбросить жалобы
-                  </Button>
-                  <Button size="sm" variant="outline" colorScheme="red" onClick={() => remove(review.id)}>
-                    Удалить рецензию
-                  </Button>
-                </Flex>
-              </Box>
-            ))}
-          </Stack>
-        )}
-      </Box>
-    </Center>
+      {loading ? (
+        <Center py="60px"><Spinner size="xl" /></Center>
+      ) : reviews.length === 0 ? (
+        <Text color="bw.textMuted" textAlign="center" py="40px">Жалоб нет — всё чисто.</Text>
+      ) : (
+        <Stack spacing={4}>
+          {reviews.map((review) => (
+            <Box key={review.id} p="4" border="1px solid" borderColor="bw.border" borderRadius="md">
+              <Flex justify="space-between" align="flex-start" mb="2" flexWrap="wrap" gap="8px">
+                <Box>
+                  <NavLink to={`/books/${review.book.id}`}>
+                    <Text fontWeight="bold" _hover={{ textDecoration: 'underline' }}>{review.book.title}</Text>
+                  </NavLink>
+                  <Text fontSize="sm" color="bw.textMuted">
+                    Автор:{' '}
+                    <NavLink to={`/users/${review.author.id}`} style={{ textDecoration: 'underline' }}>
+                      {review.author.name}
+                    </NavLink>{' '}
+                    ({review.author.email})
+                  </Text>
+                </Box>
+                <Badge colorScheme="red" fontSize="0.9em">{review.reportCount} жалоб</Badge>
+              </Flex>
+              <Text mb="3">{review.body}</Text>
+              <Text fontSize="sm" color="bw.textMuted" mb="3">Оценка: {review.rating} ⭐</Text>
+              <Flex gap="10px">
+                <Button size="sm" backgroundColor="#334d00" color="white" onClick={() => dismiss(review.id)}>
+                  Сбросить жалобы
+                </Button>
+                <Button size="sm" variant="outline" colorScheme="red" onClick={() => remove(review.id)}>
+                  Удалить рецензию
+                </Button>
+              </Flex>
+            </Box>
+          ))}
+        </Stack>
+      )}
+    </PageCard>
   );
 }

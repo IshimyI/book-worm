@@ -31,18 +31,18 @@ export default function NewsPage() {
   return (
     <Center py="40px" px="20px">
       <Box maxW="800px" width="100%">
-        <Box bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" mb="24px" borderTop="4px solid #4b5320">
+        <Box bg="bw.cardBg" color="bw.text" borderRadius="lg" boxShadow="md" p="30px" mb="24px" borderTop="4px solid" borderTopColor="bw.accent">
           <Heading as="h1" size="lg">Новости</Heading>
-          <Text color="gray.600" mt="6px">Что нового на Mr Book Worm</Text>
+          <Text color="bw.textMuted" mt="6px">Что нового на Mr Book Worm</Text>
         </Box>
         <Stack spacing="18px">
           {news.map((item) => (
-            <Box key={item.id} bg="#fffdf7" borderRadius="lg" boxShadow="md" p="24px">
-              <Text fontSize="xs" color="gray.500" mb="6px" textTransform="uppercase" letterSpacing="0.5px">
+            <Box key={item.id} bg="bw.cardBg" color="bw.text" borderRadius="lg" boxShadow="md" p="24px">
+              <Text fontSize="xs" color="bw.textMuted" mb="6px" textTransform="uppercase" letterSpacing="0.5px">
                 {dateFormatter.format(new Date(item.createdAt))}
               </Text>
               <Heading as="h2" size="md" mb="10px">{item.title}</Heading>
-              <Text color="gray.700">{item.body}</Text>
+              <Text color="bw.textMuted">{item.body}</Text>
             </Box>
           ))}
         </Stack>

@@ -132,37 +132,37 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
                 <Box maxWidth="250px">
                   <Image src={book.img || './default.jpg'} alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
                 </Box>
-                <Box w="65%" mr={'20px'} p={4} borderWidth="1px" borderRadius="md" boxShadow="sm" bg="white">
+                <Box w="65%" mr={'20px'} p={4} borderWidth="1px" borderColor="bw.border" borderRadius="md" boxShadow="sm" bg="bw.cardBg">
                   <Stack spacing={3}>
-                    <Heading as="h3" size="md" fontWeight="semibold" color="gray.700">
+                    <Heading as="h3" size="md" fontWeight="semibold" color="bw.text">
                       Информация о книге:
                     </Heading>
                     <Box>
-                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                      <Text fontSize="sm" fontWeight="medium" color="bw.textMuted">
                         Автор:
                       </Text>
                       <Text fontSize="md">{book.author}</Text>
                     </Box>
                     <Box>
-                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                      <Text fontSize="sm" fontWeight="medium" color="bw.textMuted">
                         Жанр:
                       </Text>
                       <Text fontSize="md">{book.genre}</Text>
                     </Box>
                     <Box>
-                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                      <Text fontSize="sm" fontWeight="medium" color="bw.textMuted">
                         Год:
                       </Text>
                       <Text fontSize="md">{book.year}</Text>
                     </Box>
                     <Box>
-                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                      <Text fontSize="sm" fontWeight="medium" color="bw.textMuted">
                         Рейтинг:
                       </Text>
                       <Text fontSize="md">{book.rating} ⭐</Text>
                     </Box>
                     <Box>
-                      <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                      <Text fontSize="sm" fontWeight="medium" color="bw.textMuted">
                         Оценили:
                       </Text>
                       <Text fontSize="md">{book.quantity_rate}</Text>
@@ -179,14 +179,15 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
                 <Text fontSize="xl" fontWeight="bold" mb="4">
                   Рецензии
                 </Text>
-                <Box maxH="300px" overflowY="auto" p="2" border="1px solid #ccc" borderRadius="md">
+                <Box maxH="300px" overflowY="auto" p="2" border="1px solid" borderColor="bw.border" borderRadius="md">
                   {sortedReviews.length > 0 ? (
                     sortedReviews.map((review, index) => (
                       <Box
                         key={index}
                         p="3"
-                        border={user && review.user_id === user.id ? '2px solid #4b5320' : '1px solid #ddd'}
-                        bg={user && review.user_id === user.id ? '#f7f8ef' : 'white'}
+                        border={user && review.user_id === user.id ? '2px solid #4b5320' : '1px solid'}
+                        borderColor={user && review.user_id === user.id ? undefined : 'bw.border'}
+                        bg={user && review.user_id === user.id ? 'bw.reviewHighlight' : 'bw.cardBg'}
                         borderRadius="md"
                         mb="3"
                       >
@@ -210,7 +211,7 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
                       </Box>
                     ))
                   ) : (
-                    <Text color="gray.500" textAlign="center" py="6">
+                    <Text color="bw.textMuted" textAlign="center" py="6">
                       Пока нет рецензий — будьте первым
                     </Text>
                   )}

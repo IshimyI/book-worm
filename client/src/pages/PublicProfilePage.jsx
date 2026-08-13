@@ -5,6 +5,7 @@ import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
 import { coverThumbUrl } from '../utils/coverUrl';
+import PageCard from '../ui/PageCard';
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' });
 
@@ -35,25 +36,23 @@ export default function PublicProfilePage() {
 
   if (loading) {
     return (
-      <Center py="40px" px="20px">
-        <Box maxW="800px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">
-          <Flex align="center" gap="16px" mb="10px">
-            <SkeletonCircle size="16" />
-            <Box flex="1">
-              <Skeleton height="24px" width="200px" mb="10px" />
-              <Skeleton height="14px" width="260px" />
-            </Box>
+      <PageCard>
+        <Flex align="center" gap="16px" mb="10px">
+          <SkeletonCircle size="16" />
+          <Box flex="1">
+            <Skeleton height="24px" width="200px" mb="10px" />
+            <Skeleton height="14px" width="260px" />
+          </Box>
+        </Flex>
+        <Divider my="20px" />
+        <Skeleton height="20px" width="120px" mb="16px" />
+        {[...Array(3)].map((_, i) => (
+          <Flex key={i} gap="14px" p="12px" mb="14px" border="1px solid" borderColor="bw.border" borderRadius="md">
+            <Skeleton width="60px" height="84px" borderRadius="4px" />
+            <Box flex="1"><SkeletonText noOfLines={2} spacing="2" /></Box>
           </Flex>
-          <Divider my="20px" />
-          <Skeleton height="20px" width="120px" mb="16px" />
-          {[...Array(3)].map((_, i) => (
-            <Flex key={i} gap="14px" p="12px" mb="14px" border="1px solid #eee" borderRadius="md">
-              <Skeleton width="60px" height="84px" borderRadius="4px" />
-              <Box flex="1"><SkeletonText noOfLines={2} spacing="2" /></Box>
-            </Flex>
-          ))}
-        </Box>
-      </Center>
+        ))}
+      </PageCard>
     );
   }
 
@@ -69,77 +68,76 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <Center py="40px" px="20px">
-      <Box maxW="800px" width="100%" bg="#fffdf7" borderRadius="lg" boxShadow="md" p="30px" borderTop="4px solid #4b5320">
-        <NavLink to="/">
-          <Button variant="link" mb="20px" sx={{ color: '#334d00' }}>
-            <ArrowBackIcon mr="6px" /> К каталогу
+    <PageCard>
+      <NavLink to="/">
+        <Button variant="link" mb="20px" sx={{ color: '#334d00' }}>
+          <ArrowBackIcon mr="6px" /> К каталогу
+        </Button>
+      </NavLink>
+
+      <Flex align="center" gap="16px" mb="10px">
+        <Avatar name={profile.name} size="lg" />
+        <Box>
+          <Heading as="h1" size="lg">{profile.name}</Heading>
+          <Text color="bw.textMuted" fontSize="sm">
+            На сайте с {dateFormatter.format(new Date(profile.memberSince))} · {profile.reviewCount} рецензий
+          </Text>
+        </Box>
+      </Flex>
+
+      <Divider my="20px" />
+
+      <Heading as="h2" size="md" mb="16px">Рецензии</Heading>
+      {profile.reviews.length === 0 ? (
+        <Text color="bw.textMuted">Пока нет рецензий</Text>
+      ) : (
+        <Stack spacing="14px">
+          {profile.reviews.map((review) => (
+            <NavLink key={review.id} to={`/books/${review.bookId}`}>
+              <Flex
+                gap="14px"
+                p="12px"
+                border="1px solid"
+                borderColor="bw.border"
+                borderRadius="md"
+                _hover={{ borderColor: '#4b5320', boxShadow: 'sm' }}
+                transition="border-color 0.15s ease"
+              >
+                <Image src={coverThumbUrl(review.bookImg)} alt={review.bookTitle} loading="lazy" width="60px" height="84px" objectFit="cover" borderRadius="4px" />
+                <Box>
+                  <Text fontWeight="bold">{review.bookTitle}</Text>
+                  <Text fontSize="sm" color="bw.textMuted" noOfLines={2}>{review.body}</Text>
+                  <Text fontSize="sm">{review.rating} ⭐</Text>
+                </Box>
+              </Flex>
+            </NavLink>
+          ))}
+        </Stack>
+      )}
+
+      {profile.totalPages > 1 && (
+        <Flex justifyContent="center" alignItems="center" columnGap="10px" mt="20px">
+          <Button
+            size="sm"
+            isDisabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            sx={{ backgroundColor: '#334d00', color: 'white' }}
+          >
+            ← Назад
           </Button>
-        </NavLink>
-
-        <Flex align="center" gap="16px" mb="10px">
-          <Avatar name={profile.name} size="lg" />
-          <Box>
-            <Heading as="h1" size="lg">{profile.name}</Heading>
-            <Text color="gray.500" fontSize="sm">
-              На сайте с {dateFormatter.format(new Date(profile.memberSince))} · {profile.reviewCount} рецензий
-            </Text>
-          </Box>
+          <Text fontSize="sm" color="bw.textMuted">
+            Страница {page} из {profile.totalPages}
+          </Text>
+          <Button
+            size="sm"
+            isDisabled={page >= profile.totalPages}
+            onClick={() => setPage((p) => Math.min(profile.totalPages, p + 1))}
+            sx={{ backgroundColor: '#334d00', color: 'white' }}
+          >
+            Вперёд →
+          </Button>
         </Flex>
-
-        <Divider my="20px" />
-
-        <Heading as="h2" size="md" mb="16px">Рецензии</Heading>
-        {profile.reviews.length === 0 ? (
-          <Text color="gray.500">Пока нет рецензий</Text>
-        ) : (
-          <Stack spacing="14px">
-            {profile.reviews.map((review) => (
-              <NavLink key={review.id} to={`/books/${review.bookId}`}>
-                <Flex
-                  gap="14px"
-                  p="12px"
-                  border="1px solid #ddd"
-                  borderRadius="md"
-                  _hover={{ borderColor: '#4b5320', boxShadow: 'sm' }}
-                  transition="border-color 0.15s ease"
-                >
-                  <Image src={coverThumbUrl(review.bookImg)} alt={review.bookTitle} loading="lazy" width="60px" height="84px" objectFit="cover" borderRadius="4px" />
-                  <Box>
-                    <Text fontWeight="bold">{review.bookTitle}</Text>
-                    <Text fontSize="sm" color="gray.600" noOfLines={2}>{review.body}</Text>
-                    <Text fontSize="sm">{review.rating} ⭐</Text>
-                  </Box>
-                </Flex>
-              </NavLink>
-            ))}
-          </Stack>
-        )}
-
-        {profile.totalPages > 1 && (
-          <Flex justifyContent="center" alignItems="center" columnGap="10px" mt="20px">
-            <Button
-              size="sm"
-              isDisabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              sx={{ backgroundColor: '#334d00', color: 'white' }}
-            >
-              ← Назад
-            </Button>
-            <Text fontSize="sm" color="gray.600">
-              Страница {page} из {profile.totalPages}
-            </Text>
-            <Button
-              size="sm"
-              isDisabled={page >= profile.totalPages}
-              onClick={() => setPage((p) => Math.min(profile.totalPages, p + 1))}
-              sx={{ backgroundColor: '#334d00', color: 'white' }}
-            >
-              Вперёд →
-            </Button>
-          </Flex>
-        )}
-      </Box>
-    </Center>
+      )}
+    </PageCard>
   );
 }

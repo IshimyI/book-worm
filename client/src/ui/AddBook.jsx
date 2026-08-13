@@ -180,7 +180,7 @@ export default function AddBook({ user }) {
 
                       {searchBookFlag && (
                         <>
-                          <Box w="100%" overflowY="auto" maxHeight="40vh" minH={20} mt="20px" mb="20px" borderColor="black" borderRadius="md">
+                          <Box w="100%" overflowY="auto" maxHeight="40vh" minH={20} mt="20px" mb="20px" borderColor="bw.border" borderRadius="md">
                             {books.map((book) => {
                               return <SelectedBook key={book.id} book={book} handleBookClick={handleBookClick} setInputs={setInputs} inputs={inputs} />;
                             })}
