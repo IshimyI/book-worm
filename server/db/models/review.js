@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       userId: DataTypes.INTEGER,
       user_rating: DataTypes.INTEGER,
       reportCount: DataTypes.INTEGER,
+      helpfulCount: DataTypes.INTEGER,
     },
     {
       sequelize,

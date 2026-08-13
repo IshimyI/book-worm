@@ -91,6 +91,21 @@ export default function BookPage({ user, setUser }) {
     }
   };
 
+  const toggleHelpful = async (review) => {
+    if (!user) {
+      toast({ title: 'Войдите, чтобы отметить рецензию полезной', status: 'info', duration: 2500, isClosable: true });
+      return;
+    }
+    try {
+      const res = await axiosInstance.post(`/review/${review.id}/helpful`);
+      setReviews((prev) =>
+        prev.map((r) => (r.id === review.id ? { ...r, helpfulCount: res.data.helpfulCount, helpfulByMe: res.data.helpful } : r))
+      );
+    } catch (error) {
+      toast({ title: error.response?.data?.message || 'Не удалось отметить рецензию', status: 'error', duration: 2500, isClosable: true });
+    }
+  };
+
   const reportReview = async (review) => {
     if (!user) {
       toast({ title: 'Войдите, чтобы отправить жалобу', status: 'info', duration: 2500, isClosable: true });
@@ -156,6 +171,8 @@ export default function BookPage({ user, setUser }) {
     const list = [...reviews];
     if (reviewSort === 'rating') {
       list.sort((a, b) => (b.user_raeting ?? 0) - (a.user_raeting ?? 0));
+    } else if (reviewSort === 'helpful') {
+      list.sort((a, b) => (b.helpfulCount ?? 0) - (a.helpfulCount ?? 0));
     } else if (reviewSort === 'oldest') {
       list.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
     } else {
@@ -253,6 +270,7 @@ export default function BookPage({ user, setUser }) {
             <option value="newest">Сначала новые</option>
             <option value="oldest">Сначала старые</option>
             <option value="rating">По оценке</option>
+            <option value="helpful">Сначала полезные</option>
           </Select>
         </Flex>
         <Box maxH="400px" overflowY="auto" mb="20px">
@@ -297,7 +315,27 @@ export default function BookPage({ user, setUser }) {
                       </Flex>
                       <Divider my="2" />
                       <Text>{review.user_rev}</Text>
-                      <Text>{review.user_raeting} ⭐</Text>
+                      <Flex justify="space-between" align="center" mt="6px">
+                        <Text>{review.user_raeting} ⭐</Text>
+                        {isMine ? (
+                          <Text fontSize="sm" color="bw.textMuted">
+                            👍 {review.helpfulCount || 0}
+                          </Text>
+                        ) : (
+                          <Button
+                            size="xs"
+                            variant={review.helpfulByMe ? 'solid' : 'outline'}
+                            sx={
+                              review.helpfulByMe
+                                ? { backgroundColor: '#4b5320', color: 'white' }
+                                : { color: '#4b5320', borderColor: '#4b5320' }
+                            }
+                            onClick={() => toggleHelpful(review)}
+                          >
+                            👍 Полезно {review.helpfulCount > 0 ? `(${review.helpfulCount})` : ''}
+                          </Button>
+                        )}
+                      </Flex>
                     </Box>
                   </Stack>
                 </Box>

@@ -1,14 +1,15 @@
 const express = require("express");
-const { User, Book, Review, News } = require("../../db/models");
+const { User, Book, Review, ReviewVote, News } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
+const optionalAuth = require("../middlewares/optionalAuth");
 const { containsProfanity } = require("../utils/moderation");
 const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRating");
 const cache = require("../utils/simpleCache");
 
 const router = express.Router();
 
-function mapReview(review) {
+function mapReview(review, votedReviewIds = new Set()) {
   return {
     id: review.id,
     userName: review.User.name,
@@ -16,6 +17,8 @@ function mapReview(review) {
     user_id: review.userId,
     user_raeting: review.user_rating,
     createdAt: review.createdAt,
+    helpfulCount: review.helpfulCount,
+    helpfulByMe: votedReviewIds.has(review.id),
   };
 }
 
@@ -187,7 +190,7 @@ router.get("/listAllBooks", async (req, res) => {
   }
 });
 
-router.get("/book/:id", async (req, res) => {
+router.get("/book/:id", optionalAuth, async (req, res) => {
   const { id } = req.params;
   try {
     const book = await Book.findByPk(id, {
@@ -196,7 +199,7 @@ router.get("/book/:id", async (req, res) => {
           model: Review,
           where: { reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
           required: false,
-          attributes: ["id", "userId", "body", "user_rating", "createdAt"],
+          attributes: ["id", "userId", "body", "user_rating", "createdAt", "helpfulCount"],
           include: [{ model: User, attributes: ["name"] }],
         },
       ],
@@ -204,6 +207,15 @@ router.get("/book/:id", async (req, res) => {
 
     if (!book) {
       return res.status(404).send({ message: "Книга не найдена" });
+    }
+
+    let votedReviewIds = new Set();
+    if (req.userId) {
+      const votes = await ReviewVote.findAll({
+        where: { userId: req.userId, reviewId: book.Reviews.map((r) => r.id) },
+        attributes: ["reviewId"],
+      });
+      votedReviewIds = new Set(votes.map((v) => v.reviewId));
     }
 
     res.status(200).send({
@@ -216,7 +228,7 @@ router.get("/book/:id", async (req, res) => {
       img: book.img,
       genre: book.genre,
       year: book.year,
-      reviews: book.Reviews.map(mapReview),
+      reviews: book.Reviews.map((r) => mapReview(r, votedReviewIds)),
     });
   } catch (error) {
     console.log(error);
@@ -337,6 +349,38 @@ router.delete("/review/:id", verifyAccessToken, async (req, res) => {
     await review.destroy();
     await recomputeBookRating(bookId);
     res.status(200).json({ message: "Рецензия удалена" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.post("/review/:id/helpful", verifyAccessToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const review = await Review.findByPk(id);
+    if (!review) {
+      return res.status(404).json({ message: "Рецензия не найдена" });
+    }
+    if (review.userId === req.userId) {
+      return res.status(400).json({ message: "Нельзя отметить полезной свою же рецензию" });
+    }
+
+    const existingVote = await ReviewVote.findOne({ where: { reviewId: id, userId: req.userId } });
+
+    let helpful;
+    if (existingVote) {
+      await existingVote.destroy();
+      review.helpfulCount = Math.max(0, review.helpfulCount - 1);
+      helpful = false;
+    } else {
+      await ReviewVote.create({ reviewId: id, userId: req.userId });
+      review.helpfulCount += 1;
+      helpful = true;
+    }
+    await review.save();
+
+    res.status(200).json({ helpful, helpfulCount: review.helpfulCount });
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);

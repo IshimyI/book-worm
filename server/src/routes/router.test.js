@@ -268,3 +268,63 @@ describe("POST /api/updateFavourites/:id", () => {
     expect(removeRes.body.favourites.split(" ")).not.toContain(String(book.id));
   });
 });
+
+describe("POST /api/review/:id/helpful", () => {
+  async function createReview() {
+    const author = await signupAndLogin("author@example.com");
+    const book = await Book.create({ title: "Voted Book", author: "Some Author", genre: "Роман" });
+    const review = await Review.create({ bookId: book.id, userId: author.userId, body: "Отличная книга", user_rating: 5 });
+    return { book, review };
+  }
+
+  it("requires authentication", async () => {
+    const { review } = await createReview();
+    const res = await request(app).post(`/api/review/${review.id}/helpful`);
+    expect(res.status).toBe(401);
+  });
+
+  it("refuses to let the author vote their own review helpful", async () => {
+    const { review } = await createReview();
+    const author = await request(app).post("/api/auth/login").send({ email: "author@example.com", password: "password123" });
+    const res = await request(app)
+      .post(`/api/review/${review.id}/helpful`)
+      .set("Authorization", `Bearer ${author.body.accessToken}`);
+    expect(res.status).toBe(400);
+  });
+
+  it("toggles a helpful vote and updates the count", async () => {
+    const { review } = await createReview();
+    const voter = await signupAndLogin("voter@example.com");
+
+    const voteRes = await request(app)
+      .post(`/api/review/${review.id}/helpful`)
+      .set("Authorization", `Bearer ${voter.accessToken}`);
+    expect(voteRes.status).toBe(200);
+    expect(voteRes.body).toEqual({ helpful: true, helpfulCount: 1 });
+
+    const unvoteRes = await request(app)
+      .post(`/api/review/${review.id}/helpful`)
+      .set("Authorization", `Bearer ${voter.accessToken}`);
+    expect(unvoteRes.status).toBe(200);
+    expect(unvoteRes.body).toEqual({ helpful: false, helpfulCount: 0 });
+  });
+
+  it("reflects the count and the viewer's own vote on the book detail route", async () => {
+    const { book, review } = await createReview();
+    const voter = await signupAndLogin("voter2@example.com");
+
+    await request(app)
+      .post(`/api/review/${review.id}/helpful`)
+      .set("Authorization", `Bearer ${voter.accessToken}`);
+
+    const asVoter = await request(app)
+      .get(`/api/book/${book.id}`)
+      .set("Authorization", `Bearer ${voter.accessToken}`);
+    expect(asVoter.body.reviews[0].helpfulCount).toBe(1);
+    expect(asVoter.body.reviews[0].helpfulByMe).toBe(true);
+
+    const anonymous = await request(app).get(`/api/book/${book.id}`);
+    expect(anonymous.body.reviews[0].helpfulCount).toBe(1);
+    expect(anonymous.body.reviews[0].helpfulByMe).toBe(false);
+  });
+});
