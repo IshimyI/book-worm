@@ -405,3 +405,71 @@ describe("review comments", () => {
     expect(deleteRes.status).toBe(403);
   });
 });
+
+describe("follows and feed", () => {
+  it("requires authentication to follow", async () => {
+    const target = await signupAndLogin("followtarget@example.com");
+    const res = await request(app).post(`/api/users/${target.userId}/follow`);
+    expect(res.status).toBe(401);
+  });
+
+  it("refuses to follow yourself", async () => {
+    const { userId, accessToken } = await signupAndLogin("solo@example.com");
+    const res = await request(app)
+      .post(`/api/users/${userId}/follow`)
+      .set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(400);
+  });
+
+  it("toggles a follow and updates counts on the target's profile", async () => {
+    const target = await signupAndLogin("target@example.com");
+    const follower = await signupAndLogin("follower@example.com");
+
+    const followRes = await request(app)
+      .post(`/api/users/${target.userId}/follow`)
+      .set("Authorization", `Bearer ${follower.accessToken}`);
+    expect(followRes.status).toBe(200);
+    expect(followRes.body).toEqual({ following: true, followerCount: 1 });
+
+    const profileAsFollower = await request(app)
+      .get(`/api/users/${target.userId}/profile`)
+      .set("Authorization", `Bearer ${follower.accessToken}`);
+    expect(profileAsFollower.body.followerCount).toBe(1);
+    expect(profileAsFollower.body.isFollowedByMe).toBe(true);
+
+    const profileAnonymous = await request(app).get(`/api/users/${target.userId}/profile`);
+    expect(profileAnonymous.body.followerCount).toBe(1);
+    expect(profileAnonymous.body.isFollowedByMe).toBe(false);
+
+    const unfollowRes = await request(app)
+      .post(`/api/users/${target.userId}/follow`)
+      .set("Authorization", `Bearer ${follower.accessToken}`);
+    expect(unfollowRes.status).toBe(200);
+    expect(unfollowRes.body).toEqual({ following: false, followerCount: 0 });
+  });
+
+  it("shows reviews from followed users in the feed, not from everyone", async () => {
+    const followed = await signupAndLogin("followed@example.com");
+    const notFollowed = await signupAndLogin("notfollowed@example.com");
+    const viewer = await signupAndLogin("viewer@example.com");
+
+    const book1 = await Book.create({ title: "Followed's Book", author: "A", genre: "Роман" });
+    const book2 = await Book.create({ title: "Stranger's Book", author: "B", genre: "Роман" });
+    await Review.create({ bookId: book1.id, userId: followed.userId, body: "Отзыв от того, на кого подписан", user_rating: 5 });
+    await Review.create({ bookId: book2.id, userId: notFollowed.userId, body: "Отзыв от постороннего", user_rating: 4 });
+
+    await request(app)
+      .post(`/api/users/${followed.userId}/follow`)
+      .set("Authorization", `Bearer ${viewer.accessToken}`);
+
+    const feedRes = await request(app).get("/api/feed").set("Authorization", `Bearer ${viewer.accessToken}`);
+    expect(feedRes.status).toBe(200);
+    expect(feedRes.body.reviews).toHaveLength(1);
+    expect(feedRes.body.reviews[0].userId).toBe(followed.userId);
+  });
+
+  it("requires authentication for the feed", async () => {
+    const res = await request(app).get("/api/feed");
+    expect(res.status).toBe(401);
+  });
+});

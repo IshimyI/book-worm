@@ -1,5 +1,5 @@
 const express = require("express");
-const { User, Book, Review, ReviewVote, ReviewComment, News } = require("../../db/models");
+const { User, Book, Review, ReviewVote, ReviewComment, Follow, News } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
 const optionalAuth = require("../middlewares/optionalAuth");
@@ -37,7 +37,7 @@ router.get("/news", async (req, res) => {
   }
 });
 
-router.get("/users/:id/profile", async (req, res) => {
+router.get("/users/:id/profile", optionalAuth, async (req, res) => {
   const { id } = req.params;
   const { page = 1, pageSize = 10 } = req.query;
   try {
@@ -58,11 +58,20 @@ router.get("/users/:id/profile", async (req, res) => {
       offset,
     });
 
+    const [followerCount, followingCount, isFollowedByMe] = await Promise.all([
+      Follow.count({ where: { followingId: id } }),
+      Follow.count({ where: { followerId: id } }),
+      req.userId ? Follow.findOne({ where: { followerId: req.userId, followingId: id } }).then(Boolean) : false,
+    ]);
+
     res.status(200).send({
       id: user.id,
       name: user.name,
       memberSince: user.createdAt,
       reviewCount,
+      followerCount,
+      followingCount,
+      isFollowedByMe,
       page: Math.max(Number(page) || 1, 1),
       totalPages: Math.max(1, Math.ceil(reviewCount / limit)),
       reviews: reviews.map((r) => ({
@@ -74,6 +83,81 @@ router.get("/users/:id/profile", async (req, res) => {
         rating: r.user_rating,
         createdAt: r.createdAt,
       })),
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.post("/users/:id/follow", verifyAccessToken, async (req, res) => {
+  const targetId = Number(req.params.id);
+  try {
+    if (targetId === req.userId) {
+      return res.status(400).json({ message: "Нельзя подписаться на самого себя" });
+    }
+    const target = await User.findByPk(targetId);
+    if (!target) {
+      return res.status(404).json({ message: "Пользователь не найден" });
+    }
+
+    const existing = await Follow.findOne({ where: { followerId: req.userId, followingId: targetId } });
+    let following;
+    if (existing) {
+      await existing.destroy();
+      following = false;
+    } else {
+      await Follow.create({ followerId: req.userId, followingId: targetId });
+      following = true;
+    }
+    const followerCount = await Follow.count({ where: { followingId: targetId } });
+    res.status(200).json({ following, followerCount });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.get("/feed", verifyAccessToken, async (req, res) => {
+  const { page = 1, pageSize = 15 } = req.query;
+  try {
+    const followedIds = (await Follow.findAll({ where: { followerId: req.userId }, attributes: ["followingId"] })).map(
+      (f) => f.followingId
+    );
+
+    const limit = Math.min(Number(pageSize) || 15, 50);
+    const offset = (Math.max(Number(page) || 1, 1) - 1) * limit;
+
+    if (followedIds.length === 0) {
+      return res.status(200).json({ reviews: [], page: 1, totalPages: 1, following: 0 });
+    }
+
+    const { count, rows: reviews } = await Review.findAndCountAll({
+      where: { userId: followedIds, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
+      include: [
+        { model: Book, attributes: ["id", "title", "img"] },
+        { model: User, attributes: ["id", "name"] },
+      ],
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+    });
+
+    res.status(200).json({
+      reviews: reviews.map((r) => ({
+        id: r.id,
+        bookId: r.bookId,
+        bookTitle: r.Book?.title,
+        bookImg: r.Book?.img,
+        body: r.body,
+        rating: r.user_rating,
+        createdAt: r.createdAt,
+        userId: r.User.id,
+        userName: r.User.name,
+      })),
+      page: Math.max(Number(page) || 1, 1),
+      totalPages: Math.max(1, Math.ceil(count / limit)),
+      following: followedIds.length,
     });
   } catch (error) {
     console.log(error);

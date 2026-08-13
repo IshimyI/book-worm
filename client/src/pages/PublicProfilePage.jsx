@@ -1,6 +1,7 @@
+/* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
-import { Box, Center, Heading, Text, Stack, Avatar, Divider, Image, Flex, Button, Skeleton, SkeletonCircle, SkeletonText } from '@chakra-ui/react';
+import { Box, Center, Heading, Text, Stack, Avatar, Divider, Image, Flex, Button, Skeleton, SkeletonCircle, SkeletonText, useToast } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
@@ -9,11 +10,13 @@ import PageCard from '../ui/PageCard';
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' });
 
-export default function PublicProfilePage() {
+export default function PublicProfilePage({ user }) {
   const { id } = useParams();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [followBusy, setFollowBusy] = useState(false);
+  const toast = useToast();
 
   useSeoMeta({
     enabled: Boolean(profile),
@@ -67,6 +70,24 @@ export default function PublicProfilePage() {
     );
   }
 
+  const isOwnProfile = user && user.id === profile.id;
+
+  const toggleFollow = async () => {
+    if (!user) {
+      toast({ title: 'Войдите, чтобы подписываться на пользователей', status: 'info', duration: 2500, isClosable: true });
+      return;
+    }
+    setFollowBusy(true);
+    try {
+      const res = await axiosInstance.post(`/users/${id}/follow`);
+      setProfile((prev) => ({ ...prev, isFollowedByMe: res.data.following, followerCount: res.data.followerCount }));
+    } catch (error) {
+      toast({ title: error.response?.data?.message || 'Не удалось изменить подписку', status: 'error', duration: 2500, isClosable: true });
+    } finally {
+      setFollowBusy(false);
+    }
+  };
+
   return (
     <PageCard>
       <NavLink to="/">
@@ -75,14 +96,30 @@ export default function PublicProfilePage() {
         </Button>
       </NavLink>
 
-      <Flex align="center" gap="16px" mb="10px">
+      <Flex align="center" gap="16px" mb="10px" flexWrap="wrap">
         <Avatar name={profile.name} size="lg" />
-        <Box>
+        <Box flex="1">
           <Heading as="h1" size="lg">{profile.name}</Heading>
           <Text color="bw.textMuted" fontSize="sm">
             На сайте с {dateFormatter.format(new Date(profile.memberSince))} · {profile.reviewCount} рецензий
           </Text>
+          <Text color="bw.textMuted" fontSize="sm">
+            {profile.followerCount} {profile.followerCount === 1 ? 'подписчик' : 'подписчиков'} · {profile.followingCount} подписок
+          </Text>
         </Box>
+        {!isOwnProfile && (
+          <Button
+            isLoading={followBusy}
+            onClick={toggleFollow}
+            sx={
+              profile.isFollowedByMe
+                ? { backgroundColor: 'transparent', color: '#334d00', border: '1px solid #334d00' }
+                : { backgroundColor: '#334d00', color: 'white' }
+            }
+          >
+            {profile.isFollowedByMe ? '✓ Вы подписаны' : 'Подписаться'}
+          </Button>
+        )}
       </Flex>
 
       <Divider my="20px" />
