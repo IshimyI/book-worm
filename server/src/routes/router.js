@@ -7,6 +7,7 @@ const verifyAccessToken = require("../middlewares/verifyAccessToken");
 const optionalAuth = require("../middlewares/optionalAuth");
 const { uploadAvatar, AVATAR_DIR } = require("../middlewares/uploadAvatar");
 const notify = require("../utils/notify");
+const { generateBookOgImage } = require("../utils/ogImage");
 const { containsProfanity } = require("../utils/moderation");
 const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRating");
 const cache = require("../utils/simpleCache");
@@ -467,6 +468,34 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
       readingStatus,
       reviews: book.Reviews.map((r) => mapReview(r, votedReviewIds)),
     });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.get("/book/:id/og-image.png", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const cacheKey = `og-image:${id}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      res.set("Content-Type", "image/png");
+      return res.status(200).send(cached);
+    }
+
+    const book = await Book.findByPk(id, {
+      attributes: ["id", "title", "author", "img", "rating", "quantity_rate"],
+    });
+    if (!book) {
+      return res.status(404).send({ message: "Книга не найдена" });
+    }
+
+    const png = await generateBookOgImage(book);
+    cache.set(cacheKey, png, 6 * 60 * 60 * 1000);
+    res.set("Content-Type", "image/png");
+    res.set("Cache-Control", "public, max-age=21600");
+    res.status(200).send(png);
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);

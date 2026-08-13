@@ -50,7 +50,11 @@ export default function BookPage({ user, setUser }) {
     enabled: Boolean(book),
     title: book?.title,
     description: book?.annotation || (book ? `${book.title}, ${book.author}` : ''),
-    image: book?.img,
+    // A branded card (cover + title + rating) generated server-side, not
+    // the bare cover — social crawlers don't run this JS anyway (see the
+    // server-rendered /books/:id bot response for the path that reaches
+    // them), but anything that *does* execute JS here gets the nicer image.
+    image: book ? `${import.meta.env.VITE_TARGET}/api/v1/book/${book.id}/og-image.png` : undefined,
   });
 
   const handleFavorites = async () => {

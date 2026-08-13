@@ -661,6 +661,28 @@ describe("follows and feed", () => {
   });
 });
 
+describe("GET /api/book/:id/og-image.png", () => {
+  it("returns a PNG image for a valid book", async () => {
+    const book = await Book.create({ title: "OG Book", author: "A", genre: "Роман", rating: "4.20", quantity_rate: 3 });
+    const res = await request(app).get(`/api/book/${book.id}/og-image.png`);
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toBe("image/png");
+    expect(res.body.length).toBeGreaterThan(1000);
+  }, 15000);
+
+  it("404s for a book that doesn't exist", async () => {
+    const res = await request(app).get("/api/book/999999/og-image.png");
+    expect(res.status).toBe(404);
+  });
+
+  it("renders without a cover image (falls back to a plain block)", async () => {
+    const book = await Book.create({ title: "No Cover Book", author: "A", genre: "Роман" });
+    const res = await request(app).get(`/api/book/${book.id}/og-image.png`);
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toBe("image/png");
+  }, 15000);
+});
+
 describe("recommendations", () => {
   it("recommends books in the same genre, sorted by rating, excluding itself", async () => {
     const book = await Book.create({ title: "Base Book", author: "A", genre: "Фэнтези", rating: "4.00" });
