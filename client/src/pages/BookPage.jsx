@@ -28,7 +28,7 @@ export default function BookPage({ user, setUser }) {
   const [reviewSort, setReviewSort] = useState('newest');
   const [inputBody, setInputBody] = useState('');
   const [rating, setRating] = useState(0);
-  const [recommendations, setRecommendations] = useState([]);
+  const [recommendations, setRecommendations] = useState({ sameGenre: [], sameReaders: [] });
   const { isFavorite, toggle: toggleFavorite } = useFavorite(user, setUser, book?.id);
   const toast = useToast();
   const { confirm, ConfirmDialog } = useConfirm();
@@ -50,7 +50,7 @@ export default function BookPage({ user, setUser }) {
     axiosInstance
       .get(`/book/${id}/recommendations`)
       .then((res) => setRecommendations(res.data))
-      .catch(() => setRecommendations([]));
+      .catch(() => setRecommendations({ sameGenre: [], sameReaders: [] }));
   }, [id]);
 
   useSeoMeta({
@@ -460,31 +460,45 @@ export default function BookPage({ user, setUser }) {
           </Button>
         </Box>
 
-        {recommendations.length > 0 && (
+        {recommendations.sameGenre.length > 0 && (
           <>
             <Divider my="30px" />
             <Heading as="h2" size="md" mb="16px">Похожие книги</Heading>
-            <Flex gap="16px" overflowX="auto" pb="8px">
-              {recommendations.map((rec) => (
-                <NavLink key={rec.id} to={`/books/${rec.id}`} style={{ flexShrink: 0 }}>
-                  <Box width="130px" _hover={{ opacity: 0.85 }}>
-                    <Image
-                      src={coverThumbUrl(rec.img) || './default.jpg'}
-                      alt={rec.title}
-                      loading="lazy"
-                      width="130px"
-                      height="180px"
-                      objectFit="cover"
-                      borderRadius="6px"
-                    />
-                    <Text fontSize="sm" fontWeight="bold" mt="6px" noOfLines={2}>{rec.title}</Text>
-                    <Text fontSize="xs" color="bw.textMuted">{rec.rating ?? 0} ⭐</Text>
-                  </Box>
-                </NavLink>
-              ))}
-            </Flex>
+            <BookStrip books={recommendations.sameGenre} />
+          </>
+        )}
+
+        {recommendations.sameReaders.length > 0 && (
+          <>
+            <Divider my="30px" />
+            <Heading as="h2" size="md" mb="16px">Читатели этой книги также читали</Heading>
+            <BookStrip books={recommendations.sameReaders} />
           </>
         )}
     </PageCard>
+  );
+}
+
+function BookStrip({ books }) {
+  return (
+    <Flex gap="16px" overflowX="auto" pb="8px">
+      {books.map((rec) => (
+        <NavLink key={rec.id} to={`/books/${rec.id}`} style={{ flexShrink: 0 }}>
+          <Box width="130px" _hover={{ opacity: 0.85 }}>
+            <Image
+              src={coverThumbUrl(rec.img) || './default.jpg'}
+              alt={rec.title}
+              loading="lazy"
+              width="130px"
+              height="180px"
+              objectFit="cover"
+              borderRadius="6px"
+            />
+            <Text fontSize="sm" fontWeight="bold" mt="6px" noOfLines={2}>{rec.title}</Text>
+            <Text fontSize="xs" color="bw.textMuted">{rec.rating ?? 0} ⭐</Text>
+          </Box>
+        </NavLink>
+      ))}
+    </Flex>
   );
 }

@@ -758,7 +758,7 @@ router.get("/book/:id/recommendations", async (req, res) => {
     // "Same genre" now means sharing any genre — primary or tag — with the
     // target book, not just an exact match on the one primary genre.
     const bookGenres = [book.genre, ...(book.additionalGenres || [])].filter(Boolean);
-    const recommendations = await Book.findAll({
+    const sameGenrePromise = Book.findAll({
       where: {
         id: { [Sequelize.Op.ne]: book.id },
         status: "approved",
@@ -771,7 +771,34 @@ router.get("/book/:id/recommendations", async (req, res) => {
       limit: 6,
     });
 
-    res.status(200).send(recommendations);
+    // "Readers who reviewed this book also reviewed" — collaborative,
+    // not genre-based: find everyone who reviewed this book, then the
+    // other books they reviewed, ranked by how many of them overlap.
+    const sameReadersPromise = (async () => {
+      const reviewerIds = (await Review.findAll({ where: { bookId: book.id }, attributes: ["userId"], raw: true })).map(
+        (r) => r.userId
+      );
+      if (reviewerIds.length === 0) return [];
+
+      const overlapRows = await Review.findAll({
+        where: { userId: reviewerIds, bookId: { [Sequelize.Op.ne]: book.id } },
+        attributes: ["bookId", [Sequelize.fn("COUNT", Sequelize.fn("DISTINCT", Sequelize.col("userId"))), "overlap"]],
+        include: [{ model: Book, attributes: [], where: { status: "approved" } }],
+        group: ["bookId"],
+        order: [[Sequelize.literal("overlap"), "DESC"]],
+        limit: 6,
+        raw: true,
+      });
+      if (overlapRows.length === 0) return [];
+
+      const books = await Book.findAll({ where: { id: overlapRows.map((r) => r.bookId) } });
+      const booksById = new Map(books.map((b) => [b.id, b]));
+      return overlapRows.map((r) => booksById.get(r.bookId)).filter(Boolean);
+    })();
+
+    const [sameGenre, sameReaders] = await Promise.all([sameGenrePromise, sameReadersPromise]);
+
+    res.status(200).send({ sameGenre, sameReaders });
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);

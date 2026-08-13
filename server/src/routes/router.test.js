@@ -817,7 +817,7 @@ describe("recommendations", () => {
 
     const res = await request(app).get(`/api/book/${book.id}/recommendations`);
     expect(res.status).toBe(200);
-    const ids = res.body.map((b) => b.id);
+    const ids = res.body.sameGenre.map((b) => b.id);
     expect(ids).not.toContain(book.id);
     expect(ids).toEqual([better.id, worse.id]);
   });
@@ -829,7 +829,44 @@ describe("recommendations", () => {
 
     const res = await request(app).get(`/api/book/${book.id}/recommendations`);
     expect(res.status).toBe(200);
-    expect(res.body.map((b) => b.id)).toContain(matchByAdditional.id);
+    expect(res.body.sameGenre.map((b) => b.id)).toContain(matchByAdditional.id);
+  });
+
+  it("recommends books read by the same readers, ranked by overlap", async () => {
+    const book = await Book.create({ title: "Anchor Book", author: "A", genre: "Роман" });
+    const popularOverlap = await Book.create({ title: "Read By Both", author: "B", genre: "Хоррор" });
+    const singleOverlap = await Book.create({ title: "Read By One", author: "C", genre: "Хоррор" });
+    const unrelatedBook = await Book.create({ title: "Truly Unrelated", author: "E", genre: "Хоррор" });
+
+    const reader1 = await signupAndLogin("reader1@example.com");
+    const reader2 = await signupAndLogin("reader2@example.com");
+    const reader3 = await signupAndLogin("reader3@example.com");
+
+    await Review.create({ bookId: book.id, userId: reader1.userId, body: "r", user_rating: 5 });
+    await Review.create({ bookId: book.id, userId: reader2.userId, body: "r", user_rating: 4 });
+    await Review.create({ bookId: popularOverlap.id, userId: reader1.userId, body: "r", user_rating: 5 });
+    await Review.create({ bookId: popularOverlap.id, userId: reader2.userId, body: "r", user_rating: 5 });
+    await Review.create({ bookId: singleOverlap.id, userId: reader1.userId, body: "r", user_rating: 5 });
+    await Review.create({ bookId: unrelatedBook.id, userId: reader3.userId, body: "r", user_rating: 5 });
+
+    const res = await request(app).get(`/api/book/${book.id}/recommendations`);
+    expect(res.status).toBe(200);
+    const ids = res.body.sameReaders.map((b) => b.id);
+    expect(ids[0]).toBe(popularOverlap.id);
+    expect(ids).toContain(singleOverlap.id);
+    expect(ids).not.toContain(unrelatedBook.id);
+    expect(ids).not.toContain(book.id);
+  });
+
+  it("excludes pending books from same-readers recommendations", async () => {
+    const book = await Book.create({ title: "Anchor Book 2", author: "A", genre: "Роман" });
+    const pendingBook = await Book.create({ title: "Pending Overlap", author: "B", genre: "Роман", status: "pending" });
+    const reader = await signupAndLogin("reader4@example.com");
+    await Review.create({ bookId: book.id, userId: reader.userId, body: "r", user_rating: 5 });
+    await Review.create({ bookId: pendingBook.id, userId: reader.userId, body: "r", user_rating: 5 });
+
+    const res = await request(app).get(`/api/book/${book.id}/recommendations`);
+    expect(res.body.sameReaders.map((b) => b.id)).not.toContain(pendingBook.id);
   });
 
   it("requires authentication for personalized recommendations", async () => {
