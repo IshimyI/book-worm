@@ -7,6 +7,7 @@ import FavoriteProfile from "../ui/FavoriteProfile";
 import AddBook from "../ui/AddBook";
 import BookModal from "../ui/BookModal";
 import RecommendedBooks from "../ui/RecommendedBooks";
+import AvatarUpload from "../ui/AvatarUpload";
 
 const Office = ({ user, setUser }) => {
   const [review, setReview] = useState([]);
@@ -36,7 +37,8 @@ const Office = ({ user, setUser }) => {
     <div className="conteyner">
       <Center>
         <Box maxW="1200px" width="100%" padding="20px">
-          <Flex justify="flex-end" align="center" mb="20px">
+          <Flex justify="space-between" align="center" mb="30px" flexWrap="wrap" gap="16px">
+            <AvatarUpload user={user} setUser={setUser} />
             <AddBook user={user} />
           </Flex>
           <ReviewProfile

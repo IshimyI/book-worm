@@ -6,6 +6,7 @@ import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
 import { coverThumbUrl } from '../utils/coverUrl';
+import { resolveAvatarUrl } from '../utils/avatarUrl';
 import PageCard from '../ui/PageCard';
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' });
@@ -97,7 +98,7 @@ export default function PublicProfilePage({ user }) {
       </NavLink>
 
       <Flex align="center" gap="16px" mb="10px" flexWrap="wrap">
-        <Avatar name={profile.name} size="lg" />
+        <Avatar name={profile.name} src={resolveAvatarUrl(profile.avatarUrl)} size="lg" />
         <Box flex="1">
           <Heading as="h1" size="lg">{profile.name}</Heading>
           <Text color="bw.textMuted" fontSize="sm">

@@ -10,6 +10,7 @@ if (process.env.SENTRY_DSN) {
   });
 }
 
+const path = require("path");
 const express = require("express");
 const logger = require("morgan");
 const cookieParser = require("cookie-parser");
@@ -45,6 +46,20 @@ app.use(logger("dev"));
 app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
+
+// In production nginx serves this directory directly (see the /uploads
+// location block) and this line is never reached — it exists so local dev
+// (no nginx in front) can still resolve avatar URLs. helmet()'s default
+// Cross-Origin-Resource-Policy: same-origin blocks the client (a different
+// port in dev) from loading these images, so relax it just for this route.
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.set("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
+  express.static(path.join(__dirname, "../uploads"))
+);
 
 // /api/v1 is the canonical path; bare /api is kept as an alias to the same
 // routers so the currently-deployed client (still calling /api directly)

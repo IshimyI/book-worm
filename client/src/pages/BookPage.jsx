@@ -12,6 +12,7 @@ import PageCard from '../ui/PageCard';
 import AddToListMenu from '../ui/AddToListMenu';
 import ReviewComments from '../ui/ReviewComments';
 import { coverThumbUrl } from '../utils/coverUrl';
+import { resolveAvatarUrl } from '../utils/avatarUrl';
 
 export default function BookPage({ user, setUser }) {
   const { id } = useParams();
@@ -302,7 +303,7 @@ export default function BookPage({ user, setUser }) {
                   mb="3"
                 >
                   <Stack direction="row" spacing="4" align="center">
-                    <Avatar name={review.userName} />
+                    <Avatar name={review.userName} src={resolveAvatarUrl(review.userAvatarUrl)} />
                     <Box flex="1">
                       <Flex justify="space-between" align="center">
                         <Text fontWeight="bold">

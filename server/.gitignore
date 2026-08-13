@@ -1,3 +1,6 @@
+# User-uploaded files (avatars, etc.) — not part of the repo, lives only on disk
+uploads/
+
 # Logs
 logs
 *.log

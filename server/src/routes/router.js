@@ -1,8 +1,11 @@
 const express = require("express");
 const { User, Book, Review, ReviewVote, ReviewComment, Follow, News } = require("../../db/models");
 const { Sequelize } = require("sequelize");
+const fs = require("fs");
+const path = require("path");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
 const optionalAuth = require("../middlewares/optionalAuth");
+const { uploadAvatar, AVATAR_DIR } = require("../middlewares/uploadAvatar");
 const { containsProfanity } = require("../utils/moderation");
 const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRating");
 const cache = require("../utils/simpleCache");
@@ -13,6 +16,7 @@ function mapReview(review, votedReviewIds = new Set()) {
   return {
     id: review.id,
     userName: review.User.name,
+    userAvatarUrl: review.User.avatarUrl,
     user_rev: review.body,
     user_id: review.userId,
     user_raeting: review.user_rating,
@@ -41,7 +45,7 @@ router.get("/users/:id/profile", optionalAuth, async (req, res) => {
   const { id } = req.params;
   const { page = 1, pageSize = 10 } = req.query;
   try {
-    const user = await User.findByPk(id, { attributes: ["id", "name", "createdAt"] });
+    const user = await User.findByPk(id, { attributes: ["id", "name", "createdAt", "avatarUrl"] });
     if (!user) {
       return res.status(404).send({ message: "Пользователь не найден" });
     }
@@ -67,6 +71,7 @@ router.get("/users/:id/profile", optionalAuth, async (req, res) => {
     res.status(200).send({
       id: user.id,
       name: user.name,
+      avatarUrl: user.avatarUrl,
       memberSince: user.createdAt,
       reviewCount,
       followerCount,
@@ -118,6 +123,42 @@ router.post("/users/:id/follow", verifyAccessToken, async (req, res) => {
   }
 });
 
+router.post(
+  "/users/me/avatar",
+  verifyAccessToken,
+  (req, res, next) => {
+    uploadAvatar.single("avatar")(req, res, (err) => {
+      if (err) {
+        const message = err.code === "LIMIT_FILE_SIZE" ? "Файл слишком большой (максимум 3 МБ)" : err.message;
+        return res.status(400).json({ message });
+      }
+      next();
+    });
+  },
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "Файл не выбран" });
+      }
+      const user = await User.findByPk(req.userId);
+      const previousAvatarUrl = user.avatarUrl;
+
+      user.avatarUrl = `/uploads/avatars/${req.file.filename}`;
+      await user.save();
+
+      if (previousAvatarUrl) {
+        const previousPath = path.join(AVATAR_DIR, path.basename(previousAvatarUrl));
+        fs.unlink(previousPath, () => {});
+      }
+
+      res.status(200).json({ avatarUrl: user.avatarUrl });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send(error.message);
+    }
+  }
+);
+
 router.get("/feed", verifyAccessToken, async (req, res) => {
   const { page = 1, pageSize = 15 } = req.query;
   try {
@@ -136,7 +177,7 @@ router.get("/feed", verifyAccessToken, async (req, res) => {
       where: { userId: followedIds, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
       include: [
         { model: Book, attributes: ["id", "title", "img"] },
-        { model: User, attributes: ["id", "name"] },
+        { model: User, attributes: ["id", "name", "avatarUrl"] },
       ],
       order: [["createdAt", "DESC"]],
       limit,
@@ -146,6 +187,7 @@ router.get("/feed", verifyAccessToken, async (req, res) => {
     res.status(200).json({
       reviews: reviews.map((r) => ({
         id: r.id,
+        userAvatarUrl: r.User.avatarUrl,
         bookId: r.bookId,
         bookTitle: r.Book?.title,
         bookImg: r.Book?.img,
@@ -285,7 +327,7 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
           where: { reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
           required: false,
           attributes: ["id", "userId", "body", "user_rating", "createdAt", "helpfulCount", "commentCount"],
-          include: [{ model: User, attributes: ["name"] }],
+          include: [{ model: User, attributes: ["name", "avatarUrl"] }],
         },
       ],
     });
@@ -404,7 +446,7 @@ router.get("/listUserBooks/:id", async (req, res) => {
       books.map(async (book) => {
         const allReviews = await Review.findAll({
           where: { bookId: book.id, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
-          include: [{ model: User, attributes: ["name"] }],
+          include: [{ model: User, attributes: ["name", "avatarUrl"] }],
         });
 
         return {

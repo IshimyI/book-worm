@@ -1,6 +1,15 @@
+const fs = require("fs");
+const path = require("path");
 const request = require("supertest");
 const app = require("../app");
 const { sequelize, User, Book, Review } = require("../../db/models");
+const { AVATAR_DIR } = require("../middlewares/uploadAvatar");
+
+// A minimal valid 1x1 PNG, just enough for multer/the fileFilter to accept it.
+const ONE_PIXEL_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+  "base64"
+);
 
 async function signupAndLogin(email) {
   const res = await request(app).post("/api/auth/signup").send({
@@ -507,5 +516,66 @@ describe("recommendations", () => {
     const ids = res.body.books.map((b) => b.id);
     expect(ids).toContain(unreadInGenre.id);
     expect(ids).not.toContain(readBook.id);
+  });
+});
+
+describe("POST /api/users/me/avatar", () => {
+  afterEach(() => {
+    for (const file of fs.readdirSync(AVATAR_DIR)) {
+      fs.unlinkSync(path.join(AVATAR_DIR, file));
+    }
+  });
+
+  it("requires authentication", async () => {
+    const res = await request(app).post("/api/users/me/avatar").attach("avatar", ONE_PIXEL_PNG, "avatar.png");
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects a non-image file", async () => {
+    const { accessToken } = await signupAndLogin("avatar1@example.com");
+    const res = await request(app)
+      .post("/api/users/me/avatar")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .attach("avatar", Buffer.from("not an image"), { filename: "note.txt", contentType: "text/plain" });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects when no file is attached", async () => {
+    const { accessToken } = await signupAndLogin("avatar2@example.com");
+    const res = await request(app).post("/api/users/me/avatar").set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(400);
+  });
+
+  it("uploads an avatar and persists the URL on the user", async () => {
+    const { userId, accessToken } = await signupAndLogin("avatar3@example.com");
+    const res = await request(app)
+      .post("/api/users/me/avatar")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .attach("avatar", ONE_PIXEL_PNG, "avatar.png");
+
+    expect(res.status).toBe(200);
+    expect(res.body.avatarUrl).toMatch(/^\/uploads\/avatars\//);
+
+    const user = await User.findByPk(userId);
+    expect(user.avatarUrl).toBe(res.body.avatarUrl);
+    expect(fs.existsSync(path.join(AVATAR_DIR, path.basename(user.avatarUrl)))).toBe(true);
+  });
+
+  it("replaces the previous avatar file when uploading a new one", async () => {
+    const { accessToken } = await signupAndLogin("avatar4@example.com");
+    const first = await request(app)
+      .post("/api/users/me/avatar")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .attach("avatar", ONE_PIXEL_PNG, "avatar.png");
+    const firstPath = path.join(AVATAR_DIR, path.basename(first.body.avatarUrl));
+    expect(fs.existsSync(firstPath)).toBe(true);
+
+    const second = await request(app)
+      .post("/api/users/me/avatar")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .attach("avatar", ONE_PIXEL_PNG, "avatar.png");
+
+    expect(second.body.avatarUrl).not.toBe(first.body.avatarUrl);
+    expect(fs.existsSync(firstPath)).toBe(false);
   });
 });

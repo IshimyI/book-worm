@@ -1,10 +1,11 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Box, Center, Heading, Text, Stack, Image, Flex, Button, Skeleton, SkeletonText } from '@chakra-ui/react';
+import { Box, Center, Heading, Text, Stack, Image, Avatar, Flex, Button, Skeleton, SkeletonText } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
 import { coverThumbUrl } from '../utils/coverUrl';
+import { resolveAvatarUrl } from '../utils/avatarUrl';
 import PageCard from '../ui/PageCard';
 
 export default function FeedPage({ user }) {
@@ -66,12 +67,15 @@ export default function FeedPage({ user }) {
         <Stack spacing="14px">
           {data.reviews.map((review) => (
             <Box key={review.id} p="12px" border="1px solid" borderColor="bw.border" borderRadius="md">
-              <Text fontSize="sm" color="bw.textMuted" mb="6px">
-                <NavLink to={`/users/${review.userId}`} style={{ textDecoration: 'underline' }}>
-                  {review.userName}
-                </NavLink>{' '}
-                оставил(а) рецензию
-              </Text>
+              <Flex align="center" gap="8px" mb="6px">
+                <Avatar name={review.userName} src={resolveAvatarUrl(review.userAvatarUrl)} size="xs" />
+                <Text fontSize="sm" color="bw.textMuted">
+                  <NavLink to={`/users/${review.userId}`} style={{ textDecoration: 'underline' }}>
+                    {review.userName}
+                  </NavLink>{' '}
+                  оставил(а) рецензию
+                </Text>
+              </Flex>
               <NavLink to={`/books/${review.bookId}`}>
                 <Flex gap="14px" _hover={{ opacity: 0.85 }}>
                   <Image src={coverThumbUrl(review.bookImg)} alt={review.bookTitle} loading="lazy" width="60px" height="84px" objectFit="cover" borderRadius="4px" />

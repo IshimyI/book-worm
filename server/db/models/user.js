@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       previousRefreshTokenId: DataTypes.STRING,
       refreshTokenRotatedAt: DataTypes.DATE,
       isAdmin: DataTypes.BOOLEAN,
+      avatarUrl: DataTypes.STRING,
     },
     {
       sequelize,
