@@ -124,6 +124,7 @@ export default function MainPage({ user, setUser }) {
 
               <Select
                 placeholder="Жанр"
+                aria-label="Жанр"
                 w={"90%"}
                 m={"0 auto"}
                 value={filters.genre}
@@ -138,6 +139,7 @@ export default function MainPage({ user, setUser }) {
 
               <Select
                 placeholder="Автор"
+                aria-label="Автор"
                 w={"90%"}
                 m={"0 auto"}
                 mt={"20px"}
@@ -153,6 +155,7 @@ export default function MainPage({ user, setUser }) {
 
               <Select
                 placeholder="Год издания"
+                aria-label="Год издания"
                 w={"90%"}
                 m={"0 auto"}
                 mt={"20px"}
@@ -168,6 +171,7 @@ export default function MainPage({ user, setUser }) {
 
               <Select
                 placeholder="Рейтинг от"
+                aria-label="Рейтинг от"
                 w={"90%"}
                 m={"0 auto"}
                 mt={"20px"}
@@ -205,6 +209,7 @@ export default function MainPage({ user, setUser }) {
                 <Select
                   w={200}
                   bg="bw.cardBg"
+                  aria-label="Сортировать по"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                 >
@@ -216,6 +221,7 @@ export default function MainPage({ user, setUser }) {
                 <Select
                   w={140}
                   bg="bw.cardBg"
+                  aria-label="Направление сортировки"
                   value={sortDir}
                   onChange={(e) => setSortDir(e.target.value)}
                 >
@@ -294,7 +300,7 @@ export default function MainPage({ user, setUser }) {
                         <Text fontSize="xs" color="bw.textMuted" mb={2}>
                           {book.year}
                         </Text>
-                        <Flex alignItems="center" mt={"30px"} columnGap="10px" flexWrap="wrap">
+                        <Flex alignItems="center" mt={"30px"} gap="12px" flexWrap="wrap">
                           <Text fontWeight="bold" mr={2}>
                             {book.rating == null ? 0 : book.rating} ⭐
                           </Text>
@@ -306,7 +312,6 @@ export default function MainPage({ user, setUser }) {
                           <NavLink to={`/books/${book.id}`}>
                             <Button
                               size="sm"
-                              ml={"8px"}
                               sx={{
                                 backgroundColor: "#4b5320",
                                 color: "white",

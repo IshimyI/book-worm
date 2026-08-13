@@ -228,7 +228,7 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
           </Flex>
 
           <Flex className="bookActionsRow" mt={'30px'} gap="12px">
-            <Button backgroundColor={isFavorite ? '#334d00' : '#909e18'} color="white" onClick={handleFavorites}>
+            <Button backgroundColor={isFavorite ? '#334d00' : '#6b7412'} color="white" onClick={handleFavorites}>
               {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
             </Button>
             <Button backgroundColor="#334d00" color="white" onClick={addReviewHandler}>

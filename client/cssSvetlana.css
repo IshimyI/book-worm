@@ -3,7 +3,7 @@ html, body, #root {
 }
 html, body {
   min-height: 100%;
-  background-image: url("/img/bookshelf-bg.png") !important;
+  background-image: url("/img/bookshelf-bg.jpg") !important;
   background-repeat: repeat !important;
   background-attachment: fixed !important;
 }

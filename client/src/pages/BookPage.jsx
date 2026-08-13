@@ -226,7 +226,7 @@ export default function BookPage({ user, setUser }) {
             </Stack>
             <Text mb="20px">{book.annotation}</Text>
             <Flex gap="12px" flexWrap="wrap">
-              <Button backgroundColor={isFavorite ? '#334d00' : '#909e18'} color="white" onClick={handleFavorites}>
+              <Button backgroundColor={isFavorite ? '#334d00' : '#6b7412'} color="white" onClick={handleFavorites}>
                 {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
               </Button>
               <Button

@@ -7,9 +7,9 @@ export default function Layout({ user, handleLogout }) {
   return (
     <>
       <NavBar user={user} handleLogout={handleLogout} />
-      <div className="pageContent">
+      <main className="pageContent">
         <Outlet />
-      </div>
+      </main>
       <Footer />
     </>
   );

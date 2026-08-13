@@ -142,7 +142,7 @@ export default function ModalMain({ user, setUser, book }) {
       <Button
         ml={"35px"}
         sx={{
-          backgroundColor: "#909e18",
+          backgroundColor: "#6b7412",
           color: "white",
         }}
         size="sm"
@@ -268,7 +268,7 @@ export default function ModalMain({ user, setUser, book }) {
           </Flex>
 
           <Flex className="bookActionsRow" mt={'30px'} gap="12px">
-            <Button backgroundColor={isFavorite ? '#334d00' : '#909e18'} color="white" onClick={handleFavorites}>
+            <Button backgroundColor={isFavorite ? '#334d00' : '#6b7412'} color="white" onClick={handleFavorites}>
               {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
             </Button>
             <Button backgroundColor="#334d00" color="white" onClick={addReviewHandler}>

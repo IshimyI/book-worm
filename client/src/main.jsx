@@ -5,8 +5,6 @@ import { BrowserRouter } from "react-router";
 import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
 import * as Sentry from "@sentry/react";
 import theme from "./theme";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 
 if (import.meta.env.VITE_SENTRY_DSN) {
   Sentry.init({
