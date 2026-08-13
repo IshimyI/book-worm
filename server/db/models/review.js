@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       user_rating: DataTypes.INTEGER,
       reportCount: DataTypes.INTEGER,
       helpfulCount: DataTypes.INTEGER,
+      commentCount: DataTypes.INTEGER,
     },
     {
       sequelize,

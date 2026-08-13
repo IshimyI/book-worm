@@ -10,6 +10,7 @@ import StarRatingInput from '../ui/StarRatingInput';
 import useFavorite from '../utils/useFavorite';
 import PageCard from '../ui/PageCard';
 import AddToListMenu from '../ui/AddToListMenu';
+import ReviewComments from '../ui/ReviewComments';
 
 export default function BookPage({ user, setUser }) {
   const { id } = useParams();
@@ -104,6 +105,10 @@ export default function BookPage({ user, setUser }) {
     } catch (error) {
       toast({ title: error.response?.data?.message || 'Не удалось отметить рецензию', status: 'error', duration: 2500, isClosable: true });
     }
+  };
+
+  const updateCommentCount = (reviewId, count) => {
+    setReviews((prev) => prev.map((r) => (r.id === reviewId ? { ...r, commentCount: count } : r)));
   };
 
   const reportReview = async (review) => {
@@ -336,6 +341,7 @@ export default function BookPage({ user, setUser }) {
                           </Button>
                         )}
                       </Flex>
+                      <ReviewComments user={user} review={review} onCountChange={updateCommentCount} />
                     </Box>
                   </Stack>
                 </Box>

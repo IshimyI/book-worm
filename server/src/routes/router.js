@@ -1,5 +1,5 @@
 const express = require("express");
-const { User, Book, Review, ReviewVote, News } = require("../../db/models");
+const { User, Book, Review, ReviewVote, ReviewComment, News } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
 const optionalAuth = require("../middlewares/optionalAuth");
@@ -19,6 +19,7 @@ function mapReview(review, votedReviewIds = new Set()) {
     createdAt: review.createdAt,
     helpfulCount: review.helpfulCount,
     helpfulByMe: votedReviewIds.has(review.id),
+    commentCount: review.commentCount,
   };
 }
 
@@ -199,7 +200,7 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
           model: Review,
           where: { reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
           required: false,
-          attributes: ["id", "userId", "body", "user_rating", "createdAt", "helpfulCount"],
+          attributes: ["id", "userId", "body", "user_rating", "createdAt", "helpfulCount", "commentCount"],
           include: [{ model: User, attributes: ["name"] }],
         },
       ],
@@ -381,6 +382,85 @@ router.post("/review/:id/helpful", verifyAccessToken, async (req, res) => {
     await review.save();
 
     res.status(200).json({ helpful, helpfulCount: review.helpfulCount });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.get("/review/:id/comments", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const comments = await ReviewComment.findAll({
+      where: { reviewId: id },
+      order: [["createdAt", "ASC"]],
+      include: [{ model: User, attributes: ["name"] }],
+    });
+    res.status(200).json(
+      comments.map((c) => ({
+        id: c.id,
+        body: c.body,
+        userId: c.userId,
+        userName: c.User.name,
+        createdAt: c.createdAt,
+      }))
+    );
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.post("/review/:id/comments", verifyAccessToken, async (req, res) => {
+  const { id } = req.params;
+  const body = (req.body.body || "").trim();
+  try {
+    if (!body) {
+      return res.status(400).json({ message: "Комментарий не может быть пустым" });
+    }
+    if (containsProfanity(body)) {
+      return res.status(400).json({ message: "Комментарий содержит недопустимые слова" });
+    }
+    const review = await Review.findByPk(id);
+    if (!review) {
+      return res.status(404).json({ message: "Рецензия не найдена" });
+    }
+
+    const comment = await ReviewComment.create({ reviewId: id, userId: req.userId, body });
+    review.commentCount += 1;
+    await review.save();
+
+    const author = await User.findByPk(req.userId, { attributes: ["name"] });
+    res.status(200).json({
+      id: comment.id,
+      body: comment.body,
+      userId: comment.userId,
+      userName: author.name,
+      createdAt: comment.createdAt,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.delete("/review/:reviewId/comments/:commentId", verifyAccessToken, async (req, res) => {
+  const { reviewId, commentId } = req.params;
+  try {
+    const comment = await ReviewComment.findByPk(commentId);
+    if (!comment || comment.reviewId !== Number(reviewId)) {
+      return res.status(404).json({ message: "Комментарий не найден" });
+    }
+    if (comment.userId !== req.userId) {
+      return res.status(403).json({ message: "Можно удалять только свои комментарии" });
+    }
+    await comment.destroy();
+    const review = await Review.findByPk(reviewId);
+    if (review) {
+      review.commentCount = Math.max(0, review.commentCount - 1);
+      await review.save();
+    }
+    res.status(200).json({ message: "Комментарий удалён" });
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);

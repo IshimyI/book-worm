@@ -328,3 +328,80 @@ describe("POST /api/review/:id/helpful", () => {
     expect(anonymous.body.reviews[0].helpfulByMe).toBe(false);
   });
 });
+
+describe("review comments", () => {
+  async function createReview() {
+    const author = await signupAndLogin("commented-author@example.com");
+    const book = await Book.create({ title: "Commented Book", author: "Some Author", genre: "Роман" });
+    const review = await Review.create({ bookId: book.id, userId: author.userId, body: "Хорошая книга", user_rating: 5 });
+    return { book, review };
+  }
+
+  it("requires authentication to post a comment", async () => {
+    const { review } = await createReview();
+    const res = await request(app).post(`/api/review/${review.id}/comments`).send({ body: "Согласен!" });
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects an empty comment", async () => {
+    const { review } = await createReview();
+    const commenter = await signupAndLogin("commenter@example.com");
+    const res = await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`)
+      .send({ body: "   " });
+    expect(res.status).toBe(400);
+  });
+
+  it("posts a comment, bumps commentCount, and lists it publicly", async () => {
+    const { review } = await createReview();
+    const commenter = await signupAndLogin("commenter2@example.com");
+
+    const postRes = await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`)
+      .send({ body: "Согласен, отличная книга!" });
+    expect(postRes.status).toBe(200);
+    expect(postRes.body.body).toBe("Согласен, отличная книга!");
+
+    await review.reload();
+    expect(review.commentCount).toBe(1);
+
+    const listRes = await request(app).get(`/api/review/${review.id}/comments`);
+    expect(listRes.status).toBe(200);
+    expect(listRes.body).toHaveLength(1);
+    expect(listRes.body[0].userName).toBe("Reviewer");
+  });
+
+  it("lets the author delete their own comment and decrements the count", async () => {
+    const { review } = await createReview();
+    const commenter = await signupAndLogin("commenter3@example.com");
+    const postRes = await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`)
+      .send({ body: "Мнение" });
+
+    const deleteRes = await request(app)
+      .delete(`/api/review/${review.id}/comments/${postRes.body.id}`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`);
+    expect(deleteRes.status).toBe(200);
+
+    await review.reload();
+    expect(review.commentCount).toBe(0);
+  });
+
+  it("refuses to let another user delete someone else's comment", async () => {
+    const { review } = await createReview();
+    const commenter = await signupAndLogin("commenter4@example.com");
+    const stranger = await signupAndLogin("stranger2@example.com");
+    const postRes = await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`)
+      .send({ body: "Мнение" });
+
+    const deleteRes = await request(app)
+      .delete(`/api/review/${review.id}/comments/${postRes.body.id}`)
+      .set("Authorization", `Bearer ${stranger.accessToken}`);
+    expect(deleteRes.status).toBe(403);
+  });
+});
