@@ -47,6 +47,7 @@ export default function SecurityEventLog() {
         <Select
           maxW="260px"
           size="sm"
+          aria-label="Фильтр по типу события"
           value={type}
           onChange={(e) => { setType(e.target.value); setPage(1); }}
         >

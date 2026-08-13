@@ -30,6 +30,7 @@ export default function ReadingStatusSelect({ user, bookId, status, onChange }) 
     <Select
       value={status || ''}
       onChange={handleChange}
+      aria-label="Статус чтения"
       width="auto"
       minW="170px"
       bg="bw.cardBg"

@@ -243,7 +243,7 @@ export default function AddBook({ user }) {
                         <Input name="author" value={inputs.author} onChange={handleInputChange} placeholder="Автор" mb="20px" />
                         <Input name="year" value={inputs.year} onChange={handleInputChange} placeholder="Год" mb="20px" />
                         <Input name="img" value={inputs.img} onChange={handleInputChange} placeholder="URL обложки" mb="20px" />
-                        <Select name="genre" value={inputs.genre || ''} onChange={handleInputChange} placeholder="Жанр" mb="10px">
+                        <Select name="genre" value={inputs.genre || ''} onChange={handleInputChange} placeholder="Жанр" aria-label="Жанр" mb="10px">
                           {genres.map((genre) => (
                             <option key={genre} value={genre}>
                               {genre}
@@ -253,6 +253,7 @@ export default function AddBook({ user }) {
 
                         <Select
                           placeholder="Добавить ещё жанр (необязательно)"
+                          aria-label="Добавить ещё жанр (необязательно)"
                           value=""
                           mb="10px"
                           onChange={(e) => {

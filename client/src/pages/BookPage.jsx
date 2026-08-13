@@ -306,7 +306,7 @@ export default function BookPage({ user, setUser }) {
 
         <Flex justify="space-between" align="center" mb="20px" flexWrap="wrap" gap="10px">
           <Heading as="h2" size="md">Рецензии</Heading>
-          <Select size="sm" w="200px" value={reviewSort} onChange={(e) => setReviewSort(e.target.value)}>
+          <Select size="sm" w="200px" aria-label="Сортировка рецензий" value={reviewSort} onChange={(e) => setReviewSort(e.target.value)}>
             <option value="newest">Сначала новые</option>
             <option value="oldest">Сначала старые</option>
             <option value="rating">По оценке</option>
