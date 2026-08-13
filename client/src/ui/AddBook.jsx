@@ -289,6 +289,9 @@ export default function AddBook({ user }) {
                       }}
                     >
                       <Textarea type="text" name="body" value={inputs.body} onChange={handleInputChange} placeholder="Написать рецензию"></Textarea>
+                      <Text fontSize="xs" color="bw.textMuted" mt="6px">
+                        Спойлер? Оберните текст в ||двойные вертикальные черты||.
+                      </Text>
 
                       <Box mt="40px" h="40px">
                         <StarRatingInput rating={rating} onChange={handleRating} />

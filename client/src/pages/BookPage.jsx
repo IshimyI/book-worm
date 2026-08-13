@@ -13,6 +13,7 @@ import AddToListMenu from '../ui/AddToListMenu';
 import ReadingStatusSelect from '../ui/ReadingStatusSelect';
 import ReviewComments from '../ui/ReviewComments';
 import BookQuotes from '../ui/BookQuotes';
+import SpoilerText from '../ui/SpoilerText';
 import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 
@@ -348,7 +349,7 @@ export default function BookPage({ user, setUser }) {
                         )}
                       </Flex>
                       <Divider my="2" />
-                      <Text>{review.user_rev}</Text>
+                      <SpoilerText text={review.user_rev} />
                       <Flex justify="space-between" align="center" mt="6px">
                         <Text>{review.user_raeting} ⭐</Text>
                         {isMine ? (
@@ -387,7 +388,10 @@ export default function BookPage({ user, setUser }) {
           {isEditing && (
             <Text fontSize="sm" color="#4b5320" fontWeight="bold" mb="6px">Вы редактируете свой отзыв</Text>
           )}
-          <Textarea value={inputBody} onChange={(e) => setInputBody(e.target.value)} placeholder="Напиши свою рецензию" mb="10px" />
+          <Textarea value={inputBody} onChange={(e) => setInputBody(e.target.value)} placeholder="Напиши свою рецензию" mb="6px" />
+          <Text fontSize="xs" color="bw.textMuted" mb="10px">
+            Спойлер? Оберните текст в ||двойные вертикальные черты||, и его скроют до клика.
+          </Text>
           <Box mb="15px">
             <StarRatingInput rating={rating} onChange={setRating} />
           </Box>

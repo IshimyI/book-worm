@@ -7,6 +7,7 @@ import useSeoMeta from '../utils/useSeoMeta';
 import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 import PageCard from '../ui/PageCard';
+import SpoilerText from '../ui/SpoilerText';
 
 export default function FeedPage({ user }) {
   const [data, setData] = useState(null);
@@ -81,7 +82,7 @@ export default function FeedPage({ user }) {
                   <Image src={coverThumbUrl(review.bookImg)} alt={review.bookTitle} loading="lazy" width="60px" height="84px" objectFit="cover" borderRadius="4px" />
                   <Box>
                     <Text fontWeight="bold">{review.bookTitle}</Text>
-                    <Text fontSize="sm" noOfLines={2}>{review.body}</Text>
+                    <SpoilerText text={review.body} fontSize="sm" noOfLines={2} />
                     <Text fontSize="sm">{review.rating} ⭐</Text>
                   </Box>
                 </Flex>
