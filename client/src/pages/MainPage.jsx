@@ -19,6 +19,7 @@ import ModalMain from "../ui/ModalMain";
 import axiosInstance from "../axiosInstance";
 import useSeoMeta from "../utils/useSeoMeta";
 import { coverThumbUrl } from "../utils/coverUrl";
+import RecentlyViewedStrip from "../ui/RecentlyViewedStrip";
 
 const EMPTY_FILTERS = {
   genre: "",
@@ -120,6 +121,7 @@ export default function MainPage({ user, setUser }) {
               Авторизуйтесь прямо сейчас!
             </Alert>
           )}
+          <RecentlyViewedStrip />
           <div className="lineTwo">
             <Box
               className="blockFillter"

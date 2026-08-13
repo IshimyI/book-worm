@@ -14,6 +14,7 @@ import ReviewComments from '../ui/ReviewComments';
 import BookQuotes from '../ui/BookQuotes';
 import SpoilerText from '../ui/SpoilerText';
 import { relativeTime } from '../utils/relativeTime';
+import { addRecentlyViewed } from '../utils/recentlyViewed';
 import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 import useConfirm from '../ui/useConfirm';
@@ -41,6 +42,7 @@ export default function BookPage({ user, setUser }) {
       .then((res) => {
         setBook(res.data);
         setReviews(res.data.reviews || []);
+        addRecentlyViewed(res.data);
       })
       .catch(() => setBook(false))
       .finally(() => setLoading(false));
