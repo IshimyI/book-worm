@@ -95,6 +95,79 @@ describe("admin routes", () => {
   });
 });
 
+describe("bulk moderation actions", () => {
+  async function createReportedReviewFor(email) {
+    const author = await signupAndLogin(email);
+    const book = await Book.create({ title: `Reported ${email}`, author: "Some Author", genre: "Роман" });
+    const review = await Review.create({
+      bookId: book.id,
+      userId: author.userId,
+      body: "Спорная рецензия",
+      user_rating: 3,
+      reportCount: 3,
+    });
+    return { book, review };
+  }
+
+  it("bulk-dismisses reports for multiple reviews", async () => {
+    const r1 = await createReportedReviewFor("bulk-dismiss-1@example.com");
+    const r2 = await createReportedReviewFor("bulk-dismiss-2@example.com");
+    const admin = await signupAndLogin("bulk-admin1@example.com", true);
+
+    const res = await request(app)
+      .post("/api/admin/reviews/bulk-dismiss")
+      .set("Authorization", `Bearer ${admin.accessToken}`)
+      .send({ ids: [r1.review.id, r2.review.id] });
+
+    expect(res.status).toBe(200);
+    expect(res.body.count).toBe(2);
+    await r1.review.reload();
+    await r2.review.reload();
+    expect(r1.review.reportCount).toBe(0);
+    expect(r2.review.reportCount).toBe(0);
+  });
+
+  it("bulk-deletes multiple reviews", async () => {
+    const r1 = await createReportedReviewFor("bulk-delete-1@example.com");
+    const r2 = await createReportedReviewFor("bulk-delete-2@example.com");
+    const admin = await signupAndLogin("bulk-admin2@example.com", true);
+
+    const res = await request(app)
+      .post("/api/admin/reviews/bulk-delete")
+      .set("Authorization", `Bearer ${admin.accessToken}`)
+      .send({ ids: [r1.review.id, r2.review.id] });
+
+    expect(res.status).toBe(200);
+    expect(res.body.count).toBe(2);
+    expect(await Review.findByPk(r1.review.id)).toBeNull();
+    expect(await Review.findByPk(r2.review.id)).toBeNull();
+  });
+
+  it("rejects an empty id list", async () => {
+    const admin = await signupAndLogin("bulk-admin3@example.com", true);
+    const dismissRes = await request(app)
+      .post("/api/admin/reviews/bulk-dismiss")
+      .set("Authorization", `Bearer ${admin.accessToken}`)
+      .send({ ids: [] });
+    expect(dismissRes.status).toBe(400);
+
+    const deleteRes = await request(app)
+      .post("/api/admin/reviews/bulk-delete")
+      .set("Authorization", `Bearer ${admin.accessToken}`)
+      .send({ ids: [] });
+    expect(deleteRes.status).toBe(400);
+  });
+
+  it("blocks non-admins", async () => {
+    const { accessToken } = await signupAndLogin("bulk-regular@example.com");
+    const res = await request(app)
+      .post("/api/admin/reviews/bulk-dismiss")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ ids: [1] });
+    expect(res.status).toBe(403);
+  });
+});
+
 describe("analytics", () => {
   it("blocks non-admins from the analytics summary", async () => {
     const { accessToken } = await signupAndLogin("regular2@example.com");

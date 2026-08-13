@@ -70,6 +70,45 @@ adminRouter.delete("/reviews/:id", async (req, res) => {
   }
 });
 
+function parseIds(raw) {
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(raw.map(Number).filter((id) => Number.isInteger(id) && id > 0))];
+}
+
+adminRouter.post("/reviews/bulk-dismiss", async (req, res) => {
+  try {
+    const ids = parseIds(req.body.ids);
+    if (ids.length === 0) {
+      return res.status(400).json({ message: "Не выбраны рецензии" });
+    }
+    const reviews = await Review.findAll({ where: { id: ids } });
+    await Review.update({ reportCount: 0 }, { where: { id: ids } });
+    const bookIds = [...new Set(reviews.map((r) => r.bookId))];
+    await Promise.all(bookIds.map((bookId) => recomputeBookRating(bookId)));
+    res.status(200).json({ message: `Жалобы сброшены у ${reviews.length} рецензий`, count: reviews.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+adminRouter.post("/reviews/bulk-delete", async (req, res) => {
+  try {
+    const ids = parseIds(req.body.ids);
+    if (ids.length === 0) {
+      return res.status(400).json({ message: "Не выбраны рецензии" });
+    }
+    const reviews = await Review.findAll({ where: { id: ids } });
+    const bookIds = [...new Set(reviews.map((r) => r.bookId))];
+    await Review.destroy({ where: { id: ids } });
+    await Promise.all(bookIds.map((bookId) => recomputeBookRating(bookId)));
+    res.status(200).json({ message: `Удалено рецензий: ${reviews.length}`, count: reviews.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
 adminRouter.get("/analytics", async (req, res) => {
   try {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
