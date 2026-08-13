@@ -1,7 +1,10 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const { User, Inventory, User_selected_items } = require("../../db/models");
+const { User, Inventory, User_selected_items, Review } = require("../../db/models");
+const fs = require("fs");
+const path = require("path");
 const bcrypt = require("bcrypt");
+const { AVATAR_DIR } = require("../middlewares/uploadAvatar");
 const cookieConfig = require("../configs/cookieConfig");
 const jwt = require("jsonwebtoken");
 const generateTokens = require("../utils/generateTokens");
@@ -343,6 +346,38 @@ authRouter.post("/2fa/disable", verifyAccessToken, authLimiter, async (req, res)
 
     logSecurityEvent({ type: "2fa_disabled", email: user.email, ip: req.ip });
     res.status(200).json({ message: "Двухфакторная аутентификация отключена" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+authRouter.delete("/account", verifyAccessToken, authLimiter, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "Пользователь не найден" });
+    }
+    const isValid = await bcrypt.compare(req.body.password || "", user.password);
+    if (!isValid) {
+      return res.status(400).json({ message: "Неверный пароль" });
+    }
+
+    if (user.avatarUrl) {
+      const avatarPath = path.join(AVATAR_DIR, path.basename(user.avatarUrl));
+      fs.unlink(avatarPath, () => {});
+    }
+
+    // Reviews are soft-deleted (paranoid) elsewhere, so a plain destroy()
+    // would leave the row (and its userId FK) in place — force a real
+    // delete. Everything else (comments, votes, follows, quotes, reading
+    // lists/status/challenges, push subscriptions, notifications) cascades
+    // automatically via the FK constraints once the user row itself goes.
+    await Review.destroy({ where: { userId: req.userId }, force: true });
+    await user.destroy();
+
+    logSecurityEvent({ type: "account_deleted", email: user.email, ip: req.ip });
+    res.clearCookie("refreshToken").status(200).json({ message: "Аккаунт удалён" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Ошибка сервера" });

@@ -13,6 +13,7 @@ import PushNotificationSettings from "../ui/PushNotificationSettings";
 import ReadingShelves from "../ui/ReadingShelves";
 import ReadingChallenge from "../ui/ReadingChallenge";
 import ExportDataCard from "../ui/ExportDataCard";
+import DeleteAccountCard from "../ui/DeleteAccountCard";
 
 const Office = ({ user, setUser }) => {
   const [review, setReview] = useState([]);
@@ -58,6 +59,9 @@ const Office = ({ user, setUser }) => {
             </Box>
             <Box flex="1" minW="280px">
               <ExportDataCard />
+            </Box>
+            <Box flex="1" minW="280px">
+              <DeleteAccountCard setUser={setUser} />
             </Box>
           </Flex>
           <Box mb="60px">

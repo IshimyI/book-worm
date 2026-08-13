@@ -1,9 +1,11 @@
 const request = require("supertest");
 const speakeasy = require("speakeasy");
 const app = require("../app");
-const { sequelize, User } = require("../../db/models");
+const { sequelize, User, Book, Review, Quote, Follow } = require("../../db/models");
 
 beforeEach(async () => {
+  await Review.destroy({ where: {}, truncate: true, cascade: true, force: true });
+  await Book.destroy({ where: {}, truncate: true, cascade: true });
   await User.destroy({ where: {}, truncate: true, cascade: true });
 });
 
@@ -263,5 +265,53 @@ describe("two-factor authentication", () => {
       .send({ email: "2fa-disable@example.com", password });
     expect(loginRes.body.requiresTwoFactor).toBeUndefined();
     expect(loginRes.body.accessToken).toEqual(expect.any(String));
+  });
+});
+
+describe("DELETE /api/auth/account", () => {
+  const password = "delete-my-account-123";
+
+  async function signupUser(email) {
+    const res = await request(app).post("/api/auth/signup").send({ name: "Deleter", email, password });
+    return { userId: res.body.user.id, accessToken: res.body.accessToken };
+  }
+
+  it("requires authentication", async () => {
+    const res = await request(app).delete("/api/auth/account").send({ password });
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects the wrong password", async () => {
+    const { accessToken } = await signupUser("delete-wrong-pw@example.com");
+    const res = await request(app)
+      .delete("/api/auth/account")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ password: "not-it" });
+    expect(res.status).toBe(400);
+  });
+
+  it("deletes the account and everything that references it", async () => {
+    const { userId, accessToken } = await signupUser("delete-me@example.com");
+    const other = await signupUser("delete-other@example.com");
+    const book = await Book.create({ title: "Deleted User's Book", author: "A", genre: "Роман" });
+
+    const review = await Review.create({ bookId: book.id, userId, body: "Моя рецензия", user_rating: 5 });
+    await Quote.create({ bookId: book.id, userId, text: "Моя цитата" });
+    await request(app).post(`/api/users/${userId}/follow`).set("Authorization", `Bearer ${other.accessToken}`);
+
+    const res = await request(app)
+      .delete("/api/auth/account")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ password });
+    expect(res.status).toBe(200);
+
+    expect(await User.findByPk(userId)).toBeNull();
+    expect(await Review.findByPk(review.id, { paranoid: false })).toBeNull();
+    expect(await Quote.count({ where: { userId } })).toBe(0);
+    expect(await Follow.count({ where: { followingId: userId } })).toBe(0);
+
+    // The account no longer works for login.
+    const loginRes = await request(app).post("/api/auth/login").send({ email: "delete-me@example.com", password });
+    expect(loginRes.status).toBe(400);
   });
 });
