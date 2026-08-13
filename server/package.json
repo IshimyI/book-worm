@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest",
     "dev": "nodemon --env-file=.env ./src/app.js --ext js,jsx",
+    "cleanup": "node --env-file=.env ./scripts/cleanupOldData.js",
     "dbCreate": "npx sequelize db:create",
     "dbMigrate": "npx sequelize db:migrate",
     "dbSeedAll": "npx sequelize db:seed:all",
