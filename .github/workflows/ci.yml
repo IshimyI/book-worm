@@ -34,7 +34,7 @@ jobs:
       DB_HOST: 127.0.0.1
       DB_PORT: 5432
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -50,7 +50,7 @@ jobs:
       run:
         working-directory: client
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -95,7 +95,7 @@ jobs:
       JWT_PASS: e2e-jwt-pass
       CLIENT_URL: http://localhost:5173
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -125,7 +125,7 @@ jobs:
     needs: [server, client, e2e]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v4
         with:
           name: client-dist
