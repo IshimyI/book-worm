@@ -165,6 +165,23 @@ describe("PATCH /api/users/me/bio", () => {
   });
 });
 
+describe("GET /api/book/random", () => {
+  it("returns 404 when the catalog has no approved books", async () => {
+    await Book.create({ title: "Pending Only", author: "A", genre: "Роман", status: "pending" });
+    const res = await request(app).get("/api/book/random");
+    expect(res.status).toBe(404);
+  });
+
+  it("returns an approved book, never a pending one", async () => {
+    const approved = await Book.create({ title: "Approved Book", author: "A", genre: "Роман", status: "approved" });
+    await Book.create({ title: "Pending Book", author: "B", genre: "Роман", status: "pending" });
+
+    const res = await request(app).get("/api/book/random");
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(approved.id);
+  });
+});
+
 describe("GET /api/listAllBooks", () => {
   beforeEach(async () => {
     await Book.bulkCreate([

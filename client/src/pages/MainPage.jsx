@@ -14,7 +14,7 @@ import {
   SkeletonText,
 } from "@chakra-ui/react";
 import { useState, useEffect, useRef } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import ModalMain from "../ui/ModalMain";
 import axiosInstance from "../axiosInstance";
 import useSeoMeta from "../utils/useSeoMeta";
@@ -45,7 +45,21 @@ export default function MainPage({ user, setUser }) {
   const [sortBy, setSortBy] = useState(() => localStorage.getItem("bw_catalog_sortBy") || "rating");
   const [sortDir, setSortDir] = useState(() => localStorage.getItem("bw_catalog_sortDir") || "desc");
   const [page, setPage] = useState(1);
+  const [randomLoading, setRandomLoading] = useState(false);
   const searchInputRef = useRef(null);
+  const navigate = useNavigate();
+
+  const goToRandomBook = async () => {
+    setRandomLoading(true);
+    try {
+      const res = await axiosInstance.get('/book/random');
+      navigate(`/books/${res.data.id}`);
+    } catch {
+      // no-op — an empty catalog is the only realistic failure here
+    } finally {
+      setRandomLoading(false);
+    }
+  };
 
   // Remember the reader's last sort choice between visits.
   useEffect(() => {
@@ -253,6 +267,14 @@ export default function MainPage({ user, setUser }) {
                   <option value="desc">По убыванию</option>
                   <option value="asc">По возрастанию</option>
                 </Select>
+                <Button
+                  variant="outline"
+                  sx={{ color: '#334d00', borderColor: '#334d00' }}
+                  isLoading={randomLoading}
+                  onClick={goToRandomBook}
+                >
+                  🎲 Случайная книга
+                </Button>
               </div>
 
               <Text textAlign="left" color="bw.textMuted" fontSize="sm" mb="12px">
