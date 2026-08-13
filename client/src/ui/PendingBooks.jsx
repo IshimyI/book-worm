@@ -67,7 +67,7 @@ export default function PendingBooks({ onCountChange }) {
       {books.map((book) => (
         <Box key={book.id} p="4" border="1px solid" borderColor="bw.border" borderRadius="md">
           <Flex gap="16px" flexWrap="wrap">
-            <Image src={book.img} alt="" boxSize="80px" objectFit="cover" borderRadius="md" fallbackSrc="https://cdn1.ozone.ru/s3/multimedia-x/6597669093.jpg" />
+            <Image src={book.img} alt="" loading="lazy" boxSize="80px" objectFit="cover" borderRadius="md" fallbackSrc="https://cdn1.ozone.ru/s3/multimedia-x/6597669093.jpg" />
             <Box flex="1" minW="200px">
               <NavLink to={`/books/${book.id}`}>
                 <Text fontWeight="bold" _hover={{ textDecoration: 'underline' }}>{book.title}</Text>
