@@ -11,12 +11,13 @@ function describe(n) {
   if (n.type === 'new_follower') return `${n.name || 'Кто-то'} подписался на вас`;
   if (n.type === 'review_comment') return `${n.name || 'Кто-то'} прокомментировал(а) вашу рецензию на «${n.bookTitle || 'книгу'}»`;
   if (n.type === 'comment_reply') return `${n.name || 'Кто-то'} ответил(а) на ваш комментарий к «${n.bookTitle || 'книге'}»`;
+  if (n.type === 'comment_mention') return `${n.name || 'Кто-то'} упомянул(а) вас в комментарии к «${n.bookTitle || 'книге'}»`;
   return 'Новое уведомление';
 }
 
 function linkFor(n) {
   if (n.type === 'new_follower' && n.actorId) return `/users/${n.actorId}`;
-  if ((n.type === 'review_comment' || n.type === 'comment_reply') && n.bookId) return `/books/${n.bookId}`;
+  if ((n.type === 'review_comment' || n.type === 'comment_reply' || n.type === 'comment_mention') && n.bookId) return `/books/${n.bookId}`;
   return null;
 }
 

@@ -156,7 +156,7 @@ export default function ReviewComments({ user, review, onCountChange }) {
               <Flex gap="8px" mt="8px">
                 <Textarea
                   size="sm"
-                  placeholder={user ? 'Написать комментарий…' : 'Войдите, чтобы комментировать'}
+                  placeholder={user ? 'Написать комментарий… (@имя — чтобы упомянуть)' : 'Войдите, чтобы комментировать'}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                   isDisabled={!user}

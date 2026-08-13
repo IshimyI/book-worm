@@ -15,12 +15,14 @@ function describeForPush(type, data) {
     return { title: "Новый комментарий", body: `${data.name || "Кто-то"} прокомментировал(а) вашу рецензию на «${data.bookTitle || "книгу"}»` };
   if (type === "comment_reply")
     return { title: "Новый ответ", body: `${data.name || "Кто-то"} ответил(а) на ваш комментарий к «${data.bookTitle || "книге"}»` };
+  if (type === "comment_mention")
+    return { title: "Вас упомянули", body: `${data.name || "Кто-то"} упомянул(а) вас в комментарии к «${data.bookTitle || "книге"}»` };
   return { title: "Mr Book Worm", body: "У вас новое уведомление" };
 }
 
 function linkForPush(type, data) {
   if (type === "new_follower" && data.actorId) return `/users/${data.actorId}`;
-  if ((type === "review_comment" || type === "comment_reply") && data.bookId) return `/books/${data.bookId}`;
+  if ((type === "review_comment" || type === "comment_reply" || type === "comment_mention") && data.bookId) return `/books/${data.bookId}`;
   return "/";
 }
 

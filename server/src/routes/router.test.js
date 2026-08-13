@@ -1237,6 +1237,47 @@ describe("notifications", () => {
     expect(stillOne.body.notifications).toHaveLength(1);
   });
 
+  it("notifies a mentioned user, but not the comment author or a duplicate of the review-author notification", async () => {
+    const author = await signupAndLogin("mention-author@example.com");
+    const commenter = await signupAndLogin("mention-commenter@example.com");
+    const mentionedRes = await request(app).post("/api/auth/signup").send({ name: "Alice", email: "mention-alice@example.com", password: "password123" });
+    const mentioned = { userId: mentionedRes.body.user.id, accessToken: mentionedRes.body.accessToken };
+    const book = await Book.create({ title: "Mention Book", author: "A", genre: "Роман" });
+    const review = await Review.create({ bookId: book.id, userId: author.userId, body: "Отзыв", user_rating: 4 });
+
+    await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`)
+      .send({ body: "Привет, @Alice, глянь сюда!" });
+
+    const aliceRes = await request(app).get("/api/notifications").set("Authorization", `Bearer ${mentioned.accessToken}`);
+    expect(aliceRes.body.notifications).toHaveLength(1);
+    expect(aliceRes.body.notifications[0].type).toBe("comment_mention");
+
+    const commenterRes = await request(app).get("/api/notifications").set("Authorization", `Bearer ${commenter.accessToken}`);
+    expect(commenterRes.body.notifications).toHaveLength(0);
+
+    const authorRes = await request(app).get("/api/notifications").set("Authorization", `Bearer ${author.accessToken}`);
+    expect(authorRes.body.notifications).toHaveLength(1);
+    expect(authorRes.body.notifications[0].type).toBe("review_comment");
+  });
+
+  it("does not double-notify when the mentioned user is also the review author", async () => {
+    const authorRes = await request(app).post("/api/auth/signup").send({ name: "Bob", email: "mention-bob@example.com", password: "password123" });
+    const author = { userId: authorRes.body.user.id, accessToken: authorRes.body.accessToken };
+    const commenter = await signupAndLogin("mention-commenter2@example.com");
+    const book = await Book.create({ title: "Mention Book 2", author: "A", genre: "Роман" });
+    const review = await Review.create({ bookId: book.id, userId: author.userId, body: "Отзыв", user_rating: 4 });
+
+    await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`)
+      .send({ body: "@Bob отличная рецензия!" });
+
+    const res = await request(app).get("/api/notifications").set("Authorization", `Bearer ${author.accessToken}`);
+    expect(res.body.notifications).toHaveLength(1);
+  });
+
   it("marks a single notification as read", async () => {
     const target = await signupAndLogin("notif-read@example.com");
     const follower = await signupAndLogin("notif-read-follower@example.com");

@@ -15,6 +15,7 @@ const { containsProfanity } = require("../utils/moderation");
 const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRating");
 const { computeAchievements } = require("../utils/achievements");
 const { findPossibleDuplicate } = require("../utils/bookDedup");
+const { extractMentionTokens } = require("../utils/extractMentions");
 const cache = require("../utils/simpleCache");
 const logSecurityEvent = require("../utils/securityLog");
 
@@ -1277,6 +1278,26 @@ router.post("/review/:id/comments", verifyAccessToken, contentLimiter, async (re
         type: "review_comment",
         data: { name: author.name, bookId: review.bookId, bookTitle: book?.title },
       });
+    }
+
+    const mentionTokens = extractMentionTokens(body);
+    if (mentionTokens.length > 0) {
+      const mentionedUsers = await User.findAll({
+        where: Sequelize.where(Sequelize.fn("lower", Sequelize.col("name")), { [Sequelize.Op.in]: mentionTokens }),
+        attributes: ["id", "name"],
+      });
+      const alreadyNotified = new Set([req.userId, parentComment ? parentComment.userId : review.userId]);
+      for (const mentioned of mentionedUsers) {
+        if (alreadyNotified.has(mentioned.id)) continue;
+        alreadyNotified.add(mentioned.id);
+        // eslint-disable-next-line no-await-in-loop
+        await notify({
+          userId: mentioned.id,
+          actorId: req.userId,
+          type: "comment_mention",
+          data: { name: author.name, bookId: review.bookId, bookTitle: book?.title },
+        });
+      }
     }
 
     res.status(200).json({
