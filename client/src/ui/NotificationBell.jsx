@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Menu, MenuButton, MenuList, MenuItem, MenuDivider, Button, Text, IconButton } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
+import { relativeTime } from '../utils/relativeTime';
 
 const POLL_INTERVAL_MS = 30_000;
 
@@ -116,7 +117,10 @@ export default function NotificationBell({ user }) {
         ) : (
           notifications.map((n) => (
             <MenuItem key={n.id} onClick={() => openNotification(n)} bg={n.isRead ? undefined : 'bw.reviewHighlight'}>
-              <Text fontSize="sm" noOfLines={2}>{describe(n)}</Text>
+              <Box>
+                <Text fontSize="sm" noOfLines={2}>{describe(n)}</Text>
+                <Text fontSize="xs" color="bw.textMuted">{relativeTime(n.createdAt)}</Text>
+              </Box>
             </MenuItem>
           ))
         )}

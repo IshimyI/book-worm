@@ -8,6 +8,7 @@ import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 import PageCard from '../ui/PageCard';
 import SpoilerText from '../ui/SpoilerText';
+import { relativeTime } from '../utils/relativeTime';
 
 export default function FeedPage({ user }) {
   const [data, setData] = useState(null);
@@ -74,7 +75,7 @@ export default function FeedPage({ user }) {
                   <NavLink to={`/users/${review.userId}`} style={{ textDecoration: 'underline' }}>
                     {review.userName}
                   </NavLink>{' '}
-                  оставил(а) рецензию
+                  оставил(а) рецензию · {relativeTime(review.createdAt)}
                 </Text>
               </Flex>
               <NavLink to={`/books/${review.bookId}`}>

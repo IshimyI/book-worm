@@ -14,6 +14,7 @@ import ReadingStatusSelect from '../ui/ReadingStatusSelect';
 import ReviewComments from '../ui/ReviewComments';
 import BookQuotes from '../ui/BookQuotes';
 import SpoilerText from '../ui/SpoilerText';
+import { relativeTime } from '../utils/relativeTime';
 import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 
@@ -331,13 +332,16 @@ export default function BookPage({ user, setUser }) {
                     <Avatar name={review.userName} src={resolveAvatarUrl(review.userAvatarUrl)} />
                     <Box flex="1">
                       <Flex justify="space-between" align="center">
-                        <Text fontWeight="bold">
-                          <NavLink to={`/users/${review.user_id}`} style={{ textDecoration: 'none' }}>
-                            <Text as="span" _hover={{ textDecoration: 'underline', color: '#4b5320' }}>{review.userName}</Text>
-                          </NavLink>
-                          {' '}
-                          {isMine && <Text as="span" fontSize="xs" color="#4b5320" fontWeight="bold">(ваш отзыв)</Text>}
-                        </Text>
+                        <Box>
+                          <Text fontWeight="bold">
+                            <NavLink to={`/users/${review.user_id}`} style={{ textDecoration: 'none' }}>
+                              <Text as="span" _hover={{ textDecoration: 'underline', color: '#4b5320' }}>{review.userName}</Text>
+                            </NavLink>
+                            {' '}
+                            {isMine && <Text as="span" fontSize="xs" color="#4b5320" fontWeight="bold">(ваш отзыв)</Text>}
+                          </Text>
+                          <Text fontSize="xs" color="bw.textMuted">{relativeTime(review.createdAt)}</Text>
+                        </Box>
                         {isMine ? (
                           <Flex gap="10px">
                             <Button size="xs" variant="link" sx={{ color: '#4b5320' }} onClick={startEditing}>

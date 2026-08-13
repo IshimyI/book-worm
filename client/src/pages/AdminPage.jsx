@@ -8,6 +8,7 @@ import AnalyticsSummary from '../ui/AnalyticsSummary';
 import SecurityEventLog from '../ui/SecurityEventLog';
 import StatsSummary from '../ui/StatsSummary';
 import PendingBooks from '../ui/PendingBooks';
+import { withCount } from '../utils/pluralize';
 
 export default function AdminPage({ user }) {
   const [reviews, setReviews] = useState([]);
@@ -168,7 +169,7 @@ export default function AdminPage({ user }) {
                           </Text>
                         </Box>
                       </Flex>
-                      <Badge colorScheme="red" fontSize="0.9em">{review.reportCount} жалоб</Badge>
+                      <Badge colorScheme="red" fontSize="0.9em">{withCount(review.reportCount, ['жалоба', 'жалобы', 'жалоб'])}</Badge>
                     </Flex>
                     <Text mb="3">{review.body}</Text>
                     <Text fontSize="sm" color="bw.textMuted" mb="3">Оценка: {review.rating} ⭐</Text>

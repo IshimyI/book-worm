@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Box, Button, Text, Textarea, Flex, Avatar, useToast, Spinner } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
+import { relativeTime } from '../utils/relativeTime';
 
 export default function ReviewComments({ user, review, onCountChange }) {
   const [open, setOpen] = useState(false);
@@ -94,7 +95,10 @@ export default function ReviewComments({ user, review, onCountChange }) {
       <Avatar name={comment.userName} size="xs" />
       <Box flex="1">
         <Flex justify="space-between" align="center">
-          <Text fontSize="sm" fontWeight="bold">{comment.userName}</Text>
+          <Flex align="baseline" gap="6px">
+            <Text fontSize="sm" fontWeight="bold">{comment.userName}</Text>
+            <Text fontSize="xs" color="bw.textMuted">{relativeTime(comment.createdAt)}</Text>
+          </Flex>
           {user && user.id === comment.userId && (
             <Button size="xs" variant="link" sx={{ color: '#a4522a' }} onClick={() => remove(comment, isReply, parentCommentId)}>
               Удалить

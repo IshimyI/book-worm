@@ -4,6 +4,7 @@ import { Box, Heading, Text, SimpleGrid, Flex, Image, Skeleton } from '@chakra-u
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
 import PageCard from '../ui/PageCard';
+import { withCount } from '../utils/pluralize';
 
 export default function CollectionsPage() {
   const [lists, setLists] = useState([]);
@@ -45,7 +46,7 @@ export default function CollectionsPage() {
                   <Text fontSize="sm" color="bw.textMuted" mb="10px" noOfLines={2}>{list.description}</Text>
                 )}
                 <Text fontSize="sm" color="bw.textMuted" mb="10px">
-                  {list.bookCount} {list.bookCount === 1 ? 'книга' : 'книг'}
+                  {withCount(list.bookCount, ['книга', 'книги', 'книг'])}
                 </Text>
                 {list.covers.length > 0 && (
                   <Flex gap="6px">

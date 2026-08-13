@@ -9,6 +9,7 @@ import { coverThumbUrl } from '../utils/coverUrl';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 import PageCard from '../ui/PageCard';
 import SpoilerText from '../ui/SpoilerText';
+import { withCount } from '../utils/pluralize';
 
 const dateFormatter = new Intl.DateTimeFormat('ru-RU', { month: 'long', year: 'numeric' });
 
@@ -26,7 +27,7 @@ export default function PublicProfilePage({ user }) {
   useSeoMeta({
     enabled: Boolean(profile),
     title: profile ? `${profile.name} — профиль` : '',
-    description: profile ? `${profile.reviewCount} рецензий от ${profile.name} на Mr Book Worm` : '',
+    description: profile ? `${withCount(profile.reviewCount, ['рецензия', 'рецензии', 'рецензий'])} от ${profile.name} на Mr Book Worm` : '',
   });
 
   useEffect(() => {
@@ -124,10 +125,10 @@ export default function PublicProfilePage({ user }) {
         <Box flex="1">
           <Heading as="h1" size="lg">{profile.name}</Heading>
           <Text color="bw.textMuted" fontSize="sm">
-            На сайте с {dateFormatter.format(new Date(profile.memberSince))} · {profile.reviewCount} рецензий
+            На сайте с {dateFormatter.format(new Date(profile.memberSince))} · {withCount(profile.reviewCount, ['рецензия', 'рецензии', 'рецензий'])}
           </Text>
           <Text color="bw.textMuted" fontSize="sm">
-            {profile.followerCount} {profile.followerCount === 1 ? 'подписчик' : 'подписчиков'} · {profile.followingCount} подписок
+            {withCount(profile.followerCount, ['подписчик', 'подписчика', 'подписчиков'])} · {withCount(profile.followingCount, ['подписка', 'подписки', 'подписок'])}
           </Text>
         </Box>
         {!isOwnProfile && (

@@ -4,6 +4,7 @@ import {
   Button, TableContainer, Badge,
 } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
+import { withCount } from '../utils/pluralize';
 
 const dateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
   day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
@@ -43,7 +44,7 @@ export default function SecurityEventLog() {
   return (
     <Box>
       <Flex justify="space-between" align="center" mb="16px" flexWrap="wrap" gap="10px">
-        <Text fontSize="sm" color="bw.textMuted">Всего событий: {data.total}</Text>
+        <Text fontSize="sm" color="bw.textMuted">Всего: {withCount(data.total, ['событие', 'события', 'событий'])}</Text>
         <Select
           maxW="260px"
           size="sm"

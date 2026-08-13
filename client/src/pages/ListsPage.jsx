@@ -19,6 +19,7 @@ import {
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
 import PageCard from '../ui/PageCard';
+import { withCount } from '../utils/pluralize';
 
 export default function ListsPage({ user }) {
   const [lists, setLists] = useState([]);
@@ -125,7 +126,7 @@ export default function ListsPage({ user }) {
                 </Button>
               </Flex>
               <Text fontSize="sm" color="bw.textMuted" mb="10px">
-                {list.bookCount} {list.bookCount === 1 ? 'книга' : 'книг'}
+                {withCount(list.bookCount, ['книга', 'книги', 'книг'])}
               </Text>
               {list.covers.length > 0 && (
                 <Flex gap="6px">
