@@ -199,6 +199,60 @@ router.patch("/users/me/bio", verifyAccessToken, async (req, res) => {
   }
 });
 
+router.get("/users/me/export", verifyAccessToken, async (req, res) => {
+  try {
+    const user = await User.findByPk(req.userId, {
+      attributes: ["id", "name", "email", "bio", "avatarUrl", "favourites", "createdAt"],
+    });
+    if (!user) {
+      return res.status(404).json({ message: "Пользователь не найден" });
+    }
+
+    const [reviews, quotes, readingStatuses, challenges] = await Promise.all([
+      Review.findAll({
+        where: { userId: req.userId },
+        include: [{ model: Book, attributes: ["id", "title", "author"] }],
+        order: [["createdAt", "ASC"]],
+      }),
+      Quote.findAll({ where: { userId: req.userId }, include: [{ model: Book, attributes: ["id", "title"] }], order: [["createdAt", "ASC"]] }),
+      ReadingStatus.findAll({ where: { userId: req.userId }, include: [{ model: Book, attributes: ["id", "title"] }] }),
+      ReadingChallenge.findAll({ where: { userId: req.userId }, order: [["year", "ASC"]] }),
+    ]);
+
+    const favouriteIds = user.favourites ? user.favourites.split(" ").filter(Boolean) : [];
+
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      profile: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        memberSince: user.createdAt,
+      },
+      reviews: reviews.map((r) => ({
+        bookId: r.bookId,
+        bookTitle: r.Book?.title,
+        bookAuthor: r.Book?.author,
+        body: r.body,
+        rating: r.user_rating,
+        createdAt: r.createdAt,
+      })),
+      quotes: quotes.map((q) => ({ bookId: q.bookId, bookTitle: q.Book?.title, text: q.text, page: q.page, createdAt: q.createdAt })),
+      readingStatuses: readingStatuses.map((s) => ({ bookId: s.bookId, bookTitle: s.Book?.title, status: s.status })),
+      readingChallenges: challenges.map((c) => ({ year: c.year, goal: c.goal })),
+      favouriteBookIds: favouriteIds.map(Number),
+    };
+
+    res.set("Content-Disposition", `attachment; filename="book-worm-data-${user.id}.json"`);
+    res.status(200).json(payload);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
 router.post(
   "/users/me/avatar",
   verifyAccessToken,

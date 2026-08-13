@@ -100,6 +100,35 @@ describe("GET /api/users/:id/profile", () => {
   });
 });
 
+describe("GET /api/users/me/export", () => {
+  it("requires authentication", async () => {
+    const res = await request(app).get("/api/users/me/export");
+    expect(res.status).toBe(401);
+  });
+
+  it("bundles the user's profile, reviews, quotes, and reading status into one JSON payload", async () => {
+    const { userId, accessToken } = await signupAndLogin("exporter@example.com");
+    const book = await Book.create({ title: "Exported Book", author: "A", genre: "Роман" });
+    await Review.create({ bookId: book.id, userId, body: "Отличная книга", user_rating: 5 });
+    await Quote.create({ bookId: book.id, userId, text: "Запоминающаяся цитата" });
+    await request(app)
+      .post(`/api/book/${book.id}/reading-status`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ status: "read" });
+    await request(app).post("/api/reading-challenge").set("Authorization", `Bearer ${accessToken}`).send({ goal: 10 });
+
+    const res = await request(app).get("/api/users/me/export").set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(200);
+    expect(res.headers["content-disposition"]).toContain("attachment");
+    expect(res.body.profile.email).toBe("exporter@example.com");
+    expect(res.body.reviews).toHaveLength(1);
+    expect(res.body.reviews[0].bookTitle).toBe("Exported Book");
+    expect(res.body.quotes).toHaveLength(1);
+    expect(res.body.readingStatuses[0].status).toBe("read");
+    expect(res.body.readingChallenges[0].goal).toBe(10);
+  });
+});
+
 describe("PATCH /api/users/me/bio", () => {
   it("requires authentication", async () => {
     const res = await request(app).patch("/api/users/me/bio").send({ bio: "Привет" });
