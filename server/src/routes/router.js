@@ -13,6 +13,7 @@ const { generateBookOgImage } = require("../utils/ogImage");
 const { isConfigured: pushConfigured } = require("../utils/webPush");
 const { containsProfanity } = require("../utils/moderation");
 const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRating");
+const { computeAchievements } = require("../utils/achievements");
 const cache = require("../utils/simpleCache");
 
 const router = express.Router();
@@ -98,20 +99,26 @@ router.get("/users/:id/profile", optionalAuth, async (req, res) => {
       offset,
     });
 
-    const [followerCount, followingCount, isFollowedByMe, topGenreRows] = await Promise.all([
-      Follow.count({ where: { followingId: id } }),
-      Follow.count({ where: { followerId: id } }),
-      req.userId ? Follow.findOne({ where: { followerId: req.userId, followingId: id } }).then(Boolean) : false,
-      Review.findAll({
-        where: { userId: id, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
-        include: [{ model: Book, attributes: [] }],
-        attributes: [[Sequelize.col("Book.genre"), "genre"], [Sequelize.fn("COUNT", Sequelize.col("Review.id")), "count"]],
-        group: ["Book.genre"],
-        order: [[Sequelize.literal("count"), "DESC"]],
-        limit: 3,
-        raw: true,
-      }),
-    ]);
+    const [followerCount, followingCount, isFollowedByMe, topGenreRows, booksReadCount, quotesCount, helpfulReceivedCount] =
+      await Promise.all([
+        Follow.count({ where: { followingId: id } }),
+        Follow.count({ where: { followerId: id } }),
+        req.userId ? Follow.findOne({ where: { followerId: req.userId, followingId: id } }).then(Boolean) : false,
+        Review.findAll({
+          where: { userId: id, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
+          include: [{ model: Book, attributes: [] }],
+          attributes: [[Sequelize.col("Book.genre"), "genre"], [Sequelize.fn("COUNT", Sequelize.col("Review.id")), "count"]],
+          group: ["Book.genre"],
+          order: [[Sequelize.literal("count"), "DESC"]],
+          limit: 3,
+          raw: true,
+        }),
+        ReadingStatus.count({ where: { userId: id, status: "read" } }),
+        Quote.count({ where: { userId: id } }),
+        Review.sum("helpfulCount", { where: { userId: id } }),
+      ]);
+
+    const achievements = computeAchievements({ reviewCount, booksReadCount, quotesCount, followerCount, helpfulReceivedCount: helpfulReceivedCount || 0 });
 
     res.status(200).send({
       id: user.id,
@@ -124,6 +131,7 @@ router.get("/users/:id/profile", optionalAuth, async (req, res) => {
       followingCount,
       isFollowedByMe,
       topGenres: topGenreRows.map((r) => r.genre).filter(Boolean),
+      achievements,
       page: Math.max(Number(page) || 1, 1),
       totalPages: Math.max(1, Math.ceil(reviewCount / limit)),
       reviews: reviews.map((r) => ({

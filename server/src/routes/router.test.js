@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const request = require("supertest");
 const app = require("../app");
-const { sequelize, User, Book, Review } = require("../../db/models");
+const { sequelize, User, Book, Review, Quote } = require("../../db/models");
 const { AVATAR_DIR } = require("../middlewares/uploadAvatar");
 const { AVATAR_SIZE } = require("../utils/avatarImage");
 const { loadImage } = require("@napi-rs/canvas");
@@ -72,6 +72,31 @@ describe("GET /api/users/:id/profile", () => {
     const res = await request(app).get(`/api/users/${userId}/profile`);
     expect(res.body.bio).toBe("Люблю классику");
     expect(res.body.topGenres[0]).toBe("Роман");
+  });
+
+  it("reports achievement progress and unlocks based on the user's activity", async () => {
+    const { userId, accessToken } = await signupAndLogin("achiever@example.com");
+
+    const fresh = await request(app).get(`/api/users/${userId}/profile`);
+    const firstReview = fresh.body.achievements.find((a) => a.id === "first_review");
+    expect(firstReview.achieved).toBe(false);
+    expect(firstReview.progress).toBe(0);
+
+    const book = await Book.create({ title: "Achiever Book", author: "A", genre: "Роман" });
+    await Review.create({ bookId: book.id, userId, body: "Отзыв", user_rating: 5 });
+    await Quote.create({ bookId: book.id, userId, text: "Цитата" });
+    await request(app)
+      .post(`/api/book/${book.id}/reading-status`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ status: "read" });
+
+    const res = await request(app).get(`/api/users/${userId}/profile`);
+    const byId = Object.fromEntries(res.body.achievements.map((a) => [a.id, a]));
+    expect(byId.first_review.achieved).toBe(true);
+    expect(byId.first_book_read.achieved).toBe(true);
+    expect(byId.quote_collector.achieved).toBe(false);
+    expect(byId.quote_collector.progress).toBe(1);
+    expect(byId.prolific_reviewer.achieved).toBe(false);
   });
 });
 

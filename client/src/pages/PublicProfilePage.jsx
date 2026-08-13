@@ -184,6 +184,27 @@ export default function PublicProfilePage({ user }) {
         </Flex>
       )}
 
+      {profile.achievements?.length > 0 && (
+        <Box mb="20px">
+          <Text fontSize="sm" color="bw.textMuted" mb="8px">Достижения:</Text>
+          <Flex gap="8px" flexWrap="wrap">
+            {(isOwnProfile ? profile.achievements : profile.achievements.filter((a) => a.achieved)).map((a) => (
+              <Badge
+                key={a.id}
+                title={a.achieved ? a.label : `${a.label}: ${a.progress}/${a.goal}`}
+                colorScheme={a.achieved ? 'yellow' : 'gray'}
+                opacity={a.achieved ? 1 : 0.5}
+                fontSize="0.85em"
+                px="8px"
+                py="4px"
+              >
+                {a.icon} {a.label}{!a.achieved && ` (${a.progress}/${a.goal})`}
+              </Badge>
+            ))}
+          </Flex>
+        </Box>
+      )}
+
       <Divider my="20px" />
 
       <Heading as="h2" size="md" mb="16px">Рецензии</Heading>
