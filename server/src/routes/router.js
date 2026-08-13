@@ -1,5 +1,6 @@
 const express = require("express");
-const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, Notification, PushSubscription, News } = require("../../db/models");
+const rateLimit = require("express-rate-limit");
+const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, Notification, PushSubscription, PageView, News } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const fs = require("fs");
 const path = require("path");
@@ -14,6 +15,37 @@ const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRat
 const cache = require("../utils/simpleCache");
 
 const router = express.Router();
+
+// Generous relative to authLimiter — this fires on every page navigation
+// during normal browsing (sendBeacon, unauthenticated), not just on a
+// handful of security-sensitive actions, so it needs enough headroom that
+// a real visitor clicking around the catalog never trips it.
+const pageviewLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === "test",
+  handler: (req, res, next, options) => res.status(options.statusCode).end(),
+});
+
+// sendBeacon can't perform a CORS preflight, so the client deliberately
+// sends this as text/plain (a "simple" request) rather than
+// application/json — the global express.json() middleware ignores it
+// because the content-type doesn't match, so it needs its own text parser.
+router.post("/analytics/pageview", pageviewLimiter, express.text({ type: "text/plain" }), async (req, res) => {
+  try {
+    const payload = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
+    const path = String(payload.path || "").slice(0, 200);
+    if (!path) return res.status(204).end();
+    const referrer = payload.referrer ? String(payload.referrer).slice(0, 200) : null;
+    await PageView.create({ path, referrer });
+    res.status(204).end();
+  } catch (error) {
+    console.log(error);
+    res.status(204).end(); // never let analytics noise show up as a real error to the client
+  }
+});
 
 function mapReview(review, votedReviewIds = new Set()) {
   return {

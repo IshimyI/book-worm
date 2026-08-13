@@ -3,9 +3,10 @@ import { Routes, Route } from "react-router";
 import Layout from "./ui/Layout";
 import axiosInstance, { setAccessToken } from "./axiosInstance";
 import { useEffect, useState, Suspense, lazy } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Center, Spinner } from "@chakra-ui/react";
 import MainPage from "./pages/MainPage";
+import trackPageview from "./utils/trackPageview";
 
 // Lazily loaded: not needed for the first paint of the catalog homepage.
 const AuthPage = lazy(() => import("./pages/AuthPage"));
@@ -38,6 +39,11 @@ function App() {
   const [user, setUser] = useState();
   const [loadingUser, setLoadingUser] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    trackPageview(location.pathname);
+  }, [location.pathname]);
 
   useEffect(() => {
     axiosInstance("/tokens/refresh")

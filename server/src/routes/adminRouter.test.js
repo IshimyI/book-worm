@@ -1,6 +1,6 @@
 const request = require("supertest");
 const app = require("../app");
-const { sequelize, User, Book, Review } = require("../../db/models");
+const { sequelize, User, Book, Review, PageView } = require("../../db/models");
 
 async function signupAndLogin(email, isAdmin = false) {
   const res = await request(app).post("/api/auth/signup").send({
@@ -31,6 +31,7 @@ beforeEach(async () => {
   await Review.destroy({ where: {}, truncate: true, cascade: true });
   await Book.destroy({ where: {}, truncate: true, cascade: true });
   await User.destroy({ where: {}, truncate: true, cascade: true });
+  await PageView.destroy({ where: {}, truncate: true, cascade: true });
 });
 
 afterAll(async () => {
@@ -90,5 +91,38 @@ describe("admin routes", () => {
 
     expect(res.status).toBe(200);
     expect(await Review.findByPk(review.id)).toBeNull();
+  });
+});
+
+describe("analytics", () => {
+  it("blocks non-admins from the analytics summary", async () => {
+    const { accessToken } = await signupAndLogin("regular2@example.com");
+    const res = await request(app).get("/api/admin/analytics").set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("records a pageview without authentication", async () => {
+    const res = await request(app).post("/api/analytics/pageview").send({ path: "/books/1" });
+    expect(res.status).toBe(204);
+  });
+
+  it("ignores a pageview with no path instead of erroring", async () => {
+    const res = await request(app).post("/api/analytics/pageview").send({});
+    expect(res.status).toBe(204);
+  });
+
+  it("summarizes pageviews for an admin: total, top paths, top referrers", async () => {
+    await request(app).post("/api/analytics/pageview").send({ path: "/books/1", referrer: "https://google.com" });
+    await request(app).post("/api/analytics/pageview").send({ path: "/books/1" });
+    await request(app).post("/api/analytics/pageview").send({ path: "/" });
+
+    const admin = await signupAndLogin("analytics-admin@example.com", true);
+    const res = await request(app).get("/api/admin/analytics").set("Authorization", `Bearer ${admin.accessToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.totalViews).toBe(3);
+    expect(res.body.topPaths[0]).toEqual({ path: "/books/1", count: 2 });
+    expect(res.body.topReferrers[0]).toEqual({ referrer: "https://google.com", count: 1 });
+    expect(res.body.viewsByDay.length).toBeGreaterThan(0);
   });
 });
