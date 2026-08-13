@@ -2,6 +2,7 @@
 import { Outlet } from "react-router";
 import NavBar from "./NavBar";
 import Footer from "./Footer";
+import BackToTop from "./BackToTop";
 
 export default function Layout({ user, handleLogout }) {
   return (
@@ -11,6 +12,7 @@ export default function Layout({ user, handleLogout }) {
         <Outlet />
       </main>
       <Footer />
+      <BackToTop />
     </>
   );
 }

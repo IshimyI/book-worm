@@ -154,8 +154,9 @@ export default function PublicProfilePage({ user }) {
             placeholder="Расскажите немного о себе и своих читательских вкусах"
             maxLength={500}
             rows={3}
-            mb="8px"
+            mb="4px"
           />
+          <Text fontSize="xs" color="bw.textMuted" mb="8px" textAlign="right">{bioInput.length}/500</Text>
           <Button size="sm" isLoading={savingBio} onClick={saveBio} sx={{ backgroundColor: '#334d00', color: 'white' }} mr="8px">
             Сохранить
           </Button>

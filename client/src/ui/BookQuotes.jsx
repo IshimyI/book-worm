@@ -63,8 +63,10 @@ export default function BookQuotes({ bookId, user }) {
             placeholder="Сохранить понравившийся отрывок из книги"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            mb="10px"
+            maxLength={1000}
+            mb="4px"
           />
+          <Text fontSize="xs" color="bw.textMuted" mb="10px" textAlign="right">{text.length}/1000</Text>
           <Flex gap="10px" mb="16px" align="center" flexWrap="wrap">
             <Input placeholder="Страница (необязательно)" type="number" min="1" value={page} onChange={(e) => setPage(e.target.value)} w="200px" size="sm" />
             <Button type="submit" size="sm" isLoading={submitting} sx={{ backgroundColor: '#334d00', color: 'white' }}>

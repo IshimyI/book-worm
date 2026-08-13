@@ -13,7 +13,7 @@ import {
   Skeleton,
   SkeletonText,
 } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import ModalMain from "../ui/ModalMain";
 import axiosInstance from "../axiosInstance";
@@ -41,9 +41,31 @@ export default function MainPage({ user, setUser }) {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [searchInput, setSearchInput] = useState("");
-  const [sortBy, setSortBy] = useState("rating");
-  const [sortDir, setSortDir] = useState("desc");
+  const [sortBy, setSortBy] = useState(() => localStorage.getItem("bw_catalog_sortBy") || "rating");
+  const [sortDir, setSortDir] = useState(() => localStorage.getItem("bw_catalog_sortDir") || "desc");
   const [page, setPage] = useState(1);
+  const searchInputRef = useRef(null);
+
+  // Remember the reader's last sort choice between visits.
+  useEffect(() => {
+    localStorage.setItem("bw_catalog_sortBy", sortBy);
+    localStorage.setItem("bw_catalog_sortDir", sortDir);
+  }, [sortBy, sortDir]);
+
+  // "/" focuses the search box, like most search-heavy sites — skipped
+  // while the user is already typing in a field so it doesn't hijack
+  // other inputs.
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || document.activeElement?.isContentEditable) return;
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Debounce the search box so every keystroke doesn't fire a request.
   useEffect(() => {
@@ -200,8 +222,9 @@ export default function MainPage({ user, setUser }) {
             <div className="blockAllBooks">
               <div className="lineInputSort">
                 <Input
+                  ref={searchInputRef}
                   w={"100%"}
-                  placeholder="Поиск по названию"
+                  placeholder="Поиск по названию (нажмите /)"
                   bg="bw.cardBg"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}

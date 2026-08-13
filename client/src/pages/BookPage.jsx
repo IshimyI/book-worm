@@ -60,6 +60,15 @@ export default function BookPage({ user, setUser }) {
     image: book ? `${import.meta.env.VITE_TARGET}/api/v1/book/${book.id}/og-image.png` : undefined,
   });
 
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({ title: 'Ссылка скопирована', status: 'success', duration: 1500, isClosable: true });
+    } catch {
+      toast({ title: 'Не удалось скопировать ссылку', status: 'error', duration: 2000, isClosable: true });
+    }
+  };
+
   const handleFavorites = async () => {
     if (!user) {
       toast({ title: 'Войдите, чтобы добавлять книги в избранное', status: 'info', duration: 2500, isClosable: true });
@@ -294,6 +303,9 @@ export default function BookPage({ user, setUser }) {
                 sx={{ color: '#334d00', borderColor: '#334d00' }}
               >
                 Читать / найти книгу
+              </Button>
+              <Button variant="ghost" color="bw.textMuted" onClick={copyLink}>
+                🔗 Скопировать ссылку
               </Button>
             </Flex>
           </Box>
