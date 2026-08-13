@@ -1,5 +1,5 @@
 const express = require("express");
-const { Review, Book, User, PageView } = require("../../db/models");
+const { Review, Book, User, PageView, SecurityEvent } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
 const requireAdmin = require("../middlewares/requireAdmin");
@@ -105,6 +105,39 @@ adminRouter.get("/analytics", async (req, res) => {
       viewsByDay: viewsByDayRows.map((r) => ({ date: r.day, count: Number(r.count) })),
       topPaths: topPathRows.map((r) => ({ path: r.path, count: Number(r.count) })),
       topReferrers: topReferrerRows.map((r) => ({ referrer: r.referrer, count: Number(r.count) })),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+adminRouter.get("/security-events", async (req, res) => {
+  try {
+    const { page = 1, pageSize = 25, type = "" } = req.query;
+    const limit = Math.min(Number(pageSize) || 25, 100);
+    const offset = (Math.max(Number(page) || 1, 1) - 1) * limit;
+    const where = type ? { type } : {};
+
+    const [{ count }, events, typeRows] = await Promise.all([
+      SecurityEvent.count({ where }).then((c) => ({ count: c })),
+      SecurityEvent.findAll({ where, order: [["createdAt", "DESC"]], limit, offset }),
+      SecurityEvent.findAll({ attributes: ["type"], group: ["type"], raw: true }),
+    ]);
+
+    res.status(200).json({
+      events: events.map((e) => ({
+        id: e.id,
+        type: e.type,
+        email: e.email,
+        ip: e.ip,
+        detail: e.detail,
+        createdAt: e.createdAt,
+      })),
+      total: count,
+      page: Math.max(Number(page) || 1, 1),
+      totalPages: Math.max(1, Math.ceil(count / limit)),
+      types: typeRows.map((r) => r.type).sort(),
     });
   } catch (error) {
     console.error(error);

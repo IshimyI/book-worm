@@ -5,6 +5,7 @@ import { Box, Center, Heading, Text, Stack, Flex, Button, Badge, useToast, Spinn
 import axiosInstance from '../axiosInstance';
 import PageCard from '../ui/PageCard';
 import AnalyticsSummary from '../ui/AnalyticsSummary';
+import SecurityEventLog from '../ui/SecurityEventLog';
 
 export default function AdminPage({ user }) {
   const [reviews, setReviews] = useState([]);
@@ -69,6 +70,7 @@ export default function AdminPage({ user }) {
         <TabList>
           <Tab>Жалобы {reviews.length > 0 && `(${reviews.length})`}</Tab>
           <Tab>Аналитика</Tab>
+          <Tab>Журнал безопасности</Tab>
         </TabList>
         <TabPanels>
           <TabPanel px={0}>
@@ -112,6 +114,9 @@ export default function AdminPage({ user }) {
           </TabPanel>
           <TabPanel px={0}>
             <AnalyticsSummary />
+          </TabPanel>
+          <TabPanel px={0}>
+            <SecurityEventLog />
           </TabPanel>
         </TabPanels>
       </Tabs>

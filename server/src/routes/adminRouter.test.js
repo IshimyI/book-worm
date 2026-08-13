@@ -1,6 +1,6 @@
 const request = require("supertest");
 const app = require("../app");
-const { sequelize, User, Book, Review, PageView } = require("../../db/models");
+const { sequelize, User, Book, Review, PageView, SecurityEvent } = require("../../db/models");
 
 async function signupAndLogin(email, isAdmin = false) {
   const res = await request(app).post("/api/auth/signup").send({
@@ -32,6 +32,7 @@ beforeEach(async () => {
   await Book.destroy({ where: {}, truncate: true, cascade: true });
   await User.destroy({ where: {}, truncate: true, cascade: true });
   await PageView.destroy({ where: {}, truncate: true, cascade: true });
+  await SecurityEvent.destroy({ where: {}, truncate: true, cascade: true });
 });
 
 afterAll(async () => {
@@ -124,5 +125,56 @@ describe("analytics", () => {
     expect(res.body.topPaths[0]).toEqual({ path: "/books/1", count: 2 });
     expect(res.body.topReferrers[0]).toEqual({ referrer: "https://google.com", count: 1 });
     expect(res.body.viewsByDay.length).toBeGreaterThan(0);
+  });
+});
+
+describe("security event log", () => {
+  it("blocks non-admins", async () => {
+    const { accessToken } = await signupAndLogin("regular3@example.com");
+    const res = await request(app).get("/api/admin/security-events").set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("lists security events, most recent first", async () => {
+    await SecurityEvent.create({ type: "failed_login", email: "a@example.com", ip: "1.1.1.1", detail: "wrong_password" });
+    await SecurityEvent.create({ type: "rate_limited", ip: "2.2.2.2", detail: "/auth/login" });
+
+    const admin = await signupAndLogin("security-admin@example.com", true);
+    const res = await request(app).get("/api/admin/security-events").set("Authorization", `Bearer ${admin.accessToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(2);
+    expect(res.body.events[0].type).toBe("rate_limited");
+    expect(res.body.events[1].type).toBe("failed_login");
+    expect(res.body.types.sort()).toEqual(["failed_login", "rate_limited"]);
+  });
+
+  it("filters by type", async () => {
+    await SecurityEvent.create({ type: "failed_login", email: "a@example.com", ip: "1.1.1.1" });
+    await SecurityEvent.create({ type: "rate_limited", ip: "2.2.2.2" });
+
+    const admin = await signupAndLogin("security-admin2@example.com", true);
+    const res = await request(app)
+      .get("/api/admin/security-events")
+      .query({ type: "rate_limited" })
+      .set("Authorization", `Bearer ${admin.accessToken}`);
+
+    expect(res.body.events).toHaveLength(1);
+    expect(res.body.events[0].type).toBe("rate_limited");
+  });
+
+  it("paginates", async () => {
+    for (let i = 0; i < 5; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await SecurityEvent.create({ type: "failed_login", ip: `1.1.1.${i}` });
+    }
+    const admin = await signupAndLogin("security-admin3@example.com", true);
+    const res = await request(app)
+      .get("/api/admin/security-events")
+      .query({ pageSize: 2, page: 2 })
+      .set("Authorization", `Bearer ${admin.accessToken}`);
+
+    expect(res.body.events).toHaveLength(2);
+    expect(res.body.totalPages).toBe(3);
   });
 });
