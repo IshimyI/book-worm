@@ -296,6 +296,7 @@ export default function MainPage({ user, setUser }) {
                         </Text>
                         <Text fontSize="xs" color="bw.textMuted" mb={2}>
                           {book.genre}
+                          {book.additionalGenres?.length > 0 && `, ${book.additionalGenres.join(', ')}`}
                         </Text>
                         <Text fontSize="xs" color="bw.textMuted" mb={2}>
                           {book.year}

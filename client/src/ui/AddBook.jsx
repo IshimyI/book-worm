@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
-import { Box, Flex, Input, Text, Center, Button, Textarea, Select, ModalOverlay, Modal, ModalContent, useDisclosure, Heading, Stack, Alert, AlertIcon, ModalCloseButton } from '@chakra-ui/react';
+import { Box, Flex, Input, Text, Center, Button, Textarea, Select, ModalOverlay, Modal, ModalContent, useDisclosure, Heading, Stack, Alert, AlertIcon, ModalCloseButton, Wrap, Tag, TagLabel, TagCloseButton } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
 import SelectedBook from './SelectedBook';
 import StarRatingInput from './StarRatingInput';
@@ -55,6 +55,7 @@ export default function AddBook({ user }) {
   const [changeBook, setChangeBook] = useState(false);
   const [selectedBook, setSelectedBook] = useState({});
   const [inputs, setInputs] = useState(emptyInputs);
+  const [additionalGenres, setAdditionalGenres] = useState([]);
   const [alertCode, setAlertCode] = useState(null);
   const [alertMessage, setAlertMessage] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -115,6 +116,7 @@ export default function AddBook({ user }) {
           title: inputs.title,
           author: inputs.author,
           genre: inputs.genre,
+          additionalGenres,
           annotation: inputs.annotation,
           year: inputs.year,
           img: inputs.img,
@@ -123,6 +125,7 @@ export default function AddBook({ user }) {
         });
         if (res.status === 200) {
           setInputs(emptyInputs);
+          setAdditionalGenres([]);
           setRating(0);
           setChangeBook(false);
           alertFunction(200, 'Книга успешно добавлена! Спасибо!');
@@ -235,13 +238,43 @@ export default function AddBook({ user }) {
                         <Input name="author" value={inputs.author} onChange={handleInputChange} placeholder="Автор" mb="20px" />
                         <Input name="year" value={inputs.year} onChange={handleInputChange} placeholder="Год" mb="20px" />
                         <Input name="img" value={inputs.img} onChange={handleInputChange} placeholder="URL обложки" mb="20px" />
-                        <Select name="genre" onChange={handleInputChange} placeholder="Жанр" mb="20px">
+                        <Select name="genre" value={inputs.genre || ''} onChange={handleInputChange} placeholder="Жанр" mb="10px">
                           {genres.map((genre) => (
                             <option key={genre} value={genre}>
                               {genre}
                             </option>
                           ))}
                         </Select>
+
+                        <Select
+                          placeholder="Добавить ещё жанр (необязательно)"
+                          value=""
+                          mb="10px"
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value && value !== inputs.genre && !additionalGenres.includes(value)) {
+                              setAdditionalGenres((prev) => [...prev, value]);
+                            }
+                          }}
+                        >
+                          {genres
+                            .filter((genre) => genre !== inputs.genre && !additionalGenres.includes(genre))
+                            .map((genre) => (
+                              <option key={genre} value={genre}>
+                                {genre}
+                              </option>
+                            ))}
+                        </Select>
+                        {additionalGenres.length > 0 && (
+                          <Wrap mb="10px">
+                            {additionalGenres.map((genre) => (
+                              <Tag key={genre} size="sm" colorScheme="green">
+                                <TagLabel>{genre}</TagLabel>
+                                <TagCloseButton onClick={() => setAdditionalGenres((prev) => prev.filter((g) => g !== genre))} />
+                              </Tag>
+                            ))}
+                          </Wrap>
+                        )}
                       </Box>
                     </>
                   )}

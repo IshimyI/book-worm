@@ -20,6 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       quantity_rate: DataTypes.INTEGER,
       img: DataTypes.STRING,
       genre: DataTypes.STRING,
+      additionalGenres: DataTypes.ARRAY(DataTypes.STRING),
       year: DataTypes.INTEGER,
     },
     {

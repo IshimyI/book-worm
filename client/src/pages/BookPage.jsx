@@ -254,7 +254,10 @@ export default function BookPage({ user, setUser }) {
           <Heading as="h1" size="lg" mb="10px">{book.title}</Heading>
           <Text color="bw.textMuted" mb="10px">{book.author}</Text>
             <Stack spacing={2} mb="20px">
-              <Text fontSize="sm"><b>Жанр:</b> {book.genre}</Text>
+              <Text fontSize="sm">
+                <b>Жанр:</b> {book.genre}
+                {book.additionalGenres?.length > 0 && `, ${book.additionalGenres.join(', ')}`}
+              </Text>
               <Text fontSize="sm"><b>Год:</b> {book.year}</Text>
               <Text fontSize="sm"><b>Рейтинг:</b> {book.rating ?? 0} ⭐ ({book.quantity_rate ?? 0} отзывов)</Text>
             </Stack>

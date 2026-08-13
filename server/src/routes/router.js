@@ -342,7 +342,17 @@ router.get("/listAllBooks", async (req, res) => {
     const ratingAsFloat = Sequelize.cast(Sequelize.col("rating"), "FLOAT");
 
     const andConditions = [];
-    if (genre) andConditions.push({ genre });
+    if (genre) {
+      // additionalGenres is varchar[]; array-operator comparisons need an
+      // explicit cast or Postgres can't match it against the text[] literal
+      // node-postgres sends.
+      andConditions.push({
+        [Sequelize.Op.or]: [
+          { genre },
+          Sequelize.where(Sequelize.cast(Sequelize.col("additionalGenres"), "text[]"), { [Sequelize.Op.contains]: [genre] }),
+        ],
+      });
+    }
     if (author) andConditions.push({ author });
     if (year) andConditions.push({ year });
     if (minRating) andConditions.push(Sequelize.where(ratingAsFloat, { [Sequelize.Op.gte]: Number(minRating) }));
@@ -375,7 +385,7 @@ router.get("/listAllBooks", async (req, res) => {
         limit,
         offset,
       }),
-      Book.findAll({ attributes: ["genre", "author", "year"], raw: true }),
+      Book.findAll({ attributes: ["genre", "additionalGenres", "author", "year"], raw: true }),
     ]);
 
     const payload = {
@@ -388,13 +398,16 @@ router.get("/listAllBooks", async (req, res) => {
         quantity_rate: book.quantity_rate,
         img: book.img,
         genre: book.genre,
+        additionalGenres: book.additionalGenres,
         year: book.year,
       })),
       total,
       page: Math.max(Number(page) || 1, 1),
       totalPages: Math.max(1, Math.ceil(total / limit)),
       facets: {
-        genres: [...new Set(facetRows.map((b) => b.genre))].sort(),
+        // Union of every book's primary genre and its additional tags, so
+        // the filter dropdown covers genres that only ever appear as a tag.
+        genres: [...new Set(facetRows.flatMap((b) => [b.genre, ...(b.additionalGenres || [])]))].filter(Boolean).sort(),
         authors: [...new Set(facetRows.map((b) => b.author))].sort(),
         years: [...new Set(facetRows.map((b) => b.year))].sort((a, b) => a - b),
       },
@@ -449,6 +462,7 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
       quantity_rate: book.quantity_rate,
       img: book.img,
       genre: book.genre,
+      additionalGenres: book.additionalGenres,
       year: book.year,
       readingStatus,
       reviews: book.Reviews.map((r) => mapReview(r, votedReviewIds)),
@@ -462,15 +476,21 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
 router.get("/book/:id/recommendations", async (req, res) => {
   const { id } = req.params;
   try {
-    const book = await Book.findByPk(id, { attributes: ["id", "genre"] });
+    const book = await Book.findByPk(id, { attributes: ["id", "genre", "additionalGenres"] });
     if (!book) {
       return res.status(404).send({ message: "Книга не найдена" });
     }
 
+    // "Same genre" now means sharing any genre — primary or tag — with the
+    // target book, not just an exact match on the one primary genre.
+    const bookGenres = [book.genre, ...(book.additionalGenres || [])].filter(Boolean);
     const recommendations = await Book.findAll({
       where: {
-        genre: book.genre,
         id: { [Sequelize.Op.ne]: book.id },
+        [Sequelize.Op.or]: [
+          { genre: { [Sequelize.Op.in]: bookGenres } },
+          Sequelize.where(Sequelize.cast(Sequelize.col("additionalGenres"), "text[]"), { [Sequelize.Op.overlap]: bookGenres }),
+        ],
       },
       order: [Sequelize.literal('CAST("rating" AS FLOAT) DESC NULLS LAST'), ["quantity_rate", "DESC"]],
       limit: 6,
@@ -626,12 +646,29 @@ router.get("/listUserBooks/:id", async (req, res) => {
   }
 });
 
+const MAX_ADDITIONAL_GENRES = 5;
+
+function sanitizeAdditionalGenres(raw, primaryGenre) {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set();
+  const result = [];
+  for (const value of raw) {
+    const trimmed = String(value || "").trim().slice(0, 40);
+    if (!trimmed || trimmed === primaryGenre || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    result.push(trimmed);
+    if (result.length >= MAX_ADDITIONAL_GENRES) break;
+  }
+  return result;
+}
+
 router.post("/book/new", verifyAccessToken, async (req, res) => {
   const {
     user_id,
     title = "",
     author = "",
     genre = "",
+    additionalGenres,
     year = 1,
     annotation = "Описание отсутствует",
     img = "https://cdn1.ozone.ru/s3/multimedia-x/6597669093.jpg",
@@ -652,7 +689,7 @@ router.post("/book/new", verifyAccessToken, async (req, res) => {
   try {
     const [newBook] = await Book.findOrCreate({
       where: { title, author },
-      defaults: { genre, year, annotation, img },
+      defaults: { genre, additionalGenres: sanitizeAdditionalGenres(additionalGenres, genre), year, annotation, img },
     });
 
     const [review, reviewCreated] = await Review.findOrCreate({

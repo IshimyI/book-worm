@@ -138,6 +138,19 @@ describe("GET /api/listAllBooks", () => {
     expect(res.body.books.map((b) => b.title).sort()).toEqual(["Alpha", "Gamma"]);
   });
 
+  it("matches the genre filter against additionalGenres too, not just the primary genre", async () => {
+    await Book.create({ title: "Delta", author: "Author D", genre: "Хоррор", additionalGenres: ["Роман"], year: 2015, rating: "4.00" });
+    const res = await request(app).get("/api/listAllBooks").query({ genre: "Роман" });
+    expect(res.status).toBe(200);
+    expect(res.body.books.map((b) => b.title).sort()).toEqual(["Alpha", "Delta", "Gamma"]);
+  });
+
+  it("includes additionalGenres in the genre facet list", async () => {
+    await Book.create({ title: "Epsilon", author: "Author E", genre: "Хоррор", additionalGenres: ["Готика"], year: 2018, rating: "3.00" });
+    const res = await request(app).get("/api/listAllBooks");
+    expect(res.body.facets.genres).toContain("Готика");
+  });
+
   it("searches title/author/annotation", async () => {
     const res = await request(app).get("/api/listAllBooks").query({ search: "Beta" });
     expect(res.status).toBe(200);
@@ -203,6 +216,26 @@ describe("POST /api/book/new", () => {
     expect(res.status).toBe(200);
     expect(res.body.book.title).toBe("Dune");
     expect(res.body.review.user_rating).toBe(5);
+  });
+
+  it("sanitizes additionalGenres: dedupes, drops a value matching the primary genre, and caps the count", async () => {
+    const { userId, accessToken } = await signupAndLogin("author-genres@example.com");
+
+    const res = await request(app)
+      .post("/api/book/new")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        user_id: userId,
+        title: "Tagged Dune",
+        author: "Frank Herbert",
+        genre: "Фантастика",
+        additionalGenres: ["Роман", "Фантастика", "Роман", "A", "B", "C", "D", "E"],
+        body: "Great read",
+        user_rating: 5,
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.book.additionalGenres).toEqual(["Роман", "A", "B", "C", "D"]);
   });
 
   it("rejects a review body containing profanity", async () => {
@@ -640,6 +673,16 @@ describe("recommendations", () => {
     const ids = res.body.map((b) => b.id);
     expect(ids).not.toContain(book.id);
     expect(ids).toEqual([better.id, worse.id]);
+  });
+
+  it("matches on additionalGenres too, not just an exact primary-genre match", async () => {
+    const book = await Book.create({ title: "Tagged Book", author: "A", genre: "Хоррор", additionalGenres: ["Готика"], rating: "4.00" });
+    const matchByAdditional = await Book.create({ title: "Gothic Match", author: "B", genre: "Роман", additionalGenres: ["Готика"], rating: "4.50" });
+    await Book.create({ title: "No Overlap", author: "C", genre: "Детектив", rating: "5.00" });
+
+    const res = await request(app).get(`/api/book/${book.id}/recommendations`);
+    expect(res.status).toBe(200);
+    expect(res.body.map((b) => b.id)).toContain(matchByAdditional.id);
   });
 
   it("requires authentication for personalized recommendations", async () => {
