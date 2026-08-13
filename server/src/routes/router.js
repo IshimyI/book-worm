@@ -697,6 +697,17 @@ router.post("/review/:id/helpful", verifyAccessToken, async (req, res) => {
   }
 });
 
+function mapComment(c) {
+  return {
+    id: c.id,
+    body: c.body,
+    userId: c.userId,
+    userName: c.User.name,
+    createdAt: c.createdAt,
+    parentCommentId: c.parentCommentId,
+  };
+}
+
 router.get("/review/:id/comments", async (req, res) => {
   const { id } = req.params;
   try {
@@ -705,15 +716,16 @@ router.get("/review/:id/comments", async (req, res) => {
       order: [["createdAt", "ASC"]],
       include: [{ model: User, attributes: ["name"] }],
     });
-    res.status(200).json(
-      comments.map((c) => ({
-        id: c.id,
-        body: c.body,
-        userId: c.userId,
-        userName: c.User.name,
-        createdAt: c.createdAt,
-      }))
-    );
+
+    const topLevel = comments.filter((c) => !c.parentCommentId).map(mapComment);
+    const repliesByParent = {};
+    for (const c of comments) {
+      if (!c.parentCommentId) continue;
+      (repliesByParent[c.parentCommentId] ||= []).push(mapComment(c));
+    }
+    const nested = topLevel.map((c) => ({ ...c, replies: repliesByParent[c.id] || [] }));
+
+    res.status(200).json(nested);
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);
@@ -723,6 +735,7 @@ router.get("/review/:id/comments", async (req, res) => {
 router.post("/review/:id/comments", verifyAccessToken, async (req, res) => {
   const { id } = req.params;
   const body = (req.body.body || "").trim();
+  const parentCommentId = req.body.parentCommentId ? Number(req.body.parentCommentId) : null;
   try {
     if (!body) {
       return res.status(400).json({ message: "Комментарий не может быть пустым" });
@@ -735,25 +748,49 @@ router.post("/review/:id/comments", verifyAccessToken, async (req, res) => {
       return res.status(404).json({ message: "Рецензия не найдена" });
     }
 
-    const comment = await ReviewComment.create({ reviewId: id, userId: req.userId, body });
+    let parentComment = null;
+    if (parentCommentId) {
+      parentComment = await ReviewComment.findByPk(parentCommentId);
+      if (!parentComment || parentComment.reviewId !== Number(id)) {
+        return res.status(404).json({ message: "Комментарий не найден" });
+      }
+      // Only one level of nesting — replying to a reply attaches to its
+      // top-level parent instead of growing a deeper thread.
+      if (parentComment.parentCommentId) {
+        return res.status(400).json({ message: "Нельзя ответить на ответ" });
+      }
+    }
+
+    const comment = await ReviewComment.create({ reviewId: id, userId: req.userId, body, parentCommentId });
     review.commentCount += 1;
     await review.save();
 
     const author = await User.findByPk(req.userId, { attributes: ["name"] });
-
     const book = await Book.findByPk(review.bookId, { attributes: ["title"] });
-    await notify({
-      userId: review.userId,
-      actorId: req.userId,
-      type: "review_comment",
-      data: { name: author.name, bookId: review.bookId, bookTitle: book?.title },
-    });
+
+    if (parentComment) {
+      await notify({
+        userId: parentComment.userId,
+        actorId: req.userId,
+        type: "comment_reply",
+        data: { name: author.name, bookId: review.bookId, bookTitle: book?.title },
+      });
+    } else {
+      await notify({
+        userId: review.userId,
+        actorId: req.userId,
+        type: "review_comment",
+        data: { name: author.name, bookId: review.bookId, bookTitle: book?.title },
+      });
+    }
+
     res.status(200).json({
       id: comment.id,
       body: comment.body,
       userId: comment.userId,
       userName: author.name,
       createdAt: comment.createdAt,
+      parentCommentId: comment.parentCommentId,
     });
   } catch (error) {
     console.log(error);
@@ -771,10 +808,13 @@ router.delete("/review/:reviewId/comments/:commentId", verifyAccessToken, async 
     if (comment.userId !== req.userId) {
       return res.status(403).json({ message: "Можно удалять только свои комментарии" });
     }
+    // Replies cascade-delete at the DB level when their parent goes — count
+    // them so commentCount doesn't drift out of sync with what's left.
+    const replyCount = await ReviewComment.count({ where: { parentCommentId: commentId } });
     await comment.destroy();
     const review = await Review.findByPk(reviewId);
     if (review) {
-      review.commentCount = Math.max(0, review.commentCount - 1);
+      review.commentCount = Math.max(0, review.commentCount - 1 - replyCount);
       await review.save();
     }
     res.status(200).json({ message: "Комментарий удалён" });

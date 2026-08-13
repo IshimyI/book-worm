@@ -9,6 +9,9 @@ export default function ReviewComments({ user, review, onCountChange }) {
   const [comments, setComments] = useState(null);
   const [body, setBody] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyBody, setReplyBody] = useState('');
+  const [submittingReply, setSubmittingReply] = useState(false);
   const toast = useToast();
 
   const load = () => {
@@ -36,7 +39,7 @@ export default function ReviewComments({ user, review, onCountChange }) {
     setSubmitting(true);
     try {
       const res = await axiosInstance.post(`/review/${review.id}/comments`, { body: trimmed });
-      setComments((prev) => [...(prev || []), res.data]);
+      setComments((prev) => [...(prev || []), { ...res.data, replies: [] }]);
       setBody('');
       onCountChange?.(review.id, (review.commentCount || 0) + 1);
     } catch (error) {
@@ -46,15 +49,89 @@ export default function ReviewComments({ user, review, onCountChange }) {
     }
   };
 
-  const remove = async (commentId) => {
+  const submitReply = async (parentCommentId) => {
+    if (!user) {
+      toast({ title: 'Войдите, чтобы ответить', status: 'info', duration: 2500, isClosable: true });
+      return;
+    }
+    const trimmed = replyBody.trim();
+    if (!trimmed) return;
+    setSubmittingReply(true);
     try {
-      await axiosInstance.delete(`/review/${review.id}/comments/${commentId}`);
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
-      onCountChange?.(review.id, Math.max(0, (review.commentCount || 0) - 1));
+      const res = await axiosInstance.post(`/review/${review.id}/comments`, { body: trimmed, parentCommentId });
+      setComments((prev) =>
+        prev.map((c) => (c.id === parentCommentId ? { ...c, replies: [...c.replies, res.data] } : c))
+      );
+      setReplyBody('');
+      setReplyingTo(null);
+      onCountChange?.(review.id, (review.commentCount || 0) + 1);
+    } catch (error) {
+      toast({ title: error.response?.data?.message || 'Не удалось отправить ответ', status: 'error', duration: 2500, isClosable: true });
+    } finally {
+      setSubmittingReply(false);
+    }
+  };
+
+  const remove = async (comment, isReply, parentCommentId) => {
+    try {
+      await axiosInstance.delete(`/review/${review.id}/comments/${comment.id}`);
+      const removedCount = isReply ? 1 : 1 + comment.replies.length;
+      if (isReply) {
+        setComments((prev) =>
+          prev.map((c) => (c.id === parentCommentId ? { ...c, replies: c.replies.filter((r) => r.id !== comment.id) } : c))
+        );
+      } else {
+        setComments((prev) => prev.filter((c) => c.id !== comment.id));
+      }
+      onCountChange?.(review.id, Math.max(0, (review.commentCount || 0) - removedCount));
     } catch (error) {
       toast({ title: error.response?.data?.message || 'Не удалось удалить комментарий', status: 'error', duration: 2500, isClosable: true });
     }
   };
+
+  const renderComment = (comment, isReply, parentCommentId) => (
+    <Flex key={comment.id} gap="8px" mb="10px" align="flex-start">
+      <Avatar name={comment.userName} size="xs" />
+      <Box flex="1">
+        <Flex justify="space-between" align="center">
+          <Text fontSize="sm" fontWeight="bold">{comment.userName}</Text>
+          {user && user.id === comment.userId && (
+            <Button size="xs" variant="link" sx={{ color: '#a4522a' }} onClick={() => remove(comment, isReply, parentCommentId)}>
+              Удалить
+            </Button>
+          )}
+        </Flex>
+        <Text fontSize="sm">{comment.body}</Text>
+        {!isReply && (
+          <Button size="xs" variant="link" color="bw.textMuted" mt="2px" onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}>
+            Ответить
+          </Button>
+        )}
+
+        {!isReply && comment.replies?.length > 0 && (
+          <Box mt="8px" pl="14px" borderLeft="2px solid" borderColor="bw.border">
+            {comment.replies.map((reply) => renderComment(reply, true, comment.id))}
+          </Box>
+        )}
+
+        {!isReply && replyingTo === comment.id && (
+          <Flex gap="8px" mt="8px" pl="14px">
+            <Textarea
+              size="sm"
+              placeholder={user ? 'Написать ответ…' : 'Войдите, чтобы ответить'}
+              value={replyBody}
+              onChange={(e) => setReplyBody(e.target.value)}
+              isDisabled={!user}
+              rows={2}
+            />
+            <Button size="sm" isLoading={submittingReply} onClick={() => submitReply(comment.id)} sx={{ backgroundColor: '#334d00', color: 'white' }} flexShrink={0}>
+              Ответить
+            </Button>
+          </Flex>
+        )}
+      </Box>
+    </Flex>
+  );
 
   return (
     <Box mt="6px">
@@ -71,22 +148,7 @@ export default function ReviewComments({ user, review, onCountChange }) {
               {(comments || []).length === 0 && (
                 <Text fontSize="sm" color="bw.textMuted" mb="8px">Пока нет комментариев</Text>
               )}
-              {(comments || []).map((comment) => (
-                <Flex key={comment.id} gap="8px" mb="10px" align="flex-start">
-                  <Avatar name={comment.userName} size="xs" />
-                  <Box flex="1">
-                    <Flex justify="space-between" align="center">
-                      <Text fontSize="sm" fontWeight="bold">{comment.userName}</Text>
-                      {user && user.id === comment.userId && (
-                        <Button size="xs" variant="link" sx={{ color: '#a4522a' }} onClick={() => remove(comment.id)}>
-                          Удалить
-                        </Button>
-                      )}
-                    </Flex>
-                    <Text fontSize="sm">{comment.body}</Text>
-                  </Box>
-                </Flex>
-              ))}
+              {(comments || []).map((comment) => renderComment(comment, false, null))}
               <Flex gap="8px" mt="8px">
                 <Textarea
                   size="sm"

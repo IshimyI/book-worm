@@ -413,6 +413,99 @@ describe("review comments", () => {
       .set("Authorization", `Bearer ${stranger.accessToken}`);
     expect(deleteRes.status).toBe(403);
   });
+
+  it("nests a reply under its parent in the comment list", async () => {
+    const { review } = await createReview();
+    const commenter = await signupAndLogin("thread-parent@example.com");
+    const replier = await signupAndLogin("thread-replier@example.com");
+
+    const parentRes = await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`)
+      .send({ body: "Родительский комментарий" });
+
+    const replyRes = await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${replier.accessToken}`)
+      .send({ body: "Ответ", parentCommentId: parentRes.body.id });
+    expect(replyRes.status).toBe(200);
+    expect(replyRes.body.parentCommentId).toBe(parentRes.body.id);
+
+    await review.reload();
+    expect(review.commentCount).toBe(2);
+
+    const listRes = await request(app).get(`/api/review/${review.id}/comments`);
+    expect(listRes.body).toHaveLength(1);
+    expect(listRes.body[0].replies).toHaveLength(1);
+    expect(listRes.body[0].replies[0].body).toBe("Ответ");
+  });
+
+  it("refuses to reply to a reply (only one level of nesting)", async () => {
+    const { review } = await createReview();
+    const commenter = await signupAndLogin("thread-parent2@example.com");
+    const replier = await signupAndLogin("thread-replier2@example.com");
+    const secondReplier = await signupAndLogin("thread-replier3@example.com");
+
+    const parentRes = await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`)
+      .send({ body: "Родитель" });
+    const replyRes = await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${replier.accessToken}`)
+      .send({ body: "Ответ", parentCommentId: parentRes.body.id });
+
+    const nestedReplyRes = await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${secondReplier.accessToken}`)
+      .send({ body: "Ответ на ответ", parentCommentId: replyRes.body.id });
+    expect(nestedReplyRes.status).toBe(400);
+  });
+
+  it("notifies the parent comment's author on a reply, not the review author", async () => {
+    const { review } = await createReview();
+    const commenter = await signupAndLogin("thread-notify-parent@example.com");
+    const replier = await signupAndLogin("thread-notify-replier@example.com");
+
+    const parentRes = await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`)
+      .send({ body: "Родитель" });
+    await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${replier.accessToken}`)
+      .send({ body: "Ответ", parentCommentId: parentRes.body.id });
+
+    const parentNotifs = await request(app)
+      .get("/api/notifications")
+      .set("Authorization", `Bearer ${commenter.accessToken}`);
+    expect(parentNotifs.body.notifications.some((n) => n.type === "comment_reply")).toBe(true);
+  });
+
+  it("deleting a parent comment also clears the review's commentCount for its replies", async () => {
+    const { review } = await createReview();
+    const commenter = await signupAndLogin("thread-cascade@example.com");
+    const replier = await signupAndLogin("thread-cascade-replier@example.com");
+
+    const parentRes = await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`)
+      .send({ body: "Родитель" });
+    await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${replier.accessToken}`)
+      .send({ body: "Ответ", parentCommentId: parentRes.body.id });
+
+    await request(app)
+      .delete(`/api/review/${review.id}/comments/${parentRes.body.id}`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`);
+
+    await review.reload();
+    expect(review.commentCount).toBe(0);
+
+    const listRes = await request(app).get(`/api/review/${review.id}/comments`);
+    expect(listRes.body).toHaveLength(0);
+  });
 });
 
 describe("follows and feed", () => {
