@@ -128,7 +128,12 @@ export default function AddBook({ user }) {
           setAdditionalGenres([]);
           setRating(0);
           setChangeBook(false);
-          alertFunction(200, 'Книга успешно добавлена! Спасибо!');
+          alertFunction(
+            200,
+            res.data.possibleDuplicateOf
+              ? `Похожая книга уже есть в каталоге («${res.data.possibleDuplicateOf.title}») — добавили вашу рецензию туда.`
+              : 'Книга успешно добавлена! Спасибо!'
+          );
           setTimeout(()=>{onClose()}, 2000);
         }
       } catch (error) {

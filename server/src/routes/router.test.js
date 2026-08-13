@@ -290,6 +290,59 @@ describe("POST /api/book/new", () => {
     expect(bookRes.body.status).toBe("pending");
   });
 
+  it("treats a case/whitespace-different title+author as the same book instead of duplicating it", async () => {
+    const first = await signupAndLogin("dedup-exact-1@example.com");
+    const second = await signupAndLogin("dedup-exact-2@example.com");
+
+    const originalRes = await request(app)
+      .post("/api/book/new")
+      .set("Authorization", `Bearer ${first.accessToken}`)
+      .send({ user_id: first.userId, title: "Дюна", author: "Фрэнк Герберт", body: "Отзыв 1", user_rating: 5 });
+
+    const duplicateRes = await request(app)
+      .post("/api/book/new")
+      .set("Authorization", `Bearer ${second.accessToken}`)
+      .send({ user_id: second.userId, title: "  дюна ", author: " фрэнк герберт", body: "Отзыв 2", user_rating: 4 });
+
+    expect(duplicateRes.body.book.id).toBe(originalRes.body.book.id);
+    expect(await Book.count()).toBe(1);
+  });
+
+  it("routes a near-typo duplicate to the existing book instead of creating a new one", async () => {
+    const first = await signupAndLogin("dedup-fuzzy-1@example.com");
+    const second = await signupAndLogin("dedup-fuzzy-2@example.com");
+
+    const originalRes = await request(app)
+      .post("/api/book/new")
+      .set("Authorization", `Bearer ${first.accessToken}`)
+      .send({ user_id: first.userId, title: "Мастер и Маргарита", author: "Михаил Булгаков", body: "Отзыв 1", user_rating: 5 });
+
+    const typoRes = await request(app)
+      .post("/api/book/new")
+      .set("Authorization", `Bearer ${second.accessToken}`)
+      .send({ user_id: second.userId, title: "Мастер и Маргарита.", author: "Михаил Булгаков", body: "Отзыв 2", user_rating: 4 });
+
+    expect(typoRes.body.book.id).toBe(originalRes.body.book.id);
+    expect(typoRes.body.possibleDuplicateOf).toMatchObject({ id: originalRes.body.book.id });
+    expect(await Book.count()).toBe(1);
+  });
+
+  it("does not merge clearly different books by the same author", async () => {
+    const { userId, accessToken } = await signupAndLogin("dedup-different@example.com");
+
+    await request(app)
+      .post("/api/book/new")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ user_id: userId, title: "Первая книга", author: "Один Автор", body: "Отзыв 1", user_rating: 5 });
+    const secondRes = await request(app)
+      .post("/api/book/new")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ user_id: userId, title: "Совершенно другая история", author: "Один Автор", body: "Отзыв 2", user_rating: 4 });
+
+    expect(secondRes.body.possibleDuplicateOf).toBeNull();
+    expect(await Book.count()).toBe(2);
+  });
+
   it("sanitizes additionalGenres: dedupes, drops a value matching the primary genre, and caps the count", async () => {
     const { userId, accessToken } = await signupAndLogin("author-genres@example.com");
 

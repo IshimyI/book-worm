@@ -14,6 +14,7 @@ const { isConfigured: pushConfigured } = require("../utils/webPush");
 const { containsProfanity } = require("../utils/moderation");
 const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRating");
 const { computeAchievements } = require("../utils/achievements");
+const { findPossibleDuplicate } = require("../utils/bookDedup");
 const cache = require("../utils/simpleCache");
 
 const router = express.Router();
@@ -989,14 +990,33 @@ router.post("/book/new", verifyAccessToken, async (req, res) => {
   }
 
   try {
-    const [newBook] = await Book.findOrCreate({
-      where: { title, author },
+    // Catalog is small (tens of books) — cheap to fetch every title/author
+    // and compare normalized (case/whitespace/punctuation-insensitive) in
+    // JS, catching "Дюна" vs "дюна " or "Дюна." without an exact-match
+    // query missing it or a fuzzy one risking a false match.
+    const existingBooks = await Book.findAll({ attributes: ["id", "title", "author"] });
+    const match = findPossibleDuplicate(title, author, existingBooks);
+
+    let newBook = match ? await Book.findByPk(match.id) : null;
+    // Only worth flagging when normalization actually did something — an
+    // exact resubmission (adding a second review to a book found as-is via
+    // search) is the normal path, not a duplicate to warn about.
+    const possibleDuplicateOf = match && (match.title !== title || match.author !== author) ? { id: match.id, title: match.title } : null;
+
+    if (!newBook) {
       // Newly-submitted books start pending — kept out of the public
-      // catalog/recommendations until an admin approves them. A book that
-      // already exists (this is just a second review on it) keeps its
-      // current status untouched.
-      defaults: { genre, additionalGenres: sanitizeAdditionalGenres(additionalGenres, genre), year, annotation, img, status: "pending" },
-    });
+      // catalog/recommendations until an admin approves them.
+      newBook = await Book.create({
+        title,
+        author,
+        genre,
+        additionalGenres: sanitizeAdditionalGenres(additionalGenres, genre),
+        year,
+        annotation,
+        img,
+        status: "pending",
+      });
+    }
 
     const [review, reviewCreated] = await Review.findOrCreate({
       where: { bookId: newBook.id, userId: user_id },
@@ -1011,7 +1031,7 @@ router.post("/book/new", verifyAccessToken, async (req, res) => {
 
     await recomputeBookRating(newBook.id);
 
-    res.status(200).json({ book: newBook, review });
+    res.status(200).json({ book: newBook, review, possibleDuplicateOf });
   } catch (error) {
     console.error(error);
     res.status(500).send("Ошибка при добавлении книги или отзыва");
