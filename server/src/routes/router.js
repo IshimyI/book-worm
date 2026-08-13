@@ -321,6 +321,64 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
   }
 });
 
+router.get("/book/:id/recommendations", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const book = await Book.findByPk(id, { attributes: ["id", "genre"] });
+    if (!book) {
+      return res.status(404).send({ message: "Книга не найдена" });
+    }
+
+    const recommendations = await Book.findAll({
+      where: {
+        genre: book.genre,
+        id: { [Sequelize.Op.ne]: book.id },
+      },
+      order: [Sequelize.literal('CAST("rating" AS FLOAT) DESC NULLS LAST'), ["quantity_rate", "DESC"]],
+      limit: 6,
+    });
+
+    res.status(200).send(recommendations);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.get("/recommendations", verifyAccessToken, async (req, res) => {
+  try {
+    const reviewedBookIds = (await Review.findAll({ where: { userId: req.userId }, attributes: ["bookId"] })).map(
+      (r) => r.bookId
+    );
+
+    const topGenreRow = reviewedBookIds.length
+      ? await Book.findOne({
+          where: { id: reviewedBookIds },
+          attributes: ["genre", [Sequelize.fn("COUNT", Sequelize.col("genre")), "count"]],
+          group: ["genre"],
+          order: [[Sequelize.literal("count"), "DESC"]],
+          raw: true,
+        })
+      : null;
+
+    const where = {
+      ...(reviewedBookIds.length ? { id: { [Sequelize.Op.notIn]: reviewedBookIds } } : {}),
+      ...(topGenreRow ? { genre: topGenreRow.genre } : {}),
+    };
+
+    const recommendations = await Book.findAll({
+      where,
+      order: [Sequelize.literal('CAST("rating" AS FLOAT) DESC NULLS LAST'), ["quantity_rate", "DESC"]],
+      limit: 8,
+    });
+
+    res.status(200).json({ books: recommendations, basedOnGenre: topGenreRow?.genre || null });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
 router.get("/listUserBooks/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -359,7 +417,7 @@ router.get("/listUserBooks/:id", async (req, res) => {
           img: book.img,
           genre: book.genre,
           year: book.year,
-          reviews: allReviews.map(mapReview),
+          reviews: allReviews.map((r) => mapReview(r)),
         };
       })
     );

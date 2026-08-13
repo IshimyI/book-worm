@@ -11,6 +11,7 @@ import useFavorite from '../utils/useFavorite';
 import PageCard from '../ui/PageCard';
 import AddToListMenu from '../ui/AddToListMenu';
 import ReviewComments from '../ui/ReviewComments';
+import { coverThumbUrl } from '../utils/coverUrl';
 
 export default function BookPage({ user, setUser }) {
   const { id } = useParams();
@@ -20,6 +21,7 @@ export default function BookPage({ user, setUser }) {
   const [reviewSort, setReviewSort] = useState('newest');
   const [inputBody, setInputBody] = useState('');
   const [rating, setRating] = useState(0);
+  const [recommendations, setRecommendations] = useState([]);
   const { isFavorite, toggle: toggleFavorite } = useFavorite(user, setUser, book?.id);
   const toast = useToast();
 
@@ -33,6 +35,13 @@ export default function BookPage({ user, setUser }) {
       })
       .catch(() => setBook(false))
       .finally(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    axiosInstance
+      .get(`/book/${id}/recommendations`)
+      .then((res) => setRecommendations(res.data))
+      .catch(() => setRecommendations([]));
   }, [id]);
 
   useSeoMeta({
@@ -366,6 +375,32 @@ export default function BookPage({ user, setUser }) {
             {isEditing ? 'Обновить рецензию' : 'Добавить рецензию'}
           </Button>
         </Box>
+
+        {recommendations.length > 0 && (
+          <>
+            <Divider my="30px" />
+            <Heading as="h2" size="md" mb="16px">Похожие книги</Heading>
+            <Flex gap="16px" overflowX="auto" pb="8px">
+              {recommendations.map((rec) => (
+                <NavLink key={rec.id} to={`/books/${rec.id}`} style={{ flexShrink: 0 }}>
+                  <Box width="130px" _hover={{ opacity: 0.85 }}>
+                    <Image
+                      src={coverThumbUrl(rec.img) || './default.jpg'}
+                      alt={rec.title}
+                      loading="lazy"
+                      width="130px"
+                      height="180px"
+                      objectFit="cover"
+                      borderRadius="6px"
+                    />
+                    <Text fontSize="sm" fontWeight="bold" mt="6px" noOfLines={2}>{rec.title}</Text>
+                    <Text fontSize="xs" color="bw.textMuted">{rec.rating ?? 0} ⭐</Text>
+                  </Box>
+                </NavLink>
+              ))}
+            </Flex>
+          </>
+        )}
     </PageCard>
   );
 }

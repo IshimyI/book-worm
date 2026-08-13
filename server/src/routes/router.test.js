@@ -473,3 +473,39 @@ describe("follows and feed", () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe("recommendations", () => {
+  it("recommends books in the same genre, sorted by rating, excluding itself", async () => {
+    const book = await Book.create({ title: "Base Book", author: "A", genre: "Фэнтези", rating: "4.00" });
+    const better = await Book.create({ title: "Better Match", author: "B", genre: "Фэнтези", rating: "4.80" });
+    const worse = await Book.create({ title: "Worse Match", author: "C", genre: "Фэнтези", rating: "3.20" });
+    await Book.create({ title: "Wrong Genre", author: "D", genre: "Детектив", rating: "5.00" });
+
+    const res = await request(app).get(`/api/book/${book.id}/recommendations`);
+    expect(res.status).toBe(200);
+    const ids = res.body.map((b) => b.id);
+    expect(ids).not.toContain(book.id);
+    expect(ids).toEqual([better.id, worse.id]);
+  });
+
+  it("requires authentication for personalized recommendations", async () => {
+    const res = await request(app).get("/api/recommendations");
+    expect(res.status).toBe(401);
+  });
+
+  it("recommends top-rated books in the user's most-reviewed genre, excluding already-reviewed books", async () => {
+    const { userId, accessToken } = await signupAndLogin("reco@example.com");
+    const readBook = await Book.create({ title: "Already Read", author: "A", genre: "Роман", rating: "5.00" });
+    await Review.create({ bookId: readBook.id, userId, body: "Прочитано", user_rating: 5 });
+
+    const unreadInGenre = await Book.create({ title: "Should Recommend", author: "B", genre: "Роман", rating: "4.50" });
+    await Book.create({ title: "Different Genre", author: "C", genre: "Хоррор", rating: "5.00" });
+
+    const res = await request(app).get("/api/recommendations").set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.basedOnGenre).toBe("Роман");
+    const ids = res.body.books.map((b) => b.id);
+    expect(ids).toContain(unreadInGenre.id);
+    expect(ids).not.toContain(readBook.id);
+  });
+});

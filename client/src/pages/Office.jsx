@@ -6,6 +6,7 @@ import ReviewProfile from "../ui/ReviewProfile";
 import FavoriteProfile from "../ui/FavoriteProfile";
 import AddBook from "../ui/AddBook";
 import BookModal from "../ui/BookModal";
+import RecommendedBooks from "../ui/RecommendedBooks";
 
 const Office = ({ user, setUser }) => {
   const [review, setReview] = useState([]);
@@ -49,6 +50,9 @@ const Office = ({ user, setUser }) => {
               setFavoriteBooks={setFavorite}
               user={user}
             />
+          </Box>
+          <Box marginTop="60px">
+            <RecommendedBooks handleBookClick={handleBookClick} />
           </Box>
         </Box>
         <BookModal
