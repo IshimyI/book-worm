@@ -6,6 +6,7 @@ import axiosInstance from '../axiosInstance';
 import PageCard from '../ui/PageCard';
 import AnalyticsSummary from '../ui/AnalyticsSummary';
 import SecurityEventLog from '../ui/SecurityEventLog';
+import StatsSummary from '../ui/StatsSummary';
 
 export default function AdminPage({ user }) {
   const [reviews, setReviews] = useState([]);
@@ -69,6 +70,7 @@ export default function AdminPage({ user }) {
       <Tabs colorScheme="green">
         <TabList>
           <Tab>Жалобы {reviews.length > 0 && `(${reviews.length})`}</Tab>
+          <Tab>Статистика</Tab>
           <Tab>Аналитика</Tab>
           <Tab>Журнал безопасности</Tab>
         </TabList>
@@ -111,6 +113,9 @@ export default function AdminPage({ user }) {
                 ))}
               </Stack>
             )}
+          </TabPanel>
+          <TabPanel px={0}>
+            <StatsSummary />
           </TabPanel>
           <TabPanel px={0}>
             <AnalyticsSummary />

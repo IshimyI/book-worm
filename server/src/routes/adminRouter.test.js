@@ -178,3 +178,32 @@ describe("security event log", () => {
     expect(res.body.totalPages).toBe(3);
   });
 });
+
+describe("site stats", () => {
+  it("blocks non-admins", async () => {
+    const { accessToken } = await signupAndLogin("regular4@example.com");
+    const res = await request(app).get("/api/admin/stats").set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("returns totals, growth series and top books", async () => {
+    const author = await signupAndLogin("stats-author@example.com");
+    const author2 = await signupAndLogin("stats-author2@example.com");
+    const bookA = await Book.create({ title: "Popular Book", author: "Author A", genre: "Роман" });
+    const bookB = await Book.create({ title: "Quiet Book", author: "Author B", genre: "Роман" });
+    await Review.create({ bookId: bookA.id, userId: author.userId, body: "Отлично", user_rating: 5 });
+    await Review.create({ bookId: bookA.id, userId: author2.userId, body: "Ещё раз", user_rating: 4 });
+    await Review.create({ bookId: bookB.id, userId: author.userId, body: "Неплохо", user_rating: 3 });
+
+    const admin = await signupAndLogin("stats-admin@example.com", true);
+    const res = await request(app).get("/api/admin/stats").set("Authorization", `Bearer ${admin.accessToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.totalUsers).toBeGreaterThanOrEqual(2);
+    expect(res.body.totalReviews).toBe(3);
+    expect(res.body.totalBooks).toBe(2);
+    expect(res.body.usersByDay.length).toBeGreaterThan(0);
+    expect(res.body.reviewsByDay.length).toBeGreaterThan(0);
+    expect(res.body.topBooks[0]).toMatchObject({ id: bookA.id, title: "Popular Book", reviewCount: 2 });
+  });
+});
