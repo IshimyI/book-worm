@@ -10,6 +10,8 @@ import {
   Flex,
   Input,
   Button,
+  Checkbox,
+  Badge,
   useToast,
   Skeleton,
   Image,
@@ -22,6 +24,7 @@ export default function ListsPage({ user }) {
   const [lists, setLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState('');
+  const [newIsCurated, setNewIsCurated] = useState(false);
   const [creating, setCreating] = useState(false);
   const toast = useToast();
 
@@ -46,9 +49,10 @@ export default function ListsPage({ user }) {
     if (!name) return;
     setCreating(true);
     try {
-      const res = await axiosInstance.post('/lists', { name });
+      const res = await axiosInstance.post('/lists', { name, isCurated: newIsCurated });
       setLists((prev) => [res.data, ...prev]);
       setNewName('');
+      setNewIsCurated(false);
     } catch (error) {
       toast({ title: error.response?.data?.message || 'Не удалось создать список', status: 'error', duration: 2500, isClosable: true });
     } finally {
@@ -81,7 +85,7 @@ export default function ListsPage({ user }) {
     <PageCard maxW="900px">
       <Heading as="h1" size="lg" mb="20px">Мои списки</Heading>
 
-      <Flex gap="10px" mb="30px">
+      <Flex gap="10px" mb={user.isAdmin ? '10px' : '30px'}>
         <Input
           placeholder="Название нового списка"
           value={newName}
@@ -92,6 +96,11 @@ export default function ListsPage({ user }) {
           Создать список
         </Button>
       </Flex>
+      {user.isAdmin && (
+        <Checkbox isChecked={newIsCurated} onChange={(e) => setNewIsCurated(e.target.checked)} mb="30px">
+          Сделать подборкой (видна всем на странице «Подборки»)
+        </Checkbox>
+      )}
 
       {loading ? (
         <SimpleGrid columns={{ base: 1, sm: 2 }} spacing="16px">
@@ -108,7 +117,7 @@ export default function ListsPage({ user }) {
               <Flex justify="space-between" align="flex-start" mb="10px">
                 <NavLink to={`/lists/${list.id}`}>
                   <Heading as="h3" size="sm" _hover={{ color: '#4b5320', textDecoration: 'underline' }}>
-                    {list.name}
+                    {list.name} {list.isCurated && <Badge colorScheme="green" ml="4px">подборка</Badge>}
                   </Heading>
                 </NavLink>
                 <Button size="xs" variant="link" sx={{ color: '#a4522a' }} onClick={() => removeList(list.id)}>

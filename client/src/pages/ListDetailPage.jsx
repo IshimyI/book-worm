@@ -1,53 +1,45 @@
-/* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
-import { Box, Center, Heading, Text, SimpleGrid, Flex, Input, Button, Image, useToast, Skeleton } from '@chakra-ui/react';
+import { Box, Center, Heading, Text, SimpleGrid, Flex, Input, Textarea, Button, Image, Badge, useToast, Skeleton } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
 import { coverThumbUrl } from '../utils/coverUrl';
 import PageCard from '../ui/PageCard';
 
-export default function ListDetailPage({ user }) {
+export default function ListDetailPage() {
   const { id } = useParams();
   const [list, setList] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
+  const [descInput, setDescInput] = useState('');
   const toast = useToast();
 
-  useSeoMeta({ enabled: Boolean(list), title: list?.name });
+  useSeoMeta({ enabled: Boolean(list), title: list?.name, description: list?.description || '' });
 
-  const load = () => {
+  useEffect(() => {
     setLoading(true);
     axiosInstance
       .get(`/lists/${id}`)
       .then((res) => {
         setList(res.data);
         setNameInput(res.data.name);
+        setDescInput(res.data.description || '');
       })
       .catch(() => setList(false))
       .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    if (user) load();
-    else setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, user]);
+  }, [id]);
 
   const saveName = async () => {
     const name = nameInput.trim();
-    if (!name || name === list.name) {
-      setEditingName(false);
-      return;
-    }
+    const description = descInput.trim() || null;
     try {
-      await axiosInstance.patch(`/lists/${id}`, { name });
-      setList((prev) => ({ ...prev, name }));
+      await axiosInstance.patch(`/lists/${id}`, { name, description });
+      setList((prev) => ({ ...prev, name, description }));
       setEditingName(false);
     } catch (error) {
-      toast({ title: error.response?.data?.message || 'Не удалось переименовать список', status: 'error', duration: 2500, isClosable: true });
+      toast({ title: error.response?.data?.message || 'Не удалось сохранить изменения', status: 'error', duration: 2500, isClosable: true });
     }
   };
 
@@ -59,17 +51,6 @@ export default function ListDetailPage({ user }) {
       toast({ title: error.response?.data?.message || 'Не удалось убрать книгу', status: 'error', duration: 2500, isClosable: true });
     }
   };
-
-  if (!user) {
-    return (
-      <Center py="100px" flexDirection="column">
-        <Text fontSize="xl" mb="20px">Войдите, чтобы посмотреть список</Text>
-        <NavLink to="/auth">
-          <Button backgroundColor="#334d00" color="white">Войти</Button>
-        </NavLink>
-      </Center>
-    );
-  }
 
   if (loading) {
     return (
@@ -95,29 +76,53 @@ export default function ListDetailPage({ user }) {
     );
   }
 
+  const backTo = list.isCurated ? '/collections' : '/lists';
+  const backLabel = list.isCurated ? 'К подборкам' : 'К моим спискам';
+
   return (
     <PageCard maxW="900px">
-      <NavLink to="/lists">
+      <NavLink to={backTo}>
         <Button variant="link" mb="20px" sx={{ color: '#334d00' }}>
-          <ArrowBackIcon mr="6px" /> К моим спискам
+          <ArrowBackIcon mr="6px" /> {backLabel}
         </Button>
       </NavLink>
 
+      {list.isCurated && (
+        <Badge colorScheme="green" mb="10px">Подборка редакции</Badge>
+      )}
+
       {editingName ? (
-        <Flex gap="10px" mb="20px" maxW="400px">
-          <Input value={nameInput} onChange={(e) => setNameInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveName()} autoFocus />
-          <Button onClick={saveName} sx={{ backgroundColor: '#334d00', color: 'white' }} flexShrink={0}>
+        <Flex direction="column" gap="10px" mb="20px" maxW="500px">
+          <Input value={nameInput} onChange={(e) => setNameInput(e.target.value)} autoFocus />
+          {list.isCurated && (
+            <Textarea value={descInput} onChange={(e) => setDescInput(e.target.value)} placeholder="Краткое описание подборки" rows={2} />
+          )}
+          <Button onClick={saveName} sx={{ backgroundColor: '#334d00', color: 'white' }} alignSelf="flex-start">
             Сохранить
           </Button>
         </Flex>
       ) : (
-        <Heading as="h1" size="lg" mb="20px" onClick={() => setEditingName(true)} cursor="pointer" _hover={{ color: '#4b5320' }}>
-          {list.name} <Text as="span" fontSize="sm" color="bw.textMuted">(изменить)</Text>
-        </Heading>
+        <>
+          <Heading
+            as="h1"
+            size="lg"
+            mb={list.description ? '6px' : '20px'}
+            onClick={() => list.canManage && setEditingName(true)}
+            cursor={list.canManage ? 'pointer' : 'default'}
+            _hover={list.canManage ? { color: '#4b5320' } : undefined}
+          >
+            {list.name} {list.canManage && <Text as="span" fontSize="sm" color="bw.textMuted">(изменить)</Text>}
+          </Heading>
+          {list.description && (
+            <Text color="bw.textMuted" mb="20px">{list.description}</Text>
+          )}
+        </>
       )}
 
       {list.books.length === 0 ? (
-        <Text color="bw.textMuted">В этом списке пока нет книг — добавьте их со страницы книги.</Text>
+        <Text color="bw.textMuted">
+          {list.canManage ? 'В этом списке пока нет книг — добавьте их со страницы книги.' : 'В этом списке пока нет книг.'}
+        </Text>
       ) : (
         <SimpleGrid columns={{ base: 2, sm: 3, md: 4 }} spacing="20px">
           {list.books.map((book) => (
@@ -134,9 +139,11 @@ export default function ListDetailPage({ user }) {
                 />
                 <Text fontSize="sm" fontWeight="bold" mt="6px" noOfLines={2}>{book.title}</Text>
               </NavLink>
-              <Button size="xs" variant="link" sx={{ color: '#a4522a' }} onClick={() => removeBook(book.id)}>
-                Убрать из списка
-              </Button>
+              {list.canManage && (
+                <Button size="xs" variant="link" sx={{ color: '#a4522a' }} onClick={() => removeBook(book.id)}>
+                  Убрать из списка
+                </Button>
+              )}
             </Box>
           ))}
         </SimpleGrid>

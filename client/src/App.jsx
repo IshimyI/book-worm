@@ -24,6 +24,7 @@ const AdminPage = lazy(() => import("./pages/AdminPage"));
 const ListsPage = lazy(() => import("./pages/ListsPage"));
 const ListDetailPage = lazy(() => import("./pages/ListDetailPage"));
 const FeedPage = lazy(() => import("./pages/FeedPage"));
+const CollectionsPage = lazy(() => import("./pages/CollectionsPage"));
 
 function RouteFallback() {
   return (
@@ -117,8 +118,9 @@ function App() {
           <Route path="/users/:id" element={<PublicProfilePage user={user} />} />
           <Route path="/admin" element={<AdminPage user={user} />} />
           <Route path="/lists" element={<ListsPage user={user} />} />
-          <Route path="/lists/:id" element={<ListDetailPage user={user} />} />
+          <Route path="/lists/:id" element={<ListDetailPage />} />
           <Route path="/feed" element={<FeedPage user={user} />} />
+          <Route path="/collections" element={<CollectionsPage />} />
           <Route path="*" element={<ErrorPage />} />
         </Route>
       </Routes>

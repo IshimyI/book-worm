@@ -14,6 +14,7 @@ export default function Footer() {
             <div className="siteFooterColTitle">Разделы</div>
             <nav className="siteFooterLinks">
               <NavLink to="/">Каталог</NavLink>
+              <NavLink to="/collections">Подборки</NavLink>
               <NavLink to="/news">Новости</NavLink>
               <NavLink to="/faq">FAQ</NavLink>
             </nav>

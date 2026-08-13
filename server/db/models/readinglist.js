@@ -11,6 +11,8 @@ module.exports = (sequelize, DataTypes) => {
     {
       userId: DataTypes.INTEGER,
       name: DataTypes.STRING,
+      isCurated: DataTypes.BOOLEAN,
+      description: DataTypes.TEXT,
     },
     {
       sequelize,
