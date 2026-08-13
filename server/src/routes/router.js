@@ -7,6 +7,7 @@ const path = require("path");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
 const optionalAuth = require("../middlewares/optionalAuth");
 const { uploadAvatar, AVATAR_DIR } = require("../middlewares/uploadAvatar");
+const { processAvatar } = require("../utils/avatarImage");
 const notify = require("../utils/notify");
 const { generateBookOgImage } = require("../utils/ogImage");
 const { isConfigured: pushConfigured } = require("../utils/webPush");
@@ -207,10 +208,20 @@ router.post(
       if (!req.file) {
         return res.status(400).json({ message: "Файл не выбран" });
       }
+      let processed;
+      try {
+        processed = await processAvatar(req.file.buffer);
+      } catch {
+        return res.status(400).json({ message: "Не удалось обработать изображение" });
+      }
+
       const user = await User.findByPk(req.userId);
       const previousAvatarUrl = user.avatarUrl;
 
-      user.avatarUrl = `/uploads/avatars/${req.file.filename}`;
+      const filename = `${req.userId}-${Date.now()}-${Math.round(Math.random() * 1e9)}.webp`;
+      fs.writeFileSync(path.join(AVATAR_DIR, filename), processed);
+
+      user.avatarUrl = `/uploads/avatars/${filename}`;
       await user.save();
 
       if (previousAvatarUrl) {

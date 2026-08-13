@@ -11,17 +11,11 @@ const ALLOWED_MIME_TYPES = {
   "image/webp": ".webp",
 };
 
-const storage = multer.diskStorage({
-  destination: AVATAR_DIR,
-  filename: (req, file, cb) => {
-    const ext = ALLOWED_MIME_TYPES[file.mimetype];
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `${req.userId}-${unique}${ext}`);
-  },
-});
-
 const uploadAvatar = multer({
-  storage,
+  // Uploaded files are processed (resized + re-encoded as WebP) before
+  // being written to disk, so multer only needs to hold the raw bytes
+  // in memory long enough to hand them to that pipeline.
+  storage: multer.memoryStorage(),
   limits: { fileSize: 3 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (!ALLOWED_MIME_TYPES[file.mimetype]) {

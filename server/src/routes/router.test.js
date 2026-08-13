@@ -4,6 +4,8 @@ const request = require("supertest");
 const app = require("../app");
 const { sequelize, User, Book, Review } = require("../../db/models");
 const { AVATAR_DIR } = require("../middlewares/uploadAvatar");
+const { AVATAR_SIZE } = require("../utils/avatarImage");
+const { loadImage } = require("@napi-rs/canvas");
 
 // A minimal valid 1x1 PNG, just enough for multer/the fileFilter to accept it.
 const ONE_PIXEL_PNG = Buffer.from(
@@ -787,6 +789,32 @@ describe("POST /api/users/me/avatar", () => {
 
     expect(second.body.avatarUrl).not.toBe(first.body.avatarUrl);
     expect(fs.existsSync(firstPath)).toBe(false);
+  });
+
+  it("re-encodes the uploaded image as a fixed-size WebP file", async () => {
+    const { accessToken } = await signupAndLogin("avatar5@example.com");
+    const res = await request(app)
+      .post("/api/users/me/avatar")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .attach("avatar", ONE_PIXEL_PNG, "avatar.png");
+
+    expect(res.body.avatarUrl).toMatch(/\.webp$/);
+    const buffer = fs.readFileSync(path.join(AVATAR_DIR, path.basename(res.body.avatarUrl)));
+    expect(buffer.subarray(0, 4).toString("ascii")).toBe("RIFF");
+    expect(buffer.subarray(8, 12).toString("ascii")).toBe("WEBP");
+
+    const decoded = await loadImage(buffer);
+    expect(decoded.width).toBe(AVATAR_SIZE);
+    expect(decoded.height).toBe(AVATAR_SIZE);
+  });
+
+  it("rejects a corrupt file that passes the mimetype check", async () => {
+    const { accessToken } = await signupAndLogin("avatar6@example.com");
+    const res = await request(app)
+      .post("/api/users/me/avatar")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .attach("avatar", Buffer.from([0xff, 0xd8, 0xff, 0x00, 0x01, 0x02]), { filename: "broken.jpg", contentType: "image/jpeg" });
+    expect(res.status).toBe(400);
   });
 });
 
