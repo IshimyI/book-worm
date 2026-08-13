@@ -1,11 +1,12 @@
 const express = require("express");
-const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, News } = require("../../db/models");
+const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, Notification, News } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const fs = require("fs");
 const path = require("path");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
 const optionalAuth = require("../middlewares/optionalAuth");
 const { uploadAvatar, AVATAR_DIR } = require("../middlewares/uploadAvatar");
+const notify = require("../utils/notify");
 const { containsProfanity } = require("../utils/moderation");
 const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRating");
 const cache = require("../utils/simpleCache");
@@ -114,6 +115,8 @@ router.post("/users/:id/follow", verifyAccessToken, async (req, res) => {
     } else {
       await Follow.create({ followerId: req.userId, followingId: targetId });
       following = true;
+      const follower = await User.findByPk(req.userId, { attributes: ["name"] });
+      await notify({ userId: targetId, actorId: req.userId, type: "new_follower", data: { name: follower.name } });
     }
     const followerCount = await Follow.count({ where: { followingId: targetId } });
     res.status(200).json({ following, followerCount });
@@ -158,6 +161,63 @@ router.post(
     }
   }
 );
+
+function mapNotification(n) {
+  let data = {};
+  try {
+    data = JSON.parse(n.data || "{}");
+  } catch {
+    data = {};
+  }
+  return {
+    id: n.id,
+    type: n.type,
+    isRead: n.isRead,
+    createdAt: n.createdAt,
+    actorId: n.actorId,
+    ...data,
+  };
+}
+
+router.get("/notifications", verifyAccessToken, async (req, res) => {
+  try {
+    const notifications = await Notification.findAll({
+      where: { userId: req.userId },
+      order: [["createdAt", "DESC"]],
+      limit: 30,
+    });
+    const unreadCount = await Notification.count({ where: { userId: req.userId, isRead: false } });
+    res.status(200).json({ notifications: notifications.map(mapNotification), unreadCount });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.post("/notifications/:id/read", verifyAccessToken, async (req, res) => {
+  try {
+    const notification = await Notification.findByPk(req.params.id);
+    if (!notification || notification.userId !== req.userId) {
+      return res.status(404).json({ message: "Уведомление не найдено" });
+    }
+    notification.isRead = true;
+    await notification.save();
+    res.status(200).json({ message: "Отмечено как прочитанное" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.post("/notifications/read-all", verifyAccessToken, async (req, res) => {
+  try {
+    await Notification.update({ isRead: true }, { where: { userId: req.userId, isRead: false } });
+    res.status(200).json({ message: "Все уведомления отмечены как прочитанные" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
 
 router.get("/feed", verifyAccessToken, async (req, res) => {
   const { page = 1, pageSize = 15 } = req.query;
@@ -680,6 +740,14 @@ router.post("/review/:id/comments", verifyAccessToken, async (req, res) => {
     await review.save();
 
     const author = await User.findByPk(req.userId, { attributes: ["name"] });
+
+    const book = await Book.findByPk(review.bookId, { attributes: ["title"] });
+    await notify({
+      userId: review.userId,
+      actorId: req.userId,
+      type: "review_comment",
+      data: { name: author.name, bookId: review.bookId, bookTitle: book?.title },
+    });
     res.status(200).json({
       id: comment.id,
       body: comment.body,

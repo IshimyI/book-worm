@@ -2,6 +2,7 @@
 import { NavLink } from "react-router";
 import { Flex, IconButton, useColorMode } from "@chakra-ui/react";
 import { SunIcon, MoonIcon } from "@chakra-ui/icons";
+import NotificationBell from "./NotificationBell";
 
 export default function NavBar({ user, handleLogout }) {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -38,6 +39,7 @@ export default function NavBar({ user, handleLogout }) {
             ) : null}
           </nav>
           <div className="navFlexBlock2">
+            {user && user.isEmailConfirmed ? <NotificationBell user={user} /> : null}
             <IconButton
               aria-label={colorMode === "light" ? "Включить тёмную тему" : "Включить светлую тему"}
               icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}

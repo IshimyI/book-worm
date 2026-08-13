@@ -646,3 +646,84 @@ describe("reading status", () => {
     expect(res.body.read.map((b) => b.id)).toEqual([readBook.id]);
   });
 });
+
+describe("notifications", () => {
+  it("requires authentication", async () => {
+    const res = await request(app).get("/api/notifications");
+    expect(res.status).toBe(401);
+  });
+
+  it("notifies a user when someone follows them, but not on unfollow", async () => {
+    const target = await signupAndLogin("notif-target@example.com");
+    const follower = await signupAndLogin("notif-follower@example.com");
+
+    await request(app).post(`/api/users/${target.userId}/follow`).set("Authorization", `Bearer ${follower.accessToken}`);
+
+    const res = await request(app).get("/api/notifications").set("Authorization", `Bearer ${target.accessToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.unreadCount).toBe(1);
+    expect(res.body.notifications[0].type).toBe("new_follower");
+
+    // Unfollowing shouldn't add a second notification.
+    await request(app).post(`/api/users/${target.userId}/follow`).set("Authorization", `Bearer ${follower.accessToken}`);
+    const afterUnfollow = await request(app).get("/api/notifications").set("Authorization", `Bearer ${target.accessToken}`);
+    expect(afterUnfollow.body.notifications).toHaveLength(1);
+  });
+
+  it("notifies a review's author when someone comments on it, but not when they comment on their own", async () => {
+    const author = await signupAndLogin("notif-author@example.com");
+    const commenter = await signupAndLogin("notif-commenter@example.com");
+    const book = await Book.create({ title: "Notified Book", author: "A", genre: "Роман" });
+    const review = await Review.create({ bookId: book.id, userId: author.userId, body: "Отзыв", user_rating: 4 });
+
+    await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${commenter.accessToken}`)
+      .send({ body: "Комментарий" });
+
+    const res = await request(app).get("/api/notifications").set("Authorization", `Bearer ${author.accessToken}`);
+    expect(res.body.notifications).toHaveLength(1);
+    expect(res.body.notifications[0].type).toBe("review_comment");
+    expect(res.body.notifications[0].bookTitle).toBe("Notified Book");
+
+    // Author commenting on their own review shouldn't self-notify.
+    await request(app)
+      .post(`/api/review/${review.id}/comments`)
+      .set("Authorization", `Bearer ${author.accessToken}`)
+      .send({ body: "Мой ответ" });
+    const stillOne = await request(app).get("/api/notifications").set("Authorization", `Bearer ${author.accessToken}`);
+    expect(stillOne.body.notifications).toHaveLength(1);
+  });
+
+  it("marks a single notification as read", async () => {
+    const target = await signupAndLogin("notif-read@example.com");
+    const follower = await signupAndLogin("notif-read-follower@example.com");
+    await request(app).post(`/api/users/${target.userId}/follow`).set("Authorization", `Bearer ${follower.accessToken}`);
+
+    const listRes = await request(app).get("/api/notifications").set("Authorization", `Bearer ${target.accessToken}`);
+    const notificationId = listRes.body.notifications[0].id;
+
+    const readRes = await request(app)
+      .post(`/api/notifications/${notificationId}/read`)
+      .set("Authorization", `Bearer ${target.accessToken}`);
+    expect(readRes.status).toBe(200);
+
+    const afterRes = await request(app).get("/api/notifications").set("Authorization", `Bearer ${target.accessToken}`);
+    expect(afterRes.body.unreadCount).toBe(0);
+    expect(afterRes.body.notifications[0].isRead).toBe(true);
+  });
+
+  it("marks all notifications as read", async () => {
+    const target = await signupAndLogin("notif-readall@example.com");
+    const f1 = await signupAndLogin("notif-readall-f1@example.com");
+    const f2 = await signupAndLogin("notif-readall-f2@example.com");
+    await request(app).post(`/api/users/${target.userId}/follow`).set("Authorization", `Bearer ${f1.accessToken}`);
+    await request(app).post(`/api/users/${target.userId}/follow`).set("Authorization", `Bearer ${f2.accessToken}`);
+
+    const readAllRes = await request(app).post("/api/notifications/read-all").set("Authorization", `Bearer ${target.accessToken}`);
+    expect(readAllRes.status).toBe(200);
+
+    const afterRes = await request(app).get("/api/notifications").set("Authorization", `Bearer ${target.accessToken}`);
+    expect(afterRes.body.unreadCount).toBe(0);
+  });
+});
