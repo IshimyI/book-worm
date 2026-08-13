@@ -829,6 +829,79 @@ describe("follows and feed", () => {
   });
 });
 
+describe("blocking a user", () => {
+  it("requires authentication", async () => {
+    const target = await signupAndLogin("blocktarget1@example.com");
+    const res = await request(app).post(`/api/users/${target.userId}/block`);
+    expect(res.status).toBe(401);
+  });
+
+  it("refuses to block yourself", async () => {
+    const { userId, accessToken } = await signupAndLogin("blocksolo@example.com");
+    const res = await request(app).post(`/api/users/${userId}/block`).set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(400);
+  });
+
+  it("toggles a block and hides the blocked user's reviews and comments from the blocker", async () => {
+    const blocked = await signupAndLogin("blocked1@example.com");
+    const blocker = await signupAndLogin("blocker1@example.com");
+    const book = await Book.create({ title: "Blocked Author Book", author: "A", genre: "Роман" });
+    const ownReview = await Review.create({ bookId: book.id, userId: blocker.userId, body: "Мой отзыв", user_rating: 4 });
+    await Review.create({ bookId: book.id, userId: blocked.userId, body: "Отзыв заблокированного", user_rating: 3 });
+    await request(app)
+      .post(`/api/review/${ownReview.id}/comments`)
+      .set("Authorization", `Bearer ${blocked.accessToken}`)
+      .send({ body: "Комментарий заблокированного" });
+
+    const blockRes = await request(app)
+      .post(`/api/users/${blocked.userId}/block`)
+      .set("Authorization", `Bearer ${blocker.accessToken}`);
+    expect(blockRes.status).toBe(200);
+    expect(blockRes.body).toEqual({ blocked: true });
+
+    const bookRes = await request(app)
+      .get(`/api/book/${book.id}`)
+      .set("Authorization", `Bearer ${blocker.accessToken}`);
+    expect(bookRes.body.reviews.map((r) => r.user_id)).toEqual([blocker.userId]);
+
+    const commentsRes = await request(app)
+      .get(`/api/review/${ownReview.id}/comments`)
+      .set("Authorization", `Bearer ${blocker.accessToken}`);
+    expect(commentsRes.body).toHaveLength(0);
+
+    // Someone else (not the blocker) still sees everything.
+    const bookAsAnonymous = await request(app).get(`/api/book/${book.id}`);
+    expect(bookAsAnonymous.body.reviews).toHaveLength(2);
+
+    const unblockRes = await request(app)
+      .post(`/api/users/${blocked.userId}/block`)
+      .set("Authorization", `Bearer ${blocker.accessToken}`);
+    expect(unblockRes.body).toEqual({ blocked: false });
+
+    const bookAfterUnblock = await request(app)
+      .get(`/api/book/${book.id}`)
+      .set("Authorization", `Bearer ${blocker.accessToken}`);
+    expect(bookAfterUnblock.body.reviews).toHaveLength(2);
+  });
+
+  it("lists blocked users and removes any existing follow relationship on block", async () => {
+    const blocked = await signupAndLogin("blocked2@example.com");
+    const blocker = await signupAndLogin("blocker2@example.com");
+    await request(app).post(`/api/users/${blocked.userId}/follow`).set("Authorization", `Bearer ${blocker.accessToken}`);
+
+    await request(app).post(`/api/users/${blocked.userId}/block`).set("Authorization", `Bearer ${blocker.accessToken}`);
+
+    const listRes = await request(app).get("/api/users/me/blocked").set("Authorization", `Bearer ${blocker.accessToken}`);
+    expect(listRes.body.map((u) => u.id)).toEqual([blocked.userId]);
+
+    const profileRes = await request(app)
+      .get(`/api/users/${blocked.userId}/profile`)
+      .set("Authorization", `Bearer ${blocker.accessToken}`);
+    expect(profileRes.body.isFollowedByMe).toBe(false);
+    expect(profileRes.body.isBlockedByMe).toBe(true);
+  });
+});
+
 describe("GET /api/book/:id/og-image.png", () => {
   it("returns a PNG image for a valid book", async () => {
     const book = await Book.create({ title: "OG Book", author: "A", genre: "Роман", rating: "4.20", quantity_rate: 3 });

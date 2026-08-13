@@ -19,6 +19,7 @@ export default function PublicProfilePage({ user }) {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [followBusy, setFollowBusy] = useState(false);
+  const [blockBusy, setBlockBusy] = useState(false);
   const [editingBio, setEditingBio] = useState(false);
   const [bioInput, setBioInput] = useState('');
   const [savingBio, setSavingBio] = useState(false);
@@ -112,6 +113,24 @@ export default function PublicProfilePage({ user }) {
     }
   };
 
+  const toggleBlock = async () => {
+    setBlockBusy(true);
+    try {
+      const res = await axiosInstance.post(`/users/${id}/block`);
+      setProfile((prev) => ({ ...prev, isBlockedByMe: res.data.blocked, isFollowedByMe: res.data.blocked ? false : prev.isFollowedByMe }));
+      toast({
+        title: res.data.blocked ? 'Пользователь заблокирован' : 'Пользователь разблокирован',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({ title: error.response?.data?.message || 'Не удалось изменить блокировку', status: 'error', duration: 2500, isClosable: true });
+    } finally {
+      setBlockBusy(false);
+    }
+  };
+
   return (
     <PageCard>
       <Breadcrumbs items={[{ label: 'Главная', to: '/' }, { label: profile.name }]} />
@@ -128,17 +147,29 @@ export default function PublicProfilePage({ user }) {
           </Text>
         </Box>
         {!isOwnProfile && (
-          <Button
-            isLoading={followBusy}
-            onClick={toggleFollow}
-            sx={
-              profile.isFollowedByMe
-                ? { backgroundColor: 'transparent', color: '#334d00', border: '1px solid #334d00' }
-                : { backgroundColor: '#334d00', color: 'white' }
-            }
-          >
-            {profile.isFollowedByMe ? '✓ Вы подписаны' : 'Подписаться'}
-          </Button>
+          <Flex gap="8px">
+            {!profile.isBlockedByMe && (
+              <Button
+                isLoading={followBusy}
+                onClick={toggleFollow}
+                sx={
+                  profile.isFollowedByMe
+                    ? { backgroundColor: 'transparent', color: '#334d00', border: '1px solid #334d00' }
+                    : { backgroundColor: '#334d00', color: 'white' }
+                }
+              >
+                {profile.isFollowedByMe ? '✓ Вы подписаны' : 'Подписаться'}
+              </Button>
+            )}
+            <Button
+              isLoading={blockBusy}
+              onClick={toggleBlock}
+              variant="outline"
+              colorScheme={profile.isBlockedByMe ? 'gray' : 'red'}
+            >
+              {profile.isBlockedByMe ? 'Разблокировать' : 'Заблокировать'}
+            </Button>
+          </Flex>
         )}
       </Flex>
 

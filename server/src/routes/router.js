@@ -1,6 +1,6 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const { User, Book, Review, ReviewVote, ReviewComment, Follow, ReadingStatus, ReadingChallenge, Notification, PushSubscription, PageView, News, Quote } = require("../../db/models");
+const { User, Book, Review, ReviewVote, ReviewComment, Follow, Block, ReadingStatus, ReadingChallenge, Notification, PushSubscription, PageView, News, Quote } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const fs = require("fs");
 const path = require("path");
@@ -158,11 +158,12 @@ router.get("/users/:id/profile", optionalAuth, async (req, res) => {
       offset,
     });
 
-    const [followerCount, followingCount, isFollowedByMe, topGenreRows, booksReadCount, quotesCount, helpfulReceivedCount] =
+    const [followerCount, followingCount, isFollowedByMe, isBlockedByMe, topGenreRows, booksReadCount, quotesCount, helpfulReceivedCount] =
       await Promise.all([
         Follow.count({ where: { followingId: id } }),
         Follow.count({ where: { followerId: id } }),
         req.userId ? Follow.findOne({ where: { followerId: req.userId, followingId: id } }).then(Boolean) : false,
+        req.userId ? Block.findOne({ where: { blockerId: req.userId, blockedId: id } }).then(Boolean) : false,
         Review.findAll({
           where: { userId: id, reportCount: { [Sequelize.Op.lt]: REPORT_HIDE_THRESHOLD } },
           include: [{ model: Book, attributes: [] }],
@@ -189,6 +190,7 @@ router.get("/users/:id/profile", optionalAuth, async (req, res) => {
       followerCount,
       followingCount,
       isFollowedByMe,
+      isBlockedByMe,
       topGenres: topGenreRows.map((r) => r.genre).filter(Boolean),
       achievements,
       page: Math.max(Number(page) || 1, 1),
@@ -233,6 +235,51 @@ router.post("/users/:id/follow", verifyAccessToken, contentLimiter, async (req, 
     }
     const followerCount = await Follow.count({ where: { followingId: targetId } });
     res.status(200).json({ following, followerCount });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.post("/users/:id/block", verifyAccessToken, contentLimiter, async (req, res) => {
+  const targetId = Number(req.params.id);
+  try {
+    if (targetId === req.userId) {
+      return res.status(400).json({ message: "Нельзя заблокировать самого себя" });
+    }
+    const target = await User.findByPk(targetId);
+    if (!target) {
+      return res.status(404).json({ message: "Пользователь не найден" });
+    }
+
+    const existing = await Block.findOne({ where: { blockerId: req.userId, blockedId: targetId } });
+    let blocked;
+    if (existing) {
+      await existing.destroy();
+      blocked = false;
+    } else {
+      await Block.create({ blockerId: req.userId, blockedId: targetId });
+      // A block is a one-way "hide their content from me" — it doesn't
+      // imply either side still wants to follow the other.
+      await Follow.destroy({ where: { followerId: req.userId, followingId: targetId } });
+      await Follow.destroy({ where: { followerId: targetId, followingId: req.userId } });
+      blocked = true;
+    }
+    res.status(200).json({ blocked });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.get("/users/me/blocked", verifyAccessToken, async (req, res) => {
+  try {
+    const blocks = await Block.findAll({
+      where: { blockerId: req.userId },
+      include: [{ model: User, as: "Blocked", attributes: ["id", "name", "avatarUrl"] }],
+      order: [["createdAt", "DESC"]],
+    });
+    res.status(200).json(blocks.map((b) => ({ id: b.Blocked.id, name: b.Blocked.name, avatarUrl: b.Blocked.avatarUrl })));
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);
@@ -664,17 +711,22 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
 
     let votedReviewIds = new Set();
     let readingStatus = null;
+    let blockedUserIds = new Set();
     if (req.userId) {
-      const [votes, statusRow] = await Promise.all([
+      const [votes, statusRow, blocks] = await Promise.all([
         ReviewVote.findAll({
           where: { userId: req.userId, reviewId: book.Reviews.map((r) => r.id) },
           attributes: ["reviewId"],
         }),
         ReadingStatus.findOne({ where: { userId: req.userId, bookId: book.id }, attributes: ["status"] }),
+        Block.findAll({ where: { blockerId: req.userId }, attributes: ["blockedId"] }),
       ]);
       votedReviewIds = new Set(votes.map((v) => v.reviewId));
       readingStatus = statusRow?.status || null;
+      blockedUserIds = new Set(blocks.map((b) => b.blockedId));
     }
+
+    const visibleReviews = book.Reviews.filter((r) => !blockedUserIds.has(r.userId));
 
     res.status(200).send({
       id: book.id,
@@ -689,7 +741,7 @@ router.get("/book/:id", optionalAuth, async (req, res) => {
       year: book.year,
       status: book.status,
       readingStatus,
-      reviews: book.Reviews.map((r) => mapReview(r, votedReviewIds)),
+      reviews: visibleReviews.map((r) => mapReview(r, votedReviewIds)),
     });
   } catch (error) {
     console.log(error);
@@ -1204,14 +1256,22 @@ function mapComment(c) {
   };
 }
 
-router.get("/review/:id/comments", async (req, res) => {
+router.get("/review/:id/comments", optionalAuth, async (req, res) => {
   const { id } = req.params;
   try {
-    const comments = await ReviewComment.findAll({
-      where: { reviewId: id },
-      order: [["createdAt", "ASC"]],
-      include: [{ model: User, attributes: ["name"] }],
-    });
+    let blockedUserIds = new Set();
+    if (req.userId) {
+      const blocks = await Block.findAll({ where: { blockerId: req.userId }, attributes: ["blockedId"] });
+      blockedUserIds = new Set(blocks.map((b) => b.blockedId));
+    }
+
+    const comments = (
+      await ReviewComment.findAll({
+        where: { reviewId: id },
+        order: [["createdAt", "ASC"]],
+        include: [{ model: User, attributes: ["name"] }],
+      })
+    ).filter((c) => !blockedUserIds.has(c.userId));
 
     const topLevel = comments.filter((c) => !c.parentCommentId).map(mapComment);
     const repliesByParent = {};
