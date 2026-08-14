@@ -12,9 +12,10 @@ async function signupAndLogin(email) {
 }
 
 function goodreadsCsv(rows) {
-  const header = "Title,Author,My Rating,My Review,Exclusive Shelf,Original Publication Year";
+  const header = "Title,Author,ISBN13,My Rating,My Review,Exclusive Shelf,Original Publication Year";
   const lines = rows.map(
-    (r) => `"${r.title}","${r.author}",${r.rating ?? 0},"${r.review ?? ""}",${r.shelf ?? "read"},${r.year ?? ""}`
+    (r) =>
+      `"${r.title}","${r.author}","=""${r.isbn ?? ""}""",${r.rating ?? 0},"${r.review ?? ""}",${r.shelf ?? "read"},${r.year ?? ""}`
   );
   return [header, ...lines].join("\n");
 }
@@ -76,6 +77,32 @@ describe("POST /api/import/goodreads", () => {
 
     const reloaded = await Book.findByPk(book.id);
     expect(Number(reloaded.rating)).toBe(5);
+  });
+
+  it("matches by ISBN even when the author name doesn't line up at all", async () => {
+    // Realistic case: Goodreads always stores the Latin author name, this
+    // catalog stores a Cyrillic transliteration — title+author matching
+    // alone would never catch this as the same book.
+    const { userId, accessToken } = await signupAndLogin("importer3b@example.com");
+    const book = await Book.create({
+      title: "Дюна",
+      author: "Фрэнк Герберт",
+      genre: "Фантастика",
+      status: "approved",
+      isbn: ["9780441013593"],
+    });
+
+    const csv = goodreadsCsv([{ title: "Dune", author: "Frank Herbert", isbn: "9780441013593", rating: 4, shelf: "read" }]);
+    const res = await request(app)
+      .post("/api/import/goodreads")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .attach("file", Buffer.from(csv), "export.csv");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ matched: 1, created: 0 });
+
+    const review = await Review.findOne({ where: { bookId: book.id, userId } });
+    expect(review.user_rating).toBe(4);
   });
 
   it("creates a new pending book for a title not in the catalog", async () => {

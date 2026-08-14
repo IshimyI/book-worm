@@ -11,10 +11,20 @@ const SHELF_TO_STATUS = {
 // one HTTP request (see importRouter.js).
 const MAX_ROWS = 200;
 
+// Goodreads wraps ISBN/ISBN13 as ="0441013593" — an Excel formula that
+// forces the leading zero (and the value in general) to survive as text
+// instead of being reinterpreted as a number. Strip the ="…" wrapper to
+// get the bare value.
+function extractIsbn(raw) {
+  const value = (raw || "").trim();
+  const match = value.match(/^="?(.*?)"?$/);
+  return (match ? match[1] : value).trim();
+}
+
 // Goodreads' CSV export (Profile -> My Books -> Import/Export -> Export
 // Library) has kept the same column set for years — this only reads the
 // handful of columns this site actually has a place for; everything else
-// (ISBN, binding, page count, private notes...) is dropped.
+// (binding, page count, private notes...) is dropped.
 function parseGoodreadsCsv(csvText) {
   let records;
   try {
@@ -43,8 +53,9 @@ function parseGoodreadsCsv(csvText) {
       const shelf = (row["Exclusive Shelf"] || "").trim().toLowerCase();
       const status = SHELF_TO_STATUS[shelf] || null;
       const year = Number(row["Original Publication Year"]) || Number(row["Year Published"]) || null;
+      const isbn = extractIsbn(row.ISBN13) || extractIsbn(row.ISBN) || null;
 
-      return { title, author, rating, reviewBody, status, year };
+      return { title, author, rating, reviewBody, status, year, isbn };
     })
     .filter(Boolean);
 }

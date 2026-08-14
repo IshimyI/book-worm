@@ -86,7 +86,7 @@ importRouter.post(
     }
 
     try {
-      const existingBooks = await Book.findAll({ attributes: ["id", "title", "author"] });
+      const existingBooks = await Book.findAll({ attributes: ["id", "title", "author", "isbn"] });
       const summary = { matched: 0, created: 0, skipped: 0, skippedTitles: [] };
 
       // Resolve every row to a book (existing match, or an Open Library
@@ -96,7 +96,7 @@ importRouter.post(
       const resolved = await withConcurrency(
         rows,
         async (row) => {
-          const match = findPossibleDuplicate(row.title, row.author, existingBooks);
+          const match = findPossibleDuplicate(row.title, row.author, existingBooks, row.isbn);
           if (match) return { row, bookId: match.id, isNew: false };
 
           if (row.reviewBody && containsProfanity(row.reviewBody)) {
@@ -121,6 +121,7 @@ importRouter.post(
           // Same as manually adding a book that isn't in the catalog yet:
           // starts pending, kept out of the public catalog/recommendations
           // until an admin approves it.
+          const isbnList = [...new Set([item.row.isbn, ...(item.lookup?.isbn || [])].filter(Boolean))];
           const created = await Book.create({
             title: item.row.title,
             author: item.row.author,
@@ -129,9 +130,10 @@ importRouter.post(
             annotation: "Описание отсутствует",
             img: item.lookup?.img || "https://cdn1.ozone.ru/s3/multimedia-x/6597669093.jpg",
             status: "pending",
+            isbn: isbnList,
           });
           bookId = created.id;
-          existingBooks.push({ id: bookId, title: item.row.title, author: item.row.author });
+          existingBooks.push({ id: bookId, title: item.row.title, author: item.row.author, isbn: isbnList });
           summary.created += 1;
         } else {
           summary.matched += 1;
