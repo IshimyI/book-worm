@@ -257,14 +257,21 @@ export default function PublicProfilePage({ user }) {
             {(isOwnProfile ? profile.achievements : profile.achievements.filter((a) => a.achieved)).map((a) => (
               <Badge
                 key={a.id}
-                title={a.achieved ? a.label : `${a.label}: ${a.progress}/${a.goal}`}
+                title={
+                  a.achieved
+                    ? a.isMaxTier
+                      ? `${a.label}: ${a.tierName} (максимум)`
+                      : `${a.label}: ${a.tierName}, до следующего уровня ${a.progress}/${a.goal}`
+                    : `${a.label}: ${a.progress}/${a.goal}`
+                }
                 colorScheme={a.achieved ? 'yellow' : 'gray'}
                 opacity={a.achieved ? 1 : 0.5}
                 fontSize="0.85em"
                 px="8px"
                 py="4px"
               >
-                {a.icon} {a.label}{!a.achieved && ` (${a.progress}/${a.goal})`}
+                {a.achieved ? a.tierIcon : a.icon} {a.label}
+                {a.achieved ? ` — ${a.tierName}` : ` (${a.progress}/${a.goal})`}
               </Badge>
             ))}
           </Flex>

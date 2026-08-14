@@ -1,27 +1,47 @@
 // Purely derived from existing counters — no dedicated table, nothing to
-// unlock/persist. A badge is just "does this stat clear this threshold?"
-// evaluated fresh on every profile load.
-const ACHIEVEMENTS = [
-  { id: "first_review", label: "Первая рецензия", icon: "📝", stat: "reviewCount", goal: 1 },
-  { id: "prolific_reviewer", label: "Активный критик", icon: "🖋️", stat: "reviewCount", goal: 10 },
-  { id: "review_veteran", label: "Книжный эксперт", icon: "🎓", stat: "reviewCount", goal: 25 },
-  { id: "first_book_read", label: "Первая прочитанная", icon: "📖", stat: "booksReadCount", goal: 1 },
-  { id: "avid_reader", label: "Заядлый читатель", icon: "📚", stat: "booksReadCount", goal: 10 },
-  { id: "bookworm", label: "Книжный червь", icon: "🐛", stat: "booksReadCount", goal: 25 },
-  { id: "quote_collector", label: "Коллекционер цитат", icon: "💬", stat: "quotesCount", goal: 5 },
-  { id: "popular", label: "Популярный автор", icon: "⭐", stat: "followerCount", goal: 5 },
-  { id: "helpful", label: "Полезные советы", icon: "👍", stat: "helpfulReceivedCount", goal: 10 },
+// unlock/persist. Each category has three thresholds (bronze/silver/gold);
+// a badge shows whichever tier the current value has reached, plus the
+// count needed to reach the next one.
+const TIERS = [
+  { key: "bronze", name: "Бронза", icon: "🥉" },
+  { key: "silver", name: "Серебро", icon: "🥈" },
+  { key: "gold", name: "Золото", icon: "🥇" },
+];
+
+const CATEGORIES = [
+  { id: "reviewer", label: "Рецензент", icon: "📝", stat: "reviewCount", thresholds: [1, 10, 25] },
+  { id: "reader", label: "Читатель", icon: "📚", stat: "booksReadCount", thresholds: [1, 10, 25] },
+  { id: "quotes", label: "Коллекционер цитат", icon: "💬", stat: "quotesCount", thresholds: [1, 5, 15] },
+  { id: "popularity", label: "Популярность", icon: "⭐", stat: "followerCount", thresholds: [1, 5, 20] },
+  { id: "helpfulness", label: "Полезные советы", icon: "👍", stat: "helpfulReceivedCount", thresholds: [1, 10, 30] },
 ];
 
 function computeAchievements(stats) {
-  return ACHIEVEMENTS.map((a) => ({
-    id: a.id,
-    label: a.label,
-    icon: a.icon,
-    goal: a.goal,
-    progress: Math.min(stats[a.stat] || 0, a.goal),
-    achieved: (stats[a.stat] || 0) >= a.goal,
-  }));
+  return CATEGORIES.map((category) => {
+    const value = stats[category.stat] || 0;
+    let tierIndex = -1;
+    for (let i = category.thresholds.length - 1; i >= 0; i--) {
+      if (value >= category.thresholds[i]) {
+        tierIndex = i;
+        break;
+      }
+    }
+    const reachedTier = tierIndex >= 0 ? TIERS[tierIndex] : null;
+    const nextThreshold = tierIndex + 1 < category.thresholds.length ? category.thresholds[tierIndex + 1] : null;
+
+    return {
+      id: category.id,
+      label: category.label,
+      icon: category.icon,
+      achieved: reachedTier !== null,
+      tier: reachedTier?.key || null,
+      tierName: reachedTier?.name || null,
+      tierIcon: reachedTier?.icon || null,
+      progress: value,
+      goal: nextThreshold ?? category.thresholds[category.thresholds.length - 1],
+      isMaxTier: tierIndex === category.thresholds.length - 1,
+    };
+  });
 }
 
 module.exports = { computeAchievements };

@@ -74,13 +74,15 @@ describe("GET /api/users/:id/profile", () => {
     expect(res.body.topGenres[0]).toBe("Роман");
   });
 
-  it("reports achievement progress and unlocks based on the user's activity", async () => {
+  it("reports achievement tier progress and unlocks based on the user's activity", async () => {
     const { userId, accessToken } = await signupAndLogin("achiever@example.com");
 
     const fresh = await request(app).get(`/api/users/${userId}/profile`);
-    const firstReview = fresh.body.achievements.find((a) => a.id === "first_review");
-    expect(firstReview.achieved).toBe(false);
-    expect(firstReview.progress).toBe(0);
+    const reviewer = fresh.body.achievements.find((a) => a.id === "reviewer");
+    expect(reviewer.achieved).toBe(false);
+    expect(reviewer.tier).toBeNull();
+    expect(reviewer.progress).toBe(0);
+    expect(reviewer.goal).toBe(1);
 
     const book = await Book.create({ title: "Achiever Book", author: "A", genre: "Роман" });
     await Review.create({ bookId: book.id, userId, body: "Отзыв", user_rating: 5 });
@@ -92,11 +94,14 @@ describe("GET /api/users/:id/profile", () => {
 
     const res = await request(app).get(`/api/users/${userId}/profile`);
     const byId = Object.fromEntries(res.body.achievements.map((a) => [a.id, a]));
-    expect(byId.first_review.achieved).toBe(true);
-    expect(byId.first_book_read.achieved).toBe(true);
-    expect(byId.quote_collector.achieved).toBe(false);
-    expect(byId.quote_collector.progress).toBe(1);
-    expect(byId.prolific_reviewer.achieved).toBe(false);
+    expect(byId.reviewer.achieved).toBe(true);
+    expect(byId.reviewer.tier).toBe("bronze");
+    expect(byId.reviewer.goal).toBe(10);
+    expect(byId.reader.achieved).toBe(true);
+    expect(byId.reader.tier).toBe("bronze");
+    expect(byId.quotes.achieved).toBe(true);
+    expect(byId.quotes.tier).toBe("bronze");
+    expect(byId.quotes.goal).toBe(5);
   });
 });
 
