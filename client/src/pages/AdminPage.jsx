@@ -116,7 +116,7 @@ export default function AdminPage({ user }) {
       {ConfirmDialog}
       <Heading as="h1" size="lg" mb="20px">Администрирование</Heading>
 
-      <Tabs colorScheme="green">
+      <Tabs colorScheme="green" sx={{ '[aria-selected=true]': { color: '#334d00' } }}>
         <TabList overflowX="auto" overflowY="hidden" flexWrap="nowrap" sx={{ scrollbarWidth: "thin" }}>
           <Tab whiteSpace="nowrap">Жалобы {reviews.length > 0 && `(${reviews.length})`}</Tab>
           <Tab whiteSpace="nowrap">На модерации {pendingCount > 0 && `(${pendingCount})`}</Tab>
