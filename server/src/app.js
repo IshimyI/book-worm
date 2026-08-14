@@ -22,6 +22,7 @@ const authRouter = require("./routes/authRouter");
 const tokensRouter = require("./routes/tokensRouter");
 const adminRouter = require("./routes/adminRouter");
 const listsRouter = require("./routes/listsRouter");
+const importRouter = require("./routes/importRouter");
 const { Book, User, ReadingList, News } = require("../db/models");
 
 const SITE_ORIGIN = process.env.SITE_ORIGIN || "https://mrbookworm.ru";
@@ -201,6 +202,7 @@ for (const prefix of ["/api", "/api/v1"]) {
   app.use(`${prefix}/tokens`, tokensRouter);
   app.use(`${prefix}/admin`, adminRouter);
   app.use(`${prefix}/lists`, listsRouter);
+  app.use(`${prefix}/import`, importRouter);
 }
 
 if (process.env.SENTRY_DSN) {
