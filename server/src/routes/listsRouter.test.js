@@ -236,3 +236,43 @@ describe("curated lists", () => {
     expect(res.body[0].name).toBe("Подборка 1");
   });
 });
+
+describe("GET /api/lists/:id/og-image.png", () => {
+  async function signupAdmin(email) {
+    const res = await request(app).post("/api/auth/signup").send({ name: "Admin", email, password: "password123" });
+    await User.update({ isAdmin: true }, { where: { id: res.body.user.id } });
+    return { userId: res.body.user.id, accessToken: res.body.accessToken };
+  }
+
+  it("returns a PNG image for a curated list", async () => {
+    const admin = await signupAdmin("og-list-admin@example.com");
+    const createRes = await request(app)
+      .post("/api/lists")
+      .set("Authorization", `Bearer ${admin.accessToken}`)
+      .send({ name: "OG List", isCurated: true });
+
+    const res = await request(app).get(`/api/lists/${createRes.body.id}/og-image.png`);
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toBe("image/png");
+    expect(res.body.length).toBeGreaterThan(1000);
+  }, 15000);
+
+  it("404s for someone else's personal list (same visibility rule as viewing it)", async () => {
+    const owner = await signupAndLogin("og-list-owner@example.com");
+    const stranger = await signupAndLogin("og-list-stranger@example.com");
+    const createRes = await request(app)
+      .post("/api/lists")
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .send({ name: "Private OG List" });
+
+    const res = await request(app)
+      .get(`/api/lists/${createRes.body.id}/og-image.png`)
+      .set("Authorization", `Bearer ${stranger.accessToken}`);
+    expect(res.status).toBe(404);
+  });
+
+  it("404s for a list that doesn't exist", async () => {
+    const res = await request(app).get("/api/lists/999999/og-image.png");
+    expect(res.status).toBe(404);
+  });
+});

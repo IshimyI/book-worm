@@ -32,6 +32,7 @@ export default function PublicProfilePage({ user }) {
     enabled: Boolean(profile),
     title: profile ? `${profile.name} — профиль` : '',
     description: profile ? `${withCount(profile.reviewCount, ['рецензия', 'рецензии', 'рецензий'])} от ${profile.name} на Mr Book Worm` : '',
+    image: profile ? `${import.meta.env.VITE_TARGET}/api/v1/users/${profile.id}/og-image.png` : undefined,
   });
 
   useEffect(() => {

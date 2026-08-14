@@ -2,6 +2,8 @@ const express = require("express");
 const { ReadingList, ReadingListBook, Book, User } = require("../../db/models");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
 const optionalAuth = require("../middlewares/optionalAuth");
+const { generateListOgImage } = require("../utils/ogImage");
+const cache = require("../utils/simpleCache");
 
 const listsRouter = express.Router();
 
@@ -96,6 +98,37 @@ listsRouter.post("/", verifyAccessToken, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+listsRouter.get("/:id/og-image.png", optionalAuth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const cacheKey = `og-image-list:${id}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      res.set("Content-Type", "image/png");
+      return res.status(200).send(cached);
+    }
+
+    const list = await ReadingList.findByPk(id, { include: [{ model: Book, attributes: ["id", "img"], through: { attributes: [] } }] });
+    if (!list) {
+      return res.status(404).send({ message: "Список не найден" });
+    }
+    // Same visibility rule as viewing the list itself: curated lists are
+    // public, personal lists only to their owner.
+    if (!list.isCurated && list.userId !== req.userId) {
+      return res.status(404).send({ message: "Список не найден" });
+    }
+
+    const png = await generateListOgImage(serializeListSummary(list));
+    cache.set(cacheKey, png, 6 * 60 * 60 * 1000);
+    res.set("Content-Type", "image/png");
+    res.set("Cache-Control", "public, max-age=21600");
+    res.status(200).send(png);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error.message);
   }
 });
 

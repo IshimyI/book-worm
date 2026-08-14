@@ -9,7 +9,7 @@ const optionalAuth = require("../middlewares/optionalAuth");
 const { uploadAvatar, AVATAR_DIR } = require("../middlewares/uploadAvatar");
 const { processAvatar } = require("../utils/avatarImage");
 const notify = require("../utils/notify");
-const { generateBookOgImage } = require("../utils/ogImage");
+const { generateBookOgImage, generateProfileOgImage } = require("../utils/ogImage");
 const { isConfigured: pushConfigured } = require("../utils/webPush");
 const { containsProfanity } = require("../utils/moderation");
 const { REPORT_HIDE_THRESHOLD, recomputeBookRating } = require("../utils/bookRating");
@@ -975,6 +975,44 @@ router.get("/book/:id/og-image.png", async (req, res) => {
     }
 
     const png = await generateBookOgImage(book);
+    cache.set(cacheKey, png, 6 * 60 * 60 * 1000);
+    res.set("Content-Type", "image/png");
+    res.set("Cache-Control", "public, max-age=21600");
+    res.status(200).send(png);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+// generateProfileOgImage's loadImage() call needs a real path, not the
+// relative /uploads/avatars/... URL stored on the user — resolve it to the
+// file already sitting in AVATAR_DIR instead of fetching it back over HTTP.
+function resolveAvatarForOg(avatarUrl) {
+  if (!avatarUrl) return null;
+  return path.join(AVATAR_DIR, path.basename(avatarUrl));
+}
+
+router.get("/users/:id/og-image.png", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const cacheKey = `og-image-user:${id}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      res.set("Content-Type", "image/png");
+      return res.status(200).send(cached);
+    }
+
+    const user = await User.findByPk(id, { attributes: ["id", "name", "avatarUrl"] });
+    if (!user) {
+      return res.status(404).send({ message: "Пользователь не найден" });
+    }
+    const [reviewCount, followerCount] = await Promise.all([
+      Review.count({ where: { userId: id } }),
+      Follow.count({ where: { followingId: id } }),
+    ]);
+
+    const png = await generateProfileOgImage({ name: user.name, avatarUrl: resolveAvatarForOg(user.avatarUrl), reviewCount, followerCount });
     cache.set(cacheKey, png, 6 * 60 * 60 * 1000);
     res.set("Content-Type", "image/png");
     res.set("Cache-Control", "public, max-age=21600");

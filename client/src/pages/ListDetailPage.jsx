@@ -16,7 +16,12 @@ export default function ListDetailPage() {
   const [descInput, setDescInput] = useState('');
   const toast = useToast();
 
-  useSeoMeta({ enabled: Boolean(list), title: list?.name, description: list?.description || '' });
+  useSeoMeta({
+    enabled: Boolean(list),
+    title: list?.name,
+    description: list?.description || '',
+    image: list ? `${import.meta.env.VITE_TARGET}/api/v1/lists/${id}/og-image.png` : undefined,
+  });
 
   useEffect(() => {
     setLoading(true);

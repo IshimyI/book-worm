@@ -1043,6 +1043,21 @@ describe("GET /api/book/:id/og-image.png", () => {
   }, 15000);
 });
 
+describe("GET /api/users/:id/og-image.png", () => {
+  it("returns a PNG image for a valid user, with no avatar set", async () => {
+    const { userId } = await signupAndLogin("og-user@example.com");
+    const res = await request(app).get(`/api/users/${userId}/og-image.png`);
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toBe("image/png");
+    expect(res.body.length).toBeGreaterThan(1000);
+  }, 15000);
+
+  it("404s for a user that doesn't exist", async () => {
+    const res = await request(app).get("/api/users/999999/og-image.png");
+    expect(res.status).toBe(404);
+  });
+});
+
 describe("recommendations", () => {
   it("recommends books in the same genre, sorted by rating, excluding itself", async () => {
     const book = await Book.create({ title: "Base Book", author: "A", genre: "Фэнтези", rating: "4.00" });
