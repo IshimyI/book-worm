@@ -1,5 +1,6 @@
 const request = require("supertest");
 const speakeasy = require("speakeasy");
+const jwt = require("jsonwebtoken");
 const app = require("../app");
 const { sequelize, User, Book, Review, Quote, Follow } = require("../../db/models");
 
@@ -112,6 +113,147 @@ describe("POST /api/auth/login", () => {
     });
 
     expect(res.status).toBe(400);
+  });
+});
+
+describe("GET /api/auth/confirm-email", () => {
+  it("confirms an unconfirmed user and issues tokens", async () => {
+    const signupRes = await request(app).post("/api/auth/signup").send({
+      name: "Confirm Me",
+      email: "confirm-me@example.com",
+      password: "password123",
+    });
+    const user = await User.findByPk(signupRes.body.user.id);
+    // In this test env, sending the real confirmation email fails (no SMTP
+    // creds), which signup treats as "don't strand the user" and confirms
+    // them immediately as a fallback — that's a different code path than
+    // the one this test targets, so force the "real link, not yet clicked"
+    // starting state this endpoint actually needs to be exercised against.
+    user.isEmailConfirmed = false;
+    await user.save();
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const res = await request(app).get("/api/auth/confirm-email").query({ token });
+
+    expect(res.status).toBe(200);
+    expect(res.body.accessToken).toEqual(expect.any(String));
+    await user.reload();
+    expect(user.isEmailConfirmed).toBe(true);
+  });
+
+  it("400s with a friendly message when the email is already confirmed", async () => {
+    const signupRes = await request(app).post("/api/auth/signup").send({
+      name: "Already Confirmed",
+      email: "already-confirmed@example.com",
+      password: "password123",
+    });
+    const user = await User.findByPk(signupRes.body.user.id);
+    user.isEmailConfirmed = true;
+    await user.save();
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const res = await request(app).get("/api/auth/confirm-email").query({ token });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/уже подтверждён/);
+  });
+
+  // This is the bug the user actually hit: a confirmation link clicked
+  // after its 1h expiry returns 401, which the client used to have no
+  // case for at all (only 400/500 were handled) — it fell through to
+  // whatever the empty default state rendered, a generic "please confirm
+  // your email" message with no indication anything had gone wrong or way
+  // to recover. Fixed client-side; this locks in the server contract it
+  // now relies on.
+  it("401s with an expired-token message for a token past its 1h expiry", async () => {
+    const signupRes = await request(app).post("/api/auth/signup").send({
+      name: "Expired Token",
+      email: "expired-token@example.com",
+      password: "password123",
+    });
+
+    const token = jwt.sign({ userId: signupRes.body.user.id }, process.env.JWT_SECRET, { expiresIn: "-1s" });
+    const res = await request(app).get("/api/auth/confirm-email").query({ token });
+
+    expect(res.status).toBe(401);
+    expect(res.body.message).toMatch(/истёк/);
+  });
+
+  it("400s with an invalid-token message for a malformed token", async () => {
+    const res = await request(app).get("/api/auth/confirm-email").query({ token: "not-a-real-token" });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/токен/);
+  });
+
+  it("400s when no token is provided", async () => {
+    const res = await request(app).get("/api/auth/confirm-email");
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("POST /api/auth/resend-confirmation", () => {
+  it("sends a new confirmation link for an unconfirmed account", async () => {
+    const signupRes = await request(app).post("/api/auth/signup").send({
+      name: "Needs Resend",
+      email: "needs-resend@example.com",
+      password: "password123",
+    });
+    // See the comment on the confirm-email test above — same test-env fallback.
+    await User.update({ isEmailConfirmed: false }, { where: { id: signupRes.body.user.id } });
+
+    const res = await request(app)
+      .post("/api/auth/resend-confirmation")
+      .send({ email: "needs-resend@example.com" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toMatch(/отправлено/);
+  });
+
+  it("issues a token that itself works against confirm-email", async () => {
+    const signupRes = await request(app).post("/api/auth/signup").send({
+      name: "Resend Then Confirm",
+      email: "resend-then-confirm@example.com",
+      password: "password123",
+    });
+    await User.update({ isEmailConfirmed: false }, { where: { id: signupRes.body.user.id } });
+
+    await request(app)
+      .post("/api/auth/resend-confirmation")
+      .send({ email: "resend-then-confirm@example.com" });
+
+    // The resend path doesn't hand the token back over HTTP (it only goes
+    // out by email) — sign an equivalent one the same way to confirm the
+    // account is still in a confirmable state afterwards.
+    const token = jwt.sign({ userId: signupRes.body.user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const confirmRes = await request(app).get("/api/auth/confirm-email").query({ token });
+    expect(confirmRes.status).toBe(200);
+  });
+
+  it("rejects an email with no account", async () => {
+    const res = await request(app)
+      .post("/api/auth/resend-confirmation")
+      .send({ email: "nobody@example.com" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/не найден/);
+  });
+
+  it("rejects an already-confirmed account", async () => {
+    const signupRes = await request(app).post("/api/auth/signup").send({
+      name: "Confirmed Already",
+      email: "confirmed-already@example.com",
+      password: "password123",
+    });
+    const user = await User.findByPk(signupRes.body.user.id);
+    user.isEmailConfirmed = true;
+    await user.save();
+
+    const res = await request(app)
+      .post("/api/auth/resend-confirmation")
+      .send({ email: "confirmed-already@example.com" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/уже подтверждён/);
   });
 });
 

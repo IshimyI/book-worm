@@ -155,6 +155,42 @@ authRouter.get("/confirm-email", async (req, res) => {
   }
 });
 
+authRouter.post("/resend-confirmation", authLimiter, async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Пользователь с таким email не найден." });
+    }
+    if (user.isEmailConfirmed) {
+      return res.status(400).json({ message: "Email уже подтверждён." });
+    }
+
+    // Same token shape/expiry as the one issued at signup — a stale link
+    // from an earlier email just stops working once this one is used.
+    const emailConfirmationToken = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    const confirmationLink = `${CLIENT_URL}/confirm-email?token=${emailConfirmationToken}`;
+    await sendEmail({
+      to: email,
+      subject: "Подтверждение email",
+      text: `Пожалуйста, подтвердите ваш email, перейдя по ссылке: ${confirmationLink}`,
+      html: confirmationEmailHtml(confirmationLink, user.name),
+    });
+
+    res.status(200).json({ message: "Письмо с новой ссылкой для подтверждения отправлено на ваш email." });
+  } catch (error) {
+    console.error("Ошибка при повторной отправке письма подтверждения:", error);
+    res.sendStatus(500);
+  }
+});
+
 authRouter.post("/forgot-password", authLimiter, async (req, res) => {
   const { email } = req.body;
   try {
