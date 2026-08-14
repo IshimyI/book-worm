@@ -15,7 +15,7 @@ import BookQuotes from '../ui/BookQuotes';
 import SpoilerText from '../ui/SpoilerText';
 import { relativeTime } from '../utils/relativeTime';
 import { addRecentlyViewed } from '../utils/recentlyViewed';
-import { coverThumbUrl } from '../utils/coverUrl';
+import { coverThumbUrl, coverUrl } from '../utils/coverUrl';
 import { withCount } from '../utils/pluralize';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 import useConfirm from '../ui/useConfirm';
@@ -307,7 +307,7 @@ export default function BookPage({ user, setUser }) {
       <Breadcrumbs items={[{ label: 'Главная', to: '/' }, { label: book.title }]} />
 
       <Flex gap="30px" flexWrap="wrap">
-        <Image src={book.img || './default.jpg'} fallbackSrc="./default.jpg" alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
+        <Image src={coverUrl(book.img) || './default.jpg'} fallbackSrc="./default.jpg" alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
         <Box flex="1" minW="250px">
           <Heading as="h1" size="lg" mb="10px">
             {book.title}

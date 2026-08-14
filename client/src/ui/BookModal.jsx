@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import axiosInstance from '../axiosInstance';
 import { openLibrarySearchUrl } from '../utils/openLibrary';
+import { coverUrl } from '../utils/coverUrl';
 import StarRatingInput from './StarRatingInput';
 import useFavorite from '../utils/useFavorite';
 
@@ -130,7 +131,7 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
             <Box flex="1" minW="280px">
               <Flex className="bookInfoRow" flexWrap="wrap">
                 <Box maxWidth={{ base: '100%', sm: '250px' }}>
-                  <Image src={book.img || './default.jpg'} fallbackSrc="./default.jpg" alt={book.title} width={{ base: '100%', sm: '250px' }} maxW="250px" height="350px" objectFit="cover" borderRadius="md" mx={{ base: 'auto', sm: '0' }} />
+                  <Image src={coverUrl(book.img) || './default.jpg'} fallbackSrc="./default.jpg" alt={book.title} width={{ base: '100%', sm: '250px' }} maxW="250px" height="350px" objectFit="cover" borderRadius="md" mx={{ base: 'auto', sm: '0' }} />
                 </Box>
                 <Box w={{ base: '100%', sm: '65%' }} mr={{ base: 0, sm: '20px' }} mt={{ base: '12px', sm: 0 }} p={4} borderWidth="1px" borderColor="bw.border" borderRadius="md" boxShadow="sm" bg="bw.cardBg">
                   <Stack spacing={3}>

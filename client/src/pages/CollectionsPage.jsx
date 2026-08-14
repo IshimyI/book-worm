@@ -5,6 +5,7 @@ import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
 import PageCard from '../ui/PageCard';
 import { withCount } from '../utils/pluralize';
+import { coverUrl } from '../utils/coverUrl';
 
 export default function CollectionsPage() {
   const [lists, setLists] = useState([]);
@@ -51,7 +52,7 @@ export default function CollectionsPage() {
                 {list.covers.length > 0 && (
                   <Flex gap="6px">
                     {list.covers.map((cover, i) => (
-                      <Image key={i} src={cover || './default.jpg'} fallbackSrc="./default.jpg" alt="" loading="lazy" width="44px" height="60px" objectFit="cover" borderRadius="4px" />
+                      <Image key={i} src={coverUrl(cover) || './default.jpg'} fallbackSrc="./default.jpg" alt="" loading="lazy" width="44px" height="60px" objectFit="cover" borderRadius="4px" />
                     ))}
                   </Flex>
                 )}

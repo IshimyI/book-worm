@@ -1591,3 +1591,46 @@ describe("book quotes", () => {
     expect(list.body).toHaveLength(0);
   });
 });
+
+describe("GET /api/cover-cache", () => {
+  const fs = require("fs");
+  const { COVER_CACHE_DIR } = require("../utils/coverCache");
+  const cachedFile = `${COVER_CACHE_DIR}/route-test-1234.jpg`;
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    if (fs.existsSync(cachedFile)) fs.unlinkSync(cachedFile);
+  });
+
+  it("400s when src is missing", async () => {
+    const res = await request(app).get("/api/cover-cache");
+    expect(res.status).toBe(400);
+  });
+
+  it("relaxes Cross-Origin-Resource-Policy so a cross-port dev client can load the image", async () => {
+    const res = await request(app).get("/api/cover-cache").query({ src: "https://evil.example.com/x.jpg" });
+    expect(res.headers["cross-origin-resource-policy"]).toBe("cross-origin");
+  });
+
+  it("redirects straight to the original URL for a non-Open-Library host", async () => {
+    const res = await request(app).get("/api/cover-cache").query({ src: "https://evil.example.com/x.jpg" });
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe("https://evil.example.com/x.jpg");
+  });
+
+  it("fetches, caches, and redirects to the local copy for an Open Library cover", async () => {
+    const bytes = Buffer.from("fake-jpeg-bytes");
+    jest.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      headers: { get: () => "image/jpeg" },
+      arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    });
+
+    const res = await request(app)
+      .get("/api/cover-cache")
+      .query({ src: "https://covers.openlibrary.org/b/id/route-test-1234.jpg" });
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe("/uploads/covers/route-test-1234.jpg");
+    expect(fs.existsSync(cachedFile)).toBe(true);
+  });
+});

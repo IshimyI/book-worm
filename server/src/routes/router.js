@@ -18,6 +18,7 @@ const { findPossibleDuplicate } = require("../utils/bookDedup");
 const { extractMentionTokens } = require("../utils/extractMentions");
 const cache = require("../utils/simpleCache");
 const logSecurityEvent = require("../utils/securityLog");
+const { getCachedCoverPath } = require("../utils/coverCache");
 
 const router = express.Router();
 
@@ -83,6 +84,27 @@ function mapReview(review, votedReviewIds = new Set()) {
     commentCount: review.commentCount,
   };
 }
+
+// See utils/coverCache for why: this redirects to a locally-cached copy
+// of an Open Library cover on cache hit (or after fetching it once on
+// miss), or back to the original URL if it isn't an Open Library cover or
+// the fetch failed — the client's own fallbackSrc handles that last case.
+router.get("/cover-cache", async (req, res) => {
+  // Same reasoning as the /uploads static middleware in app.js: helmet's
+  // default Cross-Origin-Resource-Policy: same-origin blocks the client
+  // (a different port in local dev, where there's no nginx in front to
+  // make them same-origin) from loading the image this redirects to.
+  res.set("Cross-Origin-Resource-Policy", "cross-origin");
+  const src = typeof req.query.src === "string" ? req.query.src : "";
+  if (!src) return res.status(400).end();
+  try {
+    const localPath = await getCachedCoverPath(src);
+    return res.redirect(302, localPath || src);
+  } catch (error) {
+    console.error(error);
+    return res.redirect(302, src);
+  }
+});
 
 router.get("/trending", async (req, res) => {
   try {
