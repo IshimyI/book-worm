@@ -28,6 +28,7 @@ export default function NavBar({ user, handleLogout }) {
           <nav className="navLinksSecondary">
             <NavLink to="/news" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Новости</NavLink>
             <NavLink to="/collections" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Подборки</NavLink>
+            <NavLink to="/leaderboard" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Топ читателей</NavLink>
             {user && user.isEmailConfirmed ? (
               <NavLink to="/feed" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Лента</NavLink>
             ) : null}

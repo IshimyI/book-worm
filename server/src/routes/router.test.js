@@ -984,6 +984,38 @@ describe("GET /api/users/suggestions", () => {
   });
 });
 
+describe("GET /api/leaderboard", () => {
+  it("ranks users by review count this month, tie-broken by helpful votes", async () => {
+    const topReviewer = await signupAndLogin("leader-top@example.com");
+    const secondReviewer = await signupAndLogin("leader-second@example.com");
+    const inactiveUser = await signupAndLogin("leader-inactive@example.com");
+    const book1 = await Book.create({ title: "Leader Book 1", author: "A", genre: "Роман" });
+    const book2 = await Book.create({ title: "Leader Book 2", author: "B", genre: "Роман" });
+
+    await Review.create({ bookId: book1.id, userId: topReviewer.userId, body: "r", user_rating: 5 });
+    await Review.create({ bookId: book2.id, userId: topReviewer.userId, body: "r", user_rating: 5 });
+    await Review.create({ bookId: book1.id, userId: secondReviewer.userId, body: "r", user_rating: 4 });
+
+    const res = await request(app).get("/api/leaderboard");
+    expect(res.status).toBe(200);
+    const ids = res.body.map((u) => u.id);
+    expect(ids[0]).toBe(topReviewer.userId);
+    expect(res.body[0].reviewCount).toBe(2);
+    expect(ids).toContain(secondReviewer.userId);
+    expect(ids).not.toContain(inactiveUser.userId);
+  });
+
+  it("excludes reviews from before this month", async () => {
+    const oldReviewer = await signupAndLogin("leader-old@example.com");
+    const book = await Book.create({ title: "Leader Old Book", author: "A", genre: "Роман" });
+    const oldReview = await Review.create({ bookId: book.id, userId: oldReviewer.userId, body: "r", user_rating: 5 });
+    await Review.update({ createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) }, { where: { id: oldReview.id } });
+
+    const res = await request(app).get("/api/leaderboard");
+    expect(res.body.map((u) => u.id)).not.toContain(oldReviewer.userId);
+  });
+});
+
 describe("GET /api/book/:id/og-image.png", () => {
   it("returns a PNG image for a valid book", async () => {
     const book = await Book.create({ title: "OG Book", author: "A", genre: "Роман", rating: "4.20", quantity_rate: 3 });

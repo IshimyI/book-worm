@@ -637,6 +637,48 @@ router.get("/users/suggestions", verifyAccessToken, async (req, res) => {
   }
 });
 
+router.get("/leaderboard", async (req, res) => {
+  try {
+    const cacheKey = "leaderboard";
+    const cached = cache.get(cacheKey);
+    if (cached) return res.status(200).json(cached);
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const rows = await Review.findAll({
+      where: { createdAt: { [Sequelize.Op.gte]: monthStart } },
+      attributes: [
+        "userId",
+        [Sequelize.fn("COUNT", Sequelize.col("id")), "reviewcount"],
+        [Sequelize.fn("COALESCE", Sequelize.fn("SUM", Sequelize.col("helpfulCount")), 0), "helpfulsum"],
+      ],
+      group: ["userId"],
+      order: [[Sequelize.literal("reviewcount"), "DESC"], [Sequelize.literal("helpfulsum"), "DESC"]],
+      limit: 10,
+      raw: true,
+    });
+
+    const users = await User.findAll({ where: { id: rows.map((r) => r.userId) }, attributes: ["id", "name", "avatarUrl"] });
+    const usersById = new Map(users.map((u) => [u.id, u]));
+    const leaderboard = rows
+      .map((r) => {
+        const u = usersById.get(r.userId);
+        return u
+          ? { id: u.id, name: u.name, avatarUrl: u.avatarUrl, reviewCount: Number(r.reviewcount), helpfulCount: Number(r.helpfulsum) }
+          : null;
+      })
+      .filter(Boolean);
+
+    cache.set(cacheKey, leaderboard, 30 * 60 * 1000);
+    res.status(200).json(leaderboard);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
 const SORT_COLUMNS = {
   rating: "rating",
   reviews: "quantity_rate",
