@@ -130,7 +130,7 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
             <Box>
               <Flex className="bookInfoRow">
                 <Box maxWidth="250px">
-                  <Image src={book.img || './default.jpg'} alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
+                  <Image src={book.img || './default.jpg'} fallbackSrc="./default.jpg" alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
                 </Box>
                 <Box w="65%" mr={'20px'} p={4} borderWidth="1px" borderColor="bw.border" borderRadius="md" boxShadow="sm" bg="bw.cardBg">
                   <Stack spacing={3}>

@@ -39,6 +39,7 @@ const FavoriteProfile = ({
           >
             <Image
               src={coverThumbUrl(book.img) || "./default.jpg"}
+              fallbackSrc="./default.jpg"
               alt={book.title}
               loading="lazy"
               width="150px"
@@ -49,8 +50,8 @@ const FavoriteProfile = ({
             <Icon
               as={SmallCloseIcon}
               position="absolute"
-              top="1vh"
-              right="4vh"
+              top="6px"
+              right="6px"
               color="white"
               boxSize={5}
               filter="drop-shadow(0px 0px 3px rgba(0, 0, 0, 0.8))"

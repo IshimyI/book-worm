@@ -15,10 +15,10 @@ import {
 } from "@chakra-ui/react";
 import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import ModalMain from "../ui/ModalMain";
 import axiosInstance from "../axiosInstance";
 import useSeoMeta from "../utils/useSeoMeta";
 import { coverThumbUrl } from "../utils/coverUrl";
+import { withCount } from "../utils/pluralize";
 import RecentlyViewedStrip from "../ui/RecentlyViewedStrip";
 import TrendingStrip from "../ui/TrendingStrip";
 
@@ -30,7 +30,7 @@ const EMPTY_FILTERS = {
   search: "",
 };
 
-export default function MainPage({ user, setUser }) {
+export default function MainPage({ user }) {
   useSeoMeta({
     title: "Каталог книг",
     description: "Каталог книг с рейтингами и рецензиями читателей — находите книги, читайте отзывы и оценивайте прочитанное.",
@@ -325,7 +325,8 @@ export default function MainPage({ user, setUser }) {
                     <Flex align="start">
                       <NavLink to={`/books/${book.id}`}>
                         <Image
-                          src={coverThumbUrl(book.img)}
+                          src={coverThumbUrl(book.img) || './default.jpg'}
+                          fallbackSrc="./default.jpg"
                           alt={book.title}
                           loading="lazy"
                           width="180px"
@@ -355,10 +356,8 @@ export default function MainPage({ user, setUser }) {
                             {book.rating == null ? 0 : book.rating} ⭐
                           </Text>
                           <Text fontSize="xs" color="bw.textMuted">
-                            ({book.quantity_rate == null ? 0 : book.quantity_rate}{" "}
-                            отзывов)
+                            ({withCount(book.quantity_rate == null ? 0 : book.quantity_rate, ['отзыв', 'отзыва', 'отзывов'])})
                           </Text>
-                          <ModalMain user={user} setUser={setUser} book={book} />
                           <NavLink to={`/books/${book.id}`}>
                             <Button
                               size="sm"

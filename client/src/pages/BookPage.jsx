@@ -16,6 +16,7 @@ import SpoilerText from '../ui/SpoilerText';
 import { relativeTime } from '../utils/relativeTime';
 import { addRecentlyViewed } from '../utils/recentlyViewed';
 import { coverThumbUrl } from '../utils/coverUrl';
+import { withCount } from '../utils/pluralize';
 import { resolveAvatarUrl } from '../utils/avatarUrl';
 import useConfirm from '../ui/useConfirm';
 import Breadcrumbs from '../ui/Breadcrumbs';
@@ -306,7 +307,7 @@ export default function BookPage({ user, setUser }) {
       <Breadcrumbs items={[{ label: 'Главная', to: '/' }, { label: book.title }]} />
 
       <Flex gap="30px" flexWrap="wrap">
-        <Image src={book.img || './default.jpg'} alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
+        <Image src={book.img || './default.jpg'} fallbackSrc="./default.jpg" alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
         <Box flex="1" minW="250px">
           <Heading as="h1" size="lg" mb="10px">
             {book.title}
@@ -321,7 +322,7 @@ export default function BookPage({ user, setUser }) {
                 {book.additionalGenres?.length > 0 && `, ${book.additionalGenres.join(', ')}`}
               </Text>
               <Text fontSize="sm"><b>Год:</b> {book.year}</Text>
-              <Text fontSize="sm"><b>Рейтинг:</b> {book.rating ?? 0} ⭐ ({book.quantity_rate ?? 0} отзывов)</Text>
+              <Text fontSize="sm"><b>Рейтинг:</b> {book.rating ?? 0} ⭐ ({withCount(book.quantity_rate ?? 0, ['отзыв', 'отзыва', 'отзывов'])})</Text>
             </Stack>
             <Text mb="20px">{book.annotation}</Text>
             <Flex gap="12px" flexWrap="wrap">
@@ -452,7 +453,11 @@ export default function BookPage({ user, setUser }) {
           )}
           <Textarea value={inputBody} onChange={(e) => setInputBody(e.target.value)} placeholder="Напиши свою рецензию" mb="6px" />
           <Text fontSize="xs" color="bw.textMuted" mb="10px">
-            Спойлер? Оберните текст в ||двойные вертикальные черты||, и его скроют до клика.
+            Спойлер? Оберните текст в{' '}
+            <Text as="code" bg="bw.pageBg" border="1px solid" borderColor="bw.border" borderRadius="4px" px="4px" py="1px" fontSize="xs">
+              ||текст спойлера||
+            </Text>
+            {' '}— и его скроют до клика.
           </Text>
           <Box mb="15px">
             <StarRatingInput rating={rating} onChange={setRating} />
@@ -489,6 +494,7 @@ function BookStrip({ books }) {
           <Box width="130px" _hover={{ opacity: 0.85 }}>
             <Image
               src={coverThumbUrl(rec.img) || './default.jpg'}
+              fallbackSrc="./default.jpg"
               alt={rec.title}
               loading="lazy"
               width="130px"

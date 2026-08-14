@@ -134,7 +134,7 @@ export default function ListsPage({ user }) {
               {list.covers.length > 0 && (
                 <Flex gap="6px">
                   {list.covers.map((cover, i) => (
-                    <Image key={i} src={cover || './default.jpg'} alt="" loading="lazy" width="44px" height="60px" objectFit="cover" borderRadius="4px" />
+                    <Image key={i} src={cover || './default.jpg'} fallbackSrc="./default.jpg" alt="" loading="lazy" width="44px" height="60px" objectFit="cover" borderRadius="4px" />
                   ))}
                 </Flex>
               )}

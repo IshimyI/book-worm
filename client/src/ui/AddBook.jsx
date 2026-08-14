@@ -296,7 +296,11 @@ export default function AddBook({ user }) {
                     >
                       <Textarea type="text" name="body" value={inputs.body} onChange={handleInputChange} placeholder="Написать рецензию"></Textarea>
                       <Text fontSize="xs" color="bw.textMuted" mt="6px">
-                        Спойлер? Оберните текст в ||двойные вертикальные черты||.
+                        Спойлер? Оберните текст в{' '}
+                        <Text as="code" bg="bw.pageBg" border="1px solid" borderColor="bw.border" borderRadius="4px" px="4px" py="1px" fontSize="xs">
+                          ||текст спойлера||
+                        </Text>
+                        .
                       </Text>
 
                       <Box mt="40px" h="40px">

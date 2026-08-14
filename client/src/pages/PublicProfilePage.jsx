@@ -297,7 +297,7 @@ export default function PublicProfilePage({ user }) {
                 _hover={{ borderColor: '#4b5320', boxShadow: 'sm' }}
                 transition="border-color 0.15s ease"
               >
-                <Image src={coverThumbUrl(review.bookImg)} alt={review.bookTitle} loading="lazy" width="60px" height="84px" objectFit="cover" borderRadius="4px" />
+                <Image src={coverThumbUrl(review.bookImg) || './default.jpg'} fallbackSrc="./default.jpg" alt={review.bookTitle} loading="lazy" width="60px" height="84px" objectFit="cover" borderRadius="4px" />
                 <Box>
                   <Text fontWeight="bold">{review.bookTitle}</Text>
                   <SpoilerText text={review.body} fontSize="sm" color="bw.textMuted" noOfLines={2} />

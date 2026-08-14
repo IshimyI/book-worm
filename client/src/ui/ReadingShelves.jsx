@@ -50,6 +50,7 @@ const ReadingShelves = ({ handleBookClick }) => {
                     >
                       <Image
                         src={coverThumbUrl(book.img) || './default.jpg'}
+                        fallbackSrc="./default.jpg"
                         alt={book.title}
                         loading="lazy"
                         width="150px"

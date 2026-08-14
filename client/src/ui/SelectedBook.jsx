@@ -11,7 +11,7 @@ export default function SelectedBook({ book, handleBookClick, setInputs }) {
   return (
     <Card onClick={() => selectBook(book)} rounded={10} direction={{ base: 'column', sm: 'row' }} overflow="hidden" variant="outline" m={2} _hover={{ border: '1px', borderColor: 'blue' }}>
 
-      <Image objectFit="cover" w="150px" rounded={10} m='1px' loading="lazy" src={coverThumbUrl(book.img)} alt={book.title || 'Обложка'} />
+      <Image objectFit="cover" w="150px" rounded={10} m='1px' loading="lazy" src={coverThumbUrl(book.img) || './default.jpg'} fallbackSrc="./default.jpg" alt={book.title || 'Обложка'} />
 
       <Stack>
         <CardBody>

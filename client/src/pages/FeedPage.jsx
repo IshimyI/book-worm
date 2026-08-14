@@ -83,7 +83,7 @@ export default function FeedPage({ user }) {
               </Flex>
               <NavLink to={`/books/${review.bookId}`}>
                 <Flex gap="14px" _hover={{ opacity: 0.85 }}>
-                  <Image src={coverThumbUrl(review.bookImg)} alt={review.bookTitle} loading="lazy" width="60px" height="84px" objectFit="cover" borderRadius="4px" />
+                  <Image src={coverThumbUrl(review.bookImg) || './default.jpg'} fallbackSrc="./default.jpg" alt={review.bookTitle} loading="lazy" width="60px" height="84px" objectFit="cover" borderRadius="4px" />
                   <Box>
                     <Text fontWeight="bold">{review.bookTitle}</Text>
                     <SpoilerText text={review.body} fontSize="sm" noOfLines={2} />

@@ -22,6 +22,7 @@ export default function RecentlyViewedStrip() {
             <Box width="100px" _hover={{ opacity: 0.85 }}>
               <Image
                 src={coverThumbUrl(book.img) || './default.jpg'}
+                fallbackSrc="./default.jpg"
                 alt={book.title}
                 loading="lazy"
                 width="100px"

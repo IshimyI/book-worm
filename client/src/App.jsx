@@ -122,7 +122,7 @@ function App() {
             }
           ></Route>
           <Route path="/office" element={<Office user={user} setUser={setUser} />} />
-          <Route path="/" element={<MainPage user={user} setUser={setUser} />} />
+          <Route path="/" element={<MainPage user={user} />} />
           <Route path="/books/:id" element={<BookPage user={user} setUser={setUser} />} />
           <Route
             path="/confirm-email"

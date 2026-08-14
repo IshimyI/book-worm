@@ -21,7 +21,8 @@ const ReviewProfile = ({ reviewBooks, handleBookClick }) => {
             _hover={{ transform: "translateY(-4px)", boxShadow: "lg" }}
           >
             <Image
-              src={coverThumbUrl(book.img)}
+              src={coverThumbUrl(book.img) || './default.jpg'}
+              fallbackSrc="./default.jpg"
               alt={book.title}
               loading="lazy"
               width="150px"
