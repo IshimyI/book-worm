@@ -157,7 +157,7 @@ export default function AddBook({ user }) {
       <Modal isOpen={isOpen} onClose={onClose} size="5xl">
         <ModalOverlay />
         <ModalContent>
-          <Flex m="40px" style={{ flexDirection: 'column' }}>
+          <Flex m={{ base: '16px', md: '40px' }} style={{ flexDirection: 'column' }}>
             <Center>
               <Flex w="100%" style={{ flexDirection: 'column' }}>
                 <Flex><Heading mb="20px">Выбор книги</Heading><ModalCloseButton /></Flex>
@@ -202,9 +202,11 @@ export default function AddBook({ user }) {
                       ) : (
                         <>
                           <Flex
-                            w="40%"
+                            w={{ base: '100%', md: '40%' }}
                             mt="20px"
                             mb="20px"
+                            flexWrap="wrap"
+                            gap="10px"
                             style={{
                               justifyContent: 'space-between',
                               alignItems: 'center',
@@ -285,9 +287,9 @@ export default function AddBook({ user }) {
                     </>
                   )}
 
-                  <Flex style={{ justifyContent: 'space-between' }}>
+                  <Flex flexWrap="wrap" gap="16px" style={{ justifyContent: 'space-between' }}>
                     <Flex
-                      w="70%"
+                      w={{ base: '100%', md: '70%' }}
                       mt={4}
                       style={{
                         flexDirection: 'column',
@@ -308,7 +310,7 @@ export default function AddBook({ user }) {
                       </Box>
                     </Flex>
                     <Flex
-                      w="30%"
+                      w={{ base: '100%', md: '30%' }}
                       minH="80px"
                       mt="20px"
                       style={{

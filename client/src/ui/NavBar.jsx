@@ -1,16 +1,33 @@
 /* eslint-disable react/prop-types */
 import { NavLink } from "react-router";
-import { Flex, IconButton, useColorMode } from "@chakra-ui/react";
-import { SunIcon, MoonIcon } from "@chakra-ui/icons";
+import {
+  Box,
+  Flex,
+  IconButton,
+  Link as ChakraLink,
+  useColorMode,
+  useDisclosure,
+  Drawer,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  DrawerHeader,
+  DrawerBody,
+  Stack,
+  Divider,
+} from "@chakra-ui/react";
+import { SunIcon, MoonIcon, HamburgerIcon } from "@chakra-ui/icons";
 import NotificationBell from "./NotificationBell";
 
 export default function NavBar({ user, handleLogout }) {
   const { colorMode, toggleColorMode } = useColorMode();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const navLinkClass = ({ isActive }) => (isActive ? "navLinkActive" : "");
+
   return (
     <div className="navbar">
-
       <div className="conteynerNav">
-
         <Flex
           className="navbarFlex"
           alignItems="center"
@@ -25,61 +42,125 @@ export default function NavBar({ user, handleLogout }) {
               </div>
             </div>
           </NavLink>
-          <nav className="navLinksSecondary">
-            <NavLink to="/news" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Новости</NavLink>
-            <NavLink to="/collections" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Подборки</NavLink>
-            <NavLink to="/leaderboard" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Топ читателей</NavLink>
-            {user && user.isEmailConfirmed ? (
-              <NavLink to="/feed" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Лента</NavLink>
-            ) : null}
-            {user && user.isEmailConfirmed ? (
-              <NavLink to="/lists" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Мои списки</NavLink>
-            ) : null}
-            {user && user.isAdmin ? (
-              <NavLink to="/admin" className={({ isActive }) => (isActive ? "navLinkActive" : "")}>Модерация</NavLink>
-            ) : null}
-          </nav>
-          <div className="navFlexBlock2">
+
+          <Box display={{ base: "none", lg: "contents" }}>
+            <nav className="navLinksSecondary">
+              <NavLink to="/news" className={navLinkClass}>Новости</NavLink>
+              <NavLink to="/collections" className={navLinkClass}>Подборки</NavLink>
+              <NavLink to="/leaderboard" className={navLinkClass}>Топ читателей</NavLink>
+              {user && user.isEmailConfirmed ? (
+                <NavLink to="/feed" className={navLinkClass}>Лента</NavLink>
+              ) : null}
+              {user && user.isEmailConfirmed ? (
+                <NavLink to="/lists" className={navLinkClass}>Мои списки</NavLink>
+              ) : null}
+              {user && user.isAdmin ? (
+                <NavLink to="/admin" className={navLinkClass}>Модерация</NavLink>
+              ) : null}
+            </nav>
+            <div className="navFlexBlock2">
+              {user && user.isEmailConfirmed ? <NotificationBell user={user} /> : null}
+              <IconButton
+                aria-label={colorMode === "light" ? "Включить тёмную тему" : "Включить светлую тему"}
+                icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
+                onClick={toggleColorMode}
+                size="sm"
+                variant="ghost"
+                color="#f5f0dc"
+                _hover={{ bg: "whiteAlpha.200" }}
+              />
+              {user && user.isEmailConfirmed ? (
+                <NavLink to="/office">
+                  <button className="btnMain" type="button">
+                    <img src="/img/ic_Home.png" className="imgMainBTN" alt="" />
+                    Кабинет
+                  </button>
+                </NavLink>
+              ) : null}
+              {user && user.isEmailConfirmed ? (
+                <NavLink to="/auth">
+                  <button
+                    className="btnMain"
+                    type="button"
+                    onClick={handleLogout}
+                  >
+                    <img src="/img/ic_voyti.png" className="imgMainBTN" alt="" />
+                    Выйти
+                  </button>
+                </NavLink>
+              ) : (
+                <NavLink to="/auth">
+                  <button className="btnMain" type="button">
+                    <img src="/img/ic_voyti.png" className="imgMainBTN" alt="" />
+                    Войти
+                  </button>
+                </NavLink>
+              )}
+            </div>
+          </Box>
+
+          <Flex display={{ base: "flex", lg: "none" }} alignItems="center" gap="6px">
             {user && user.isEmailConfirmed ? <NotificationBell user={user} /> : null}
             <IconButton
-              aria-label={colorMode === "light" ? "Включить тёмную тему" : "Включить светлую тему"}
-              icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
-              onClick={toggleColorMode}
+              aria-label="Открыть меню"
+              icon={<HamburgerIcon />}
+              onClick={onOpen}
               size="sm"
               variant="ghost"
               color="#f5f0dc"
               _hover={{ bg: "whiteAlpha.200" }}
             />
-            {user && user.isEmailConfirmed ? (
-              <NavLink to="/office">
-                <button className="btnMain" type="button">
-                  <img src="/img/ic_Home.png" className="imgMainBTN" alt="" />
-                  Кабинет
-                </button>
-              </NavLink>
-            ) : null}
-            {user && user.isEmailConfirmed ? (
-              <NavLink to="/auth">
-                <button
-                  className="btnMain"
-                  type="button"
-                  onClick={handleLogout}
-                >
-                  <img src="/img/ic_voyti.png" className="imgMainBTN" alt="" />
-                  Выйти
-                </button>
-              </NavLink>
-            ) : (
-              <NavLink to="/auth">
-                <button className="btnMain" type="button">
-                  <img src="/img/ic_voyti.png" className="imgMainBTN" alt="" />
-                  Войти
-                </button>
-              </NavLink>
-            )}
-          </div>
+          </Flex>
         </Flex>
       </div>
+
+      <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+        <DrawerOverlay />
+        <DrawerContent bg="bw.cardBg" color="bw.text">
+          <DrawerCloseButton />
+          <DrawerHeader>Меню</DrawerHeader>
+          <DrawerBody>
+            <Stack spacing="4" fontSize="md" fontWeight="600" onClick={onClose}>
+              <ChakraLink as={NavLink} to="/news" color="bw.text" _hover={{ color: "#4b5320" }}>Новости</ChakraLink>
+              <ChakraLink as={NavLink} to="/collections" color="bw.text" _hover={{ color: "#4b5320" }}>Подборки</ChakraLink>
+              <ChakraLink as={NavLink} to="/leaderboard" color="bw.text" _hover={{ color: "#4b5320" }}>Топ читателей</ChakraLink>
+              {user && user.isEmailConfirmed ? (
+                <ChakraLink as={NavLink} to="/feed" color="bw.text" _hover={{ color: "#4b5320" }}>Лента</ChakraLink>
+              ) : null}
+              {user && user.isEmailConfirmed ? (
+                <ChakraLink as={NavLink} to="/lists" color="bw.text" _hover={{ color: "#4b5320" }}>Мои списки</ChakraLink>
+              ) : null}
+              {user && user.isAdmin ? (
+                <ChakraLink as={NavLink} to="/admin" color="bw.text" _hover={{ color: "#4b5320" }}>Модерация</ChakraLink>
+              ) : null}
+
+              <Divider />
+
+              <Flex align="center" justify="space-between">
+                <span>Тема</span>
+                <IconButton
+                  aria-label={colorMode === "light" ? "Включить тёмную тему" : "Включить светлую тему"}
+                  icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />}
+                  onClick={toggleColorMode}
+                  size="sm"
+                  variant="ghost"
+                />
+              </Flex>
+
+              <Divider />
+
+              {user && user.isEmailConfirmed ? (
+                <ChakraLink as={NavLink} to="/office" color="bw.text" _hover={{ color: "#4b5320" }}>Кабинет</ChakraLink>
+              ) : null}
+              {user && user.isEmailConfirmed ? (
+                <ChakraLink as={NavLink} to="/auth" onClick={handleLogout} color="bw.text" _hover={{ color: "#4b5320" }}>Выйти</ChakraLink>
+              ) : (
+                <ChakraLink as={NavLink} to="/auth" color="bw.text" _hover={{ color: "#4b5320" }}>Войти</ChakraLink>
+              )}
+            </Stack>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

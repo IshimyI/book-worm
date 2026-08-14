@@ -294,7 +294,7 @@ export default function MainPage({ user }) {
                     boxShadow="md"
                     mb="20px"
                     h={250}
-                    w={{ base: "100%", md: "700px" }}
+                    w="100%"
                   >
                     <Flex align="start">
                       <Skeleton width="180px" height="250px" mr={4} />
@@ -318,7 +318,7 @@ export default function MainPage({ user }) {
                     boxShadow="md"
                     mb={"20px"}
                     h={{ base: "auto", md: 250 }}
-                    w={{ base: "100%", md: "700px" }}
+                    w="100%"
                     transition="transform 0.15s ease, box-shadow 0.15s ease"
                     _hover={{ transform: "translateY(-3px)", boxShadow: "xl" }}
                   >

@@ -115,24 +115,24 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
   return (
     <Modal isCentered isOpen={isOpen} onClose={onClose} size="xl">
       <OverlayOne />
-      <ModalContent maxW="70%" minH="700px" p="6" overflow="hidden">
+      <ModalContent maxW={{ base: '95%', md: '70%' }} minH={{ base: 'auto', md: '700px' }} p={{ base: 4, md: 6 }} overflow="hidden">
         <ModalCloseButton />
-        <ModalHeader fontSize="2xl" fontWeight="bold">
+        <ModalHeader fontSize={{ base: 'xl', md: '2xl' }} fontWeight="bold">
           {book.title}
           <NavLink to={`/books/${book.id}`}>
-            <Button size="xs" ml="12px" variant="outline" sx={{ color: '#334d00', borderColor: '#334d00' }}>
+            <Button size="xs" ml="12px" mt={{ base: '8px', md: 0 }} variant="outline" sx={{ color: '#334d00', borderColor: '#334d00' }}>
               <ExternalLinkIcon mr="6px" /> Открыть страницу книги
             </Button>
           </NavLink>
         </ModalHeader>
         <ModalBody overflow="auto">
-          <Flex>
-            <Box>
-              <Flex className="bookInfoRow">
-                <Box maxWidth="250px">
-                  <Image src={book.img || './default.jpg'} fallbackSrc="./default.jpg" alt={book.title} width="250px" height="350px" objectFit="cover" borderRadius="md" />
+          <Flex flexWrap="wrap" gap="20px">
+            <Box flex="1" minW="280px">
+              <Flex className="bookInfoRow" flexWrap="wrap">
+                <Box maxWidth={{ base: '100%', sm: '250px' }}>
+                  <Image src={book.img || './default.jpg'} fallbackSrc="./default.jpg" alt={book.title} width={{ base: '100%', sm: '250px' }} maxW="250px" height="350px" objectFit="cover" borderRadius="md" mx={{ base: 'auto', sm: '0' }} />
                 </Box>
-                <Box w="65%" mr={'20px'} p={4} borderWidth="1px" borderColor="bw.border" borderRadius="md" boxShadow="sm" bg="bw.cardBg">
+                <Box w={{ base: '100%', sm: '65%' }} mr={{ base: 0, sm: '20px' }} mt={{ base: '12px', sm: 0 }} p={4} borderWidth="1px" borderColor="bw.border" borderRadius="md" boxShadow="sm" bg="bw.cardBg">
                   <Stack spacing={3}>
                     <Heading as="h3" size="md" fontWeight="semibold" color="bw.text">
                       Информация о книге:

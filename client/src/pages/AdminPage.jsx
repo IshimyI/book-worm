@@ -117,13 +117,13 @@ export default function AdminPage({ user }) {
       <Heading as="h1" size="lg" mb="20px">Администрирование</Heading>
 
       <Tabs colorScheme="green">
-        <TabList>
-          <Tab>Жалобы {reviews.length > 0 && `(${reviews.length})`}</Tab>
-          <Tab>На модерации {pendingCount > 0 && `(${pendingCount})`}</Tab>
-          <Tab>Жалобы на пользователей {reportedUsersCount > 0 && `(${reportedUsersCount})`}</Tab>
-          <Tab>Статистика</Tab>
-          <Tab>Аналитика</Tab>
-          <Tab>Журнал безопасности</Tab>
+        <TabList overflowX="auto" overflowY="hidden" flexWrap="nowrap" sx={{ scrollbarWidth: "thin" }}>
+          <Tab whiteSpace="nowrap">Жалобы {reviews.length > 0 && `(${reviews.length})`}</Tab>
+          <Tab whiteSpace="nowrap">На модерации {pendingCount > 0 && `(${pendingCount})`}</Tab>
+          <Tab whiteSpace="nowrap">Жалобы на пользователей {reportedUsersCount > 0 && `(${reportedUsersCount})`}</Tab>
+          <Tab whiteSpace="nowrap">Статистика</Tab>
+          <Tab whiteSpace="nowrap">Аналитика</Tab>
+          <Tab whiteSpace="nowrap">Журнал безопасности</Tab>
         </TabList>
         <TabPanels>
           <TabPanel px={0}>
