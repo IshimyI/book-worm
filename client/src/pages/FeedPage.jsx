@@ -9,6 +9,7 @@ import { resolveAvatarUrl } from '../utils/avatarUrl';
 import PageCard from '../ui/PageCard';
 import SpoilerText from '../ui/SpoilerText';
 import { relativeTime } from '../utils/relativeTime';
+import FollowSuggestions from '../ui/FollowSuggestions';
 
 export default function FeedPage({ user }) {
   const [data, setData] = useState(null);
@@ -58,6 +59,8 @@ export default function FeedPage({ user }) {
   return (
     <PageCard maxW="800px">
       <Heading as="h1" size="lg" mb="10px">Лента</Heading>
+
+      <FollowSuggestions />
 
       {!data || data.following === 0 ? (
         <Text color="bw.textMuted">

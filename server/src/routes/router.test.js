@@ -937,6 +937,53 @@ describe("reporting a user", () => {
   });
 });
 
+describe("GET /api/users/suggestions", () => {
+  it("requires authentication", async () => {
+    const res = await request(app).get("/api/users/suggestions");
+    expect(res.status).toBe(401);
+  });
+
+  it("suggests reviewers who share a genre with the viewer, excluding self/followed/blocked", async () => {
+    const viewer = await signupAndLogin("suggest-viewer@example.com");
+    const sharedGenreUser = await signupAndLogin("suggest-shared@example.com");
+    const alreadyFollowed = await signupAndLogin("suggest-followed@example.com");
+    const blocked = await signupAndLogin("suggest-blocked@example.com");
+    const differentGenreUser = await signupAndLogin("suggest-different@example.com");
+
+    const romanBook = await Book.create({ title: "Suggest Roman", author: "A", genre: "Роман" });
+    const horrorBook = await Book.create({ title: "Suggest Horror", author: "B", genre: "Хоррор" });
+
+    await Review.create({ bookId: romanBook.id, userId: viewer.userId, body: "r", user_rating: 5 });
+    await Review.create({ bookId: romanBook.id, userId: sharedGenreUser.userId, body: "r", user_rating: 4 });
+    await Review.create({ bookId: romanBook.id, userId: alreadyFollowed.userId, body: "r", user_rating: 4 });
+    await Review.create({ bookId: romanBook.id, userId: blocked.userId, body: "r", user_rating: 4 });
+    await Review.create({ bookId: horrorBook.id, userId: differentGenreUser.userId, body: "r", user_rating: 4 });
+
+    await request(app).post(`/api/users/${alreadyFollowed.userId}/follow`).set("Authorization", `Bearer ${viewer.accessToken}`);
+    await request(app).post(`/api/users/${blocked.userId}/block`).set("Authorization", `Bearer ${viewer.accessToken}`);
+
+    const res = await request(app).get("/api/users/suggestions").set("Authorization", `Bearer ${viewer.accessToken}`);
+    expect(res.status).toBe(200);
+    const ids = res.body.map((u) => u.id);
+    expect(ids).toContain(sharedGenreUser.userId);
+    expect(ids).not.toContain(viewer.userId);
+    expect(ids).not.toContain(alreadyFollowed.userId);
+    expect(ids).not.toContain(blocked.userId);
+    expect(ids).not.toContain(differentGenreUser.userId);
+  });
+
+  it("falls back to the most active reviewers when the viewer has no reviews yet", async () => {
+    const viewer = await signupAndLogin("suggest-newuser@example.com");
+    const activeReviewer = await signupAndLogin("suggest-active@example.com");
+    const book = await Book.create({ title: "Suggest Fallback", author: "A", genre: "Роман" });
+    await Review.create({ bookId: book.id, userId: activeReviewer.userId, body: "r", user_rating: 5 });
+
+    const res = await request(app).get("/api/users/suggestions").set("Authorization", `Bearer ${viewer.accessToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.map((u) => u.id)).toContain(activeReviewer.userId);
+  });
+});
+
 describe("GET /api/book/:id/og-image.png", () => {
   it("returns a PNG image for a valid book", async () => {
     const book = await Book.create({ title: "OG Book", author: "A", genre: "Роман", rating: "4.20", quantity_rate: 3 });

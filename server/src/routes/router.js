@@ -578,6 +578,65 @@ router.get("/feed", verifyAccessToken, async (req, res) => {
   }
 });
 
+router.get("/users/suggestions", verifyAccessToken, async (req, res) => {
+  try {
+    const [followedIds, blockedIds, blockedByIds] = await Promise.all([
+      Follow.findAll({ where: { followerId: req.userId }, attributes: ["followingId"] }).then((rows) => rows.map((r) => r.followingId)),
+      Block.findAll({ where: { blockerId: req.userId }, attributes: ["blockedId"] }).then((rows) => rows.map((r) => r.blockedId)),
+      Block.findAll({ where: { blockedId: req.userId }, attributes: ["blockerId"] }).then((rows) => rows.map((r) => r.blockerId)),
+    ]);
+    const excludeIds = [...new Set([req.userId, ...followedIds, ...blockedIds, ...blockedByIds])];
+
+    const myGenreRows = await Review.findAll({
+      where: { userId: req.userId },
+      include: [{ model: Book, attributes: [] }],
+      attributes: [[Sequelize.col("Book.genre"), "genre"]],
+      group: ["Book.genre"],
+      raw: true,
+    });
+    const myGenres = myGenreRows.map((r) => r.genre).filter(Boolean);
+
+    let candidates;
+    if (myGenres.length > 0) {
+      candidates = await Review.findAll({
+        where: { userId: { [Sequelize.Op.notIn]: excludeIds } },
+        include: [{ model: Book, attributes: [], where: { genre: { [Sequelize.Op.in]: myGenres } } }],
+        attributes: ["userId", [Sequelize.fn("COUNT", Sequelize.col("Review.id")), "count"]],
+        group: ["userId"],
+        order: [[Sequelize.literal("count"), "DESC"]],
+        limit: 5,
+        raw: true,
+      });
+    }
+    // No genre signal yet (new user with no reviews), or no genre-overlap
+    // candidates found — fall back to the site's most active reviewers.
+    if (!candidates || candidates.length === 0) {
+      candidates = await Review.findAll({
+        where: { userId: { [Sequelize.Op.notIn]: excludeIds } },
+        attributes: ["userId", [Sequelize.fn("COUNT", Sequelize.col("id")), "count"]],
+        group: ["userId"],
+        order: [[Sequelize.literal("count"), "DESC"]],
+        limit: 5,
+        raw: true,
+      });
+    }
+
+    const users = await User.findAll({ where: { id: candidates.map((c) => c.userId) }, attributes: ["id", "name", "avatarUrl"] });
+    const usersById = new Map(users.map((u) => [u.id, u]));
+    const suggestions = candidates
+      .map((c) => {
+        const u = usersById.get(c.userId);
+        return u ? { id: u.id, name: u.name, avatarUrl: u.avatarUrl, reviewCount: Number(c.count) } : null;
+      })
+      .filter(Boolean);
+
+    res.status(200).json(suggestions);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
 const SORT_COLUMNS = {
   rating: "rating",
   reviews: "quantity_rate",
