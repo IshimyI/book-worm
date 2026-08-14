@@ -295,6 +295,7 @@ export default function MainPage({ user }) {
                     mb="20px"
                     h={250}
                     w="100%"
+                    maxW="700px"
                   >
                     <Flex align="start">
                       <Skeleton width="180px" height="250px" mr={4} />
@@ -319,6 +320,7 @@ export default function MainPage({ user }) {
                     mb={"20px"}
                     h={{ base: "auto", md: 250 }}
                     w="100%"
+                    maxW="700px"
                     transition="transform 0.15s ease, box-shadow 0.15s ease"
                     _hover={{ transform: "translateY(-3px)", boxShadow: "xl" }}
                   >

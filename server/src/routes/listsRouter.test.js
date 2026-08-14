@@ -219,9 +219,10 @@ describe("curated lists", () => {
     expect(renameRes.status).toBe(200);
   });
 
-  it("lists curated lists publicly via GET /lists/curated", async () => {
+  it("lists curated lists publicly via GET /lists/curated, but only once they have books", async () => {
     const admin = await signupAdmin("admin3@example.com");
-    await request(app)
+    const book = await Book.create({ title: "Публичная книга", author: "A", genre: "Роман" });
+    const curated = await request(app)
       .post("/api/lists")
       .set("Authorization", `Bearer ${admin.accessToken}`)
       .send({ name: "Подборка 1", isCurated: true });
@@ -229,6 +230,17 @@ describe("curated lists", () => {
       .post("/api/lists")
       .set("Authorization", `Bearer ${admin.accessToken}`)
       .send({ name: "Личный список админа" });
+
+    // An empty curated collection reads as broken to a visitor, so it's
+    // held back from the public list until it actually has a book in it.
+    const emptyRes = await request(app).get("/api/lists/curated");
+    expect(emptyRes.status).toBe(200);
+    expect(emptyRes.body).toHaveLength(0);
+
+    await request(app)
+      .post(`/api/lists/${curated.body.id}/books`)
+      .set("Authorization", `Bearer ${admin.accessToken}`)
+      .send({ bookId: book.id });
 
     const res = await request(app).get("/api/lists/curated");
     expect(res.status).toBe(200);

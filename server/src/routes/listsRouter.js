@@ -50,7 +50,10 @@ listsRouter.get("/curated", async (req, res) => {
       order: [["createdAt", "DESC"]],
       include: [{ model: Book, attributes: ["id", "img"], through: { attributes: [] } }],
     });
-    res.status(200).json(lists.map(serializeListSummary));
+    // An empty curated collection reads as a broken/unfinished page to a
+    // visitor — hide it from the public list until an admin adds books;
+    // it's still visible (and editable) on the admin's own /lists page.
+    res.status(200).json(lists.filter((list) => list.Books.length > 0).map(serializeListSummary));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Ошибка сервера" });
