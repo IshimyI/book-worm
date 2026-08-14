@@ -8,6 +8,7 @@ import AnalyticsSummary from '../ui/AnalyticsSummary';
 import SecurityEventLog from '../ui/SecurityEventLog';
 import StatsSummary from '../ui/StatsSummary';
 import PendingBooks from '../ui/PendingBooks';
+import ReportedUsers from '../ui/ReportedUsers';
 import { withCount } from '../utils/pluralize';
 import useConfirm from '../ui/useConfirm';
 
@@ -15,6 +16,7 @@ export default function AdminPage({ user }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
+  const [reportedUsersCount, setReportedUsersCount] = useState(0);
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkBusy, setBulkBusy] = useState(false);
   const toast = useToast();
@@ -118,6 +120,7 @@ export default function AdminPage({ user }) {
         <TabList>
           <Tab>Жалобы {reviews.length > 0 && `(${reviews.length})`}</Tab>
           <Tab>На модерации {pendingCount > 0 && `(${pendingCount})`}</Tab>
+          <Tab>Жалобы на пользователей {reportedUsersCount > 0 && `(${reportedUsersCount})`}</Tab>
           <Tab>Статистика</Tab>
           <Tab>Аналитика</Tab>
           <Tab>Журнал безопасности</Tab>
@@ -191,6 +194,9 @@ export default function AdminPage({ user }) {
           </TabPanel>
           <TabPanel px={0}>
             <PendingBooks onCountChange={setPendingCount} />
+          </TabPanel>
+          <TabPanel px={0}>
+            <ReportedUsers onCountChange={setReportedUsersCount} />
           </TabPanel>
           <TabPanel px={0}>
             <StatsSummary />

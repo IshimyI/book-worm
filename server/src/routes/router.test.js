@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const request = require("supertest");
 const app = require("../app");
-const { sequelize, User, Book, Review, Quote, PageView } = require("../../db/models");
+const { sequelize, User, Book, Review, Quote, PageView, UserReport } = require("../../db/models");
 const { AVATAR_DIR } = require("../middlewares/uploadAvatar");
 const { AVATAR_SIZE } = require("../utils/avatarImage");
 const { loadImage } = require("@napi-rs/canvas");
@@ -899,6 +899,41 @@ describe("blocking a user", () => {
       .set("Authorization", `Bearer ${blocker.accessToken}`);
     expect(profileRes.body.isFollowedByMe).toBe(false);
     expect(profileRes.body.isBlockedByMe).toBe(true);
+  });
+});
+
+describe("reporting a user", () => {
+  it("requires authentication", async () => {
+    const target = await signupAndLogin("reporttarget1@example.com");
+    const res = await request(app).post(`/api/users/${target.userId}/report`).send({ reason: "spam" });
+    expect(res.status).toBe(401);
+  });
+
+  it("refuses to report yourself", async () => {
+    const { userId, accessToken } = await signupAndLogin("reportsolo@example.com");
+    const res = await request(app).post(`/api/users/${userId}/report`).set("Authorization", `Bearer ${accessToken}`).send({});
+    expect(res.status).toBe(400);
+  });
+
+  it("submits a report and resubmitting updates the reason instead of duplicating", async () => {
+    const target = await signupAndLogin("reporttarget2@example.com");
+    const reporter = await signupAndLogin("reporter1@example.com");
+
+    const res = await request(app)
+      .post(`/api/users/${target.userId}/report`)
+      .set("Authorization", `Bearer ${reporter.accessToken}`)
+      .send({ reason: "Спам в комментариях" });
+    expect(res.status).toBe(200);
+
+    const again = await request(app)
+      .post(`/api/users/${target.userId}/report`)
+      .set("Authorization", `Bearer ${reporter.accessToken}`)
+      .send({ reason: "Оскорбления" });
+    expect(again.status).toBe(200);
+
+    expect(await UserReport.count({ where: { reportedId: target.userId } })).toBe(1);
+    const report = await UserReport.findOne({ where: { reportedId: target.userId } });
+    expect(report.reason).toBe("Оскорбления");
   });
 });
 

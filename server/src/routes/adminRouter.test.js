@@ -1,6 +1,6 @@
 const request = require("supertest");
 const app = require("../app");
-const { sequelize, User, Book, Review, PageView, SecurityEvent } = require("../../db/models");
+const { sequelize, User, Book, Review, PageView, SecurityEvent, UserReport } = require("../../db/models");
 
 async function signupAndLogin(email, isAdmin = false) {
   const res = await request(app).post("/api/auth/signup").send({
@@ -333,5 +333,46 @@ describe("book moderation queue", () => {
       .set("Authorization", `Bearer ${admin.accessToken}`);
     expect(res.status).toBe(200);
     expect(await Book.findByPk(book.id)).toBeNull();
+  });
+});
+
+describe("reported users", () => {
+  it("blocks non-admins", async () => {
+    const { accessToken } = await signupAndLogin("reportedusers-regular@example.com");
+    const res = await request(app).get("/api/admin/reported-users").set("Authorization", `Bearer ${accessToken}`);
+    expect(res.status).toBe(403);
+  });
+
+  it("groups reports by reported user, most-reported first", async () => {
+    const target1 = await signupAndLogin("reported-target1@example.com");
+    const target2 = await signupAndLogin("reported-target2@example.com");
+    const reporter1 = await signupAndLogin("reported-reporter1@example.com");
+    const reporter2 = await signupAndLogin("reported-reporter2@example.com");
+
+    await UserReport.create({ reporterId: reporter1.userId, reportedId: target1.userId, reason: "Спам" });
+    await UserReport.create({ reporterId: reporter2.userId, reportedId: target1.userId, reason: "Оскорбления" });
+    await UserReport.create({ reporterId: reporter1.userId, reportedId: target2.userId, reason: "Спам" });
+
+    const admin = await signupAndLogin("reportedusers-admin1@example.com", true);
+    const res = await request(app).get("/api/admin/reported-users").set("Authorization", `Bearer ${admin.accessToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body[0].id).toBe(target1.userId);
+    expect(res.body[0].reportCount).toBe(2);
+    expect(res.body[1].id).toBe(target2.userId);
+    expect(res.body[1].reportCount).toBe(1);
+  });
+
+  it("dismisses all reports for a user", async () => {
+    const target = await signupAndLogin("reported-target3@example.com");
+    const reporter = await signupAndLogin("reported-reporter3@example.com");
+    await UserReport.create({ reporterId: reporter.userId, reportedId: target.userId, reason: "Спам" });
+
+    const admin = await signupAndLogin("reportedusers-admin2@example.com", true);
+    const res = await request(app)
+      .post(`/api/admin/reported-users/${target.userId}/dismiss`)
+      .set("Authorization", `Bearer ${admin.accessToken}`);
+    expect(res.status).toBe(200);
+    expect(await UserReport.count({ where: { reportedId: target.userId } })).toBe(0);
   });
 });

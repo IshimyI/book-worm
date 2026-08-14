@@ -1,5 +1,5 @@
 const express = require("express");
-const { Review, Book, User, PageView, SecurityEvent } = require("../../db/models");
+const { Review, Book, User, PageView, SecurityEvent, UserReport } = require("../../db/models");
 const cache = require("../utils/simpleCache");
 const { Sequelize } = require("sequelize");
 const verifyAccessToken = require("../middlewares/verifyAccessToken");
@@ -301,6 +301,56 @@ adminRouter.delete("/books/:id", async (req, res) => {
     await Review.destroy({ where: { bookId: book.id }, force: true });
     await book.destroy();
     res.status(200).json({ message: "Книга отклонена и удалена" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+adminRouter.get("/reported-users", async (req, res) => {
+  try {
+    const reports = await UserReport.findAll({
+      include: [
+        { model: User, as: "Reporter", attributes: ["id", "name", "email"] },
+        { model: User, as: "Reported", attributes: ["id", "name", "email"] },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    const byReportedId = new Map();
+    for (const r of reports) {
+      if (!r.Reported) continue;
+      if (!byReportedId.has(r.reportedId)) {
+        byReportedId.set(r.reportedId, {
+          id: r.Reported.id,
+          name: r.Reported.name,
+          email: r.Reported.email,
+          reportCount: 0,
+          reports: [],
+        });
+      }
+      const entry = byReportedId.get(r.reportedId);
+      entry.reportCount += 1;
+      entry.reports.push({
+        id: r.id,
+        reason: r.reason,
+        createdAt: r.createdAt,
+        reporter: r.Reporter ? { id: r.Reporter.id, name: r.Reporter.name, email: r.Reporter.email } : null,
+      });
+    }
+
+    const result = [...byReportedId.values()].sort((a, b) => b.reportCount - a.reportCount);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
+});
+
+adminRouter.post("/reported-users/:id/dismiss", async (req, res) => {
+  try {
+    await UserReport.destroy({ where: { reportedId: req.params.id } });
+    res.status(200).json({ message: "Жалобы на пользователя сброшены" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Ошибка сервера" });

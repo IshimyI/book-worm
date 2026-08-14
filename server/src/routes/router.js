@@ -1,6 +1,6 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const { User, Book, Review, ReviewVote, ReviewComment, Follow, Block, ReadingStatus, ReadingChallenge, Notification, PushSubscription, PageView, News, Quote } = require("../../db/models");
+const { User, Book, Review, ReviewVote, ReviewComment, Follow, Block, UserReport, ReadingStatus, ReadingChallenge, Notification, PushSubscription, PageView, News, Quote } = require("../../db/models");
 const { Sequelize } = require("sequelize");
 const fs = require("fs");
 const path = require("path");
@@ -266,6 +266,34 @@ router.post("/users/:id/block", verifyAccessToken, contentLimiter, async (req, r
       blocked = true;
     }
     res.status(200).json({ blocked });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error.message);
+  }
+});
+
+router.post("/users/:id/report", verifyAccessToken, contentLimiter, async (req, res) => {
+  const targetId = Number(req.params.id);
+  const reason = (req.body.reason || "").trim().slice(0, 500);
+  try {
+    if (targetId === req.userId) {
+      return res.status(400).json({ message: "Нельзя пожаловаться на самого себя" });
+    }
+    const target = await User.findByPk(targetId);
+    if (!target) {
+      return res.status(404).json({ message: "Пользователь не найден" });
+    }
+
+    const [report] = await UserReport.findOrCreate({
+      where: { reporterId: req.userId, reportedId: targetId },
+      defaults: { reason: reason || null },
+    });
+    if (report.reason !== (reason || null)) {
+      report.reason = reason || null;
+      await report.save();
+    }
+
+    res.status(200).json({ message: "Жалоба отправлена" });
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);

@@ -20,6 +20,9 @@ export default function PublicProfilePage({ user }) {
   const [page, setPage] = useState(1);
   const [followBusy, setFollowBusy] = useState(false);
   const [blockBusy, setBlockBusy] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportBusy, setReportBusy] = useState(false);
   const [editingBio, setEditingBio] = useState(false);
   const [bioInput, setBioInput] = useState('');
   const [savingBio, setSavingBio] = useState(false);
@@ -131,6 +134,20 @@ export default function PublicProfilePage({ user }) {
     }
   };
 
+  const submitReport = async () => {
+    setReportBusy(true);
+    try {
+      await axiosInstance.post(`/users/${id}/report`, { reason: reportReason });
+      toast({ title: 'Жалоба отправлена', status: 'success', duration: 2000, isClosable: true });
+      setReporting(false);
+      setReportReason('');
+    } catch (error) {
+      toast({ title: error.response?.data?.message || 'Не удалось отправить жалобу', status: 'error', duration: 2500, isClosable: true });
+    } finally {
+      setReportBusy(false);
+    }
+  };
+
   return (
     <PageCard>
       <Breadcrumbs items={[{ label: 'Главная', to: '/' }, { label: profile.name }]} />
@@ -169,9 +186,29 @@ export default function PublicProfilePage({ user }) {
             >
               {profile.isBlockedByMe ? 'Разблокировать' : 'Заблокировать'}
             </Button>
+            <Button size="sm" variant="link" color="bw.textMuted" onClick={() => setReporting((v) => !v)}>
+              Пожаловаться
+            </Button>
           </Flex>
         )}
       </Flex>
+
+      {reporting && (
+        <Box mb="20px" p="12px" border="1px solid" borderColor="bw.border" borderRadius="md">
+          <Textarea
+            placeholder="Опишите, в чём проблема (необязательно)"
+            value={reportReason}
+            onChange={(e) => setReportReason(e.target.value)}
+            maxLength={500}
+            mb="8px"
+            size="sm"
+          />
+          <Button size="sm" isLoading={reportBusy} onClick={submitReport} sx={{ backgroundColor: '#334d00', color: 'white' }} mr="8px">
+            Отправить жалобу
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setReporting(false)}>Отмена</Button>
+        </Box>
+      )}
 
       {editingBio ? (
         <Box mb="20px">
