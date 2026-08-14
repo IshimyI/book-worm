@@ -22,7 +22,7 @@ const authRouter = require("./routes/authRouter");
 const tokensRouter = require("./routes/tokensRouter");
 const adminRouter = require("./routes/adminRouter");
 const listsRouter = require("./routes/listsRouter");
-const { Book, User, ReadingList } = require("../db/models");
+const { Book, User, ReadingList, News } = require("../db/models");
 
 const SITE_ORIGIN = process.env.SITE_ORIGIN || "https://mrbookworm.ru";
 
@@ -154,6 +154,37 @@ app.get("/lists/:id", async (req, res, next) => {
       pageUrl: `${SITE_ORIGIN}/lists/${list.id}`,
       imageUrl: `${SITE_ORIGIN}/api/v1/lists/${list.id}/og-image.png`,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/rss.xml", async (req, res, next) => {
+  try {
+    const news = await News.findAll({ order: [["createdAt", "DESC"]], limit: 30 });
+    const items = news
+      .map(
+        (n) => `
+  <item>
+    <title>${escapeHtml(n.title)}</title>
+    <link>${SITE_ORIGIN}/news</link>
+    <guid isPermaLink="false">mrbookworm-news-${n.id}</guid>
+    <pubDate>${new Date(n.createdAt).toUTCString()}</pubDate>
+    <description>${escapeHtml(n.body)}</description>
+  </item>`
+      )
+      .join("");
+
+    res.set("Content-Type", "application/rss+xml; charset=utf-8");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>Mr Book Worm — Новости</title>
+<link>${SITE_ORIGIN}/news</link>
+<description>Новости и обновления каталога книг Mr Book Worm.</description>
+<language>ru</language>${items}
+</channel>
+</rss>`);
   } catch (error) {
     next(error);
   }

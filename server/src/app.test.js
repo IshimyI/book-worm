@@ -1,11 +1,12 @@
 const request = require("supertest");
 const app = require("./app");
-const { sequelize, Book, User, ReadingList } = require("../db/models");
+const { sequelize, Book, User, ReadingList, News } = require("../db/models");
 
 beforeEach(async () => {
   await Book.destroy({ where: {}, truncate: true, cascade: true });
   await ReadingList.destroy({ where: {}, truncate: true, cascade: true });
   await User.destroy({ where: {}, truncate: true, cascade: true });
+  await News.destroy({ where: {}, truncate: true, cascade: true });
 });
 
 afterAll(async () => {
@@ -72,5 +73,26 @@ describe("GET /lists/:id (server-rendered bot response)", () => {
     const list = await ReadingList.create({ userId: owner.id, name: "Private List", isCurated: false });
     const res = await request(app).get(`/lists/${list.id}`);
     expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /rss.xml", () => {
+  it("returns a valid RSS 2.0 feed of news items, newest first, with escaped HTML", async () => {
+    const older = await News.create({ title: "Старая новость", body: "Текст 1" });
+    await News.update({ createdAt: new Date(Date.now() - 60 * 60 * 1000) }, { where: { id: older.id } });
+    await News.create({ title: '<b>Новая</b> новость', body: "Текст 2" });
+
+    const res = await request(app).get("/rss.xml");
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toMatch(/application\/rss\+xml/);
+    expect(res.text).toContain("<rss version=\"2.0\">");
+    expect(res.text).toContain("&lt;b&gt;Новая&lt;/b&gt; новость");
+    expect(res.text.indexOf("Новая")).toBeLessThan(res.text.indexOf("Старая"));
+  });
+
+  it("still returns a valid (empty) feed when there's no news yet", async () => {
+    const res = await request(app).get("/rss.xml");
+    expect(res.status).toBe(200);
+    expect(res.text).toContain("<channel>");
   });
 });

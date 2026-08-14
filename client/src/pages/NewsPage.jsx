@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Center, Heading, Text, Stack, Spinner } from '@chakra-ui/react';
+import { Box, Center, Heading, Text, Stack, Spinner, Link } from '@chakra-ui/react';
 import axiosInstance from '../axiosInstance';
 import useSeoMeta from '../utils/useSeoMeta';
 
@@ -34,6 +34,9 @@ export default function NewsPage() {
         <Box bg="bw.cardBg" color="bw.text" borderRadius="lg" boxShadow="md" p="30px" mb="24px" borderTop="4px solid" borderTopColor="bw.accent">
           <Heading as="h1" size="lg">Новости</Heading>
           <Text color="bw.textMuted" mt="6px">Что нового на Mr Book Worm</Text>
+          <Link href="/rss.xml" isExternal fontSize="sm" color="#4b5320" mt="10px" display="inline-block">
+            📡 RSS-лента
+          </Link>
         </Box>
         <Stack spacing="18px">
           {news.map((item) => (
