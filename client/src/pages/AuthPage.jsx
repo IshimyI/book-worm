@@ -44,6 +44,8 @@ export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoF
       const result = await handleLogin(e);
       if (result?.requiresTwoFactor) {
         setChallengeToken(result.challengeToken);
+      } else {
+        toast({ title: 'Вы успешно вошли!', status: 'success', duration: 2000, isClosable: true });
       }
     } catch (error) {
       toast({ title: error.response?.data?.message || 'Не удалось войти', status: 'error', duration: 2500, isClosable: true });
@@ -56,6 +58,7 @@ export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoF
     setVerifying(true);
     try {
       await handleVerifyTwoFactor(challengeToken, twoFactorCode.trim());
+      toast({ title: 'Вы успешно вошли!', status: 'success', duration: 2000, isClosable: true });
     } catch (error) {
       toast({ title: error.response?.data?.message || 'Неверный код', status: 'error', duration: 2500, isClosable: true });
     } finally {
