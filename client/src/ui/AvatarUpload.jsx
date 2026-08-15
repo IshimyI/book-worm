@@ -51,7 +51,8 @@ export default function AvatarUpload({ user, setUser }) {
           size="sm"
           isLoading={uploading}
           onClick={() => inputRef.current?.click()}
-          sx={{ backgroundColor: '#334d00', color: 'white' }}
+          bg="bw.accentSolid"
+          color="bw.accentSolidText"
         >
           Изменить фото
         </Button>

@@ -87,10 +87,8 @@ export default function RecoverPassword() {
           </FormControl>
 
           <Button
-            sx={{
-              backgroundColor: "#334d00",
-              color: "white",
-            }}
+            bg="bw.accentSolid"
+            color="bw.accentSolidText"
             width="100%"
             type="submit"
           >
@@ -105,9 +103,7 @@ export default function RecoverPassword() {
               as={NavLink}
               to={"/auth"}
               ml={2}
-              sx={{
-                color: "#334d00",
-              }}
+              color="bw.accent"
               variant="link"
             >
               Войти

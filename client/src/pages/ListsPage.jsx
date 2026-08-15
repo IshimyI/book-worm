@@ -79,7 +79,7 @@ export default function ListsPage({ user }) {
       <Center py="100px" flexDirection="column">
         <Text fontSize="xl" mb="20px">Войдите, чтобы создавать списки чтения</Text>
         <NavLink to="/auth">
-          <Button backgroundColor="#334d00" color="white">Войти</Button>
+          <Button bg="bw.accentSolid" color="bw.accentSolidText">Войти</Button>
         </NavLink>
       </Center>
     );
@@ -97,7 +97,7 @@ export default function ListsPage({ user }) {
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && createList()}
         />
-        <Button isLoading={creating} onClick={createList} sx={{ backgroundColor: '#334d00', color: 'white' }} flexShrink={0}>
+        <Button isLoading={creating} onClick={createList} bg="bw.accentSolid" color="bw.accentSolidText" flexShrink={0}>
           Создать список
         </Button>
       </Flex>
@@ -121,7 +121,7 @@ export default function ListsPage({ user }) {
             <Box key={list.id} border="1px solid" borderColor="bw.border" borderRadius="md" p="16px" bg="bw.cardBg">
               <Flex justify="space-between" align="flex-start" mb="10px">
                 <NavLink to={`/lists/${list.id}`}>
-                  <Heading as="h3" size="sm" _hover={{ color: '#4b5320', textDecoration: 'underline' }}>
+                  <Heading as="h3" size="sm" _hover={{ color: 'bw.accent', textDecoration: 'underline' }}>
                     {list.name} {list.isCurated && <Badge colorScheme="green" ml="4px">подборка</Badge>}
                   </Heading>
                 </NavLink>

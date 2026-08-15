@@ -20,7 +20,7 @@ export default function useUndoableAction() {
       duration: DELAY_MS,
       isClosable: true,
       render: ({ onClose }) => (
-        <Flex bg="#334d00" color="white" p="12px 16px" borderRadius="md" justify="space-between" align="center" gap="14px">
+        <Flex bg="bw.accentSolid" color="bw.accentSolidText" p="12px 16px" borderRadius="md" justify="space-between" align="center" gap="14px">
           <Text fontSize="sm">{message}</Text>
           <Button
             size="xs"

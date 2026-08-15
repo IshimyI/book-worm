@@ -25,8 +25,9 @@ export default function BackToTop() {
       borderRadius="full"
       size="lg"
       boxShadow="md"
-      sx={{ backgroundColor: '#334d00', color: 'white' }}
-      _hover={{ backgroundColor: '#4b5320' }}
+      bg="bw.accentSolid"
+      color="bw.accentSolidText"
+      _hover={{ bg: 'bw.accent' }}
     />
   );
 }

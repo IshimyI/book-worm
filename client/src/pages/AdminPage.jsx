@@ -116,7 +116,7 @@ export default function AdminPage({ user }) {
       {ConfirmDialog}
       <Heading as="h1" size="lg" mb="20px">Администрирование</Heading>
 
-      <Tabs colorScheme="green" sx={{ '[aria-selected=true]': { color: '#334d00' } }}>
+      <Tabs colorScheme="green" sx={{ '[aria-selected=true]': { color: 'var(--chakra-colors-bw-accent)' } }}>
         <TabList overflowX="auto" overflowY="hidden" flexWrap="nowrap" sx={{ scrollbarWidth: "thin" }}>
           <Tab whiteSpace="nowrap">Жалобы {reviews.length > 0 && `(${reviews.length})`}</Tab>
           <Tab whiteSpace="nowrap">На модерации {pendingCount > 0 && `(${pendingCount})`}</Tab>
@@ -143,7 +143,7 @@ export default function AdminPage({ user }) {
                   </Checkbox>
                   {selectedIds.length > 0 && (
                     <Flex gap="10px">
-                      <Button size="sm" backgroundColor="#334d00" color="white" isLoading={bulkBusy} onClick={bulkDismiss}>
+                      <Button size="sm" bg="bw.accentSolid" color="bw.accentSolidText" isLoading={bulkBusy} onClick={bulkDismiss}>
                         Сбросить жалобы ({selectedIds.length})
                       </Button>
                       <Button size="sm" variant="outline" colorScheme="red" isLoading={bulkBusy} onClick={bulkRemove}>
@@ -180,7 +180,7 @@ export default function AdminPage({ user }) {
                     <Text mb="3">{review.body}</Text>
                     <Text fontSize="sm" color="bw.textMuted" mb="3">Оценка: {review.rating} ⭐</Text>
                     <Flex gap="10px">
-                      <Button size="sm" backgroundColor="#334d00" color="white" onClick={() => dismiss(review.id)}>
+                      <Button size="sm" bg="bw.accentSolid" color="bw.accentSolidText" onClick={() => dismiss(review.id)}>
                         Сбросить жалобы
                       </Button>
                       <Button size="sm" variant="outline" colorScheme="red" onClick={() => remove(review.id)}>

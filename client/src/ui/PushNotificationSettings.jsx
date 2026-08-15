@@ -62,7 +62,7 @@ export default function PushNotificationSettings() {
           Отключить
         </Button>
       ) : (
-        <Button size="sm" isLoading={busy} onClick={enable} sx={{ backgroundColor: '#334d00', color: 'white' }}>
+        <Button size="sm" isLoading={busy} onClick={enable} bg="bw.accentSolid" color="bw.accentSolidText">
           Включить push-уведомления
         </Button>
       )}

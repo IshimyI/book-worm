@@ -93,7 +93,7 @@ export default function PendingBooks({ onCountChange }) {
               )}
             </Box>
             <Flex gap="10px" align="flex-start">
-              <Button size="sm" backgroundColor="#334d00" color="white" onClick={() => approve(book.id)}>
+              <Button size="sm" bg="bw.accentSolid" color="bw.accentSolidText" onClick={() => approve(book.id)}>
                 Одобрить
               </Button>
               <Button size="sm" variant="outline" colorScheme="red" onClick={() => reject(book.id)}>

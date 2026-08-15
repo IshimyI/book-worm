@@ -95,10 +95,8 @@ export default function ResetPassword() {
           </FormControl>
 
           <Button
-            sx={{
-              backgroundColor: "#334d00",
-              color: "white",
-            }}
+            bg="bw.accentSolid"
+            color="bw.accentSolidText"
             width="100%"
             type="submit"
             disabled={loading}

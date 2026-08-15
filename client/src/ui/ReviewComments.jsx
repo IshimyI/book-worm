@@ -128,7 +128,7 @@ export default function ReviewComments({ user, review, onCountChange }) {
               isDisabled={!user}
               rows={2}
             />
-            <Button size="sm" isLoading={submittingReply} onClick={() => submitReply(comment.id)} sx={{ backgroundColor: '#334d00', color: 'white' }} flexShrink={0}>
+            <Button size="sm" isLoading={submittingReply} onClick={() => submitReply(comment.id)} bg="bw.accentSolid" color="bw.accentSolidText" flexShrink={0}>
               Ответить
             </Button>
           </Flex>
@@ -162,7 +162,7 @@ export default function ReviewComments({ user, review, onCountChange }) {
                   isDisabled={!user}
                   rows={2}
                 />
-                <Button size="sm" isLoading={submitting} onClick={submit} sx={{ backgroundColor: '#334d00', color: 'white' }} flexShrink={0}>
+                <Button size="sm" isLoading={submitting} onClick={submit} bg="bw.accentSolid" color="bw.accentSolidText" flexShrink={0}>
                   Отправить
                 </Button>
               </Flex>

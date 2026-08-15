@@ -41,7 +41,7 @@ export default function CollectionsPage() {
         <SimpleGrid columns={{ base: 1, sm: 2 }} spacing="16px">
           {lists.map((list) => (
             <NavLink key={list.id} to={`/lists/${list.id}`}>
-              <Box border="1px solid" borderColor="bw.border" borderRadius="md" p="16px" bg="bw.cardBg" _hover={{ borderColor: '#4b5320', boxShadow: 'sm' }} transition="border-color 0.15s ease">
+              <Box border="1px solid" borderColor="bw.border" borderRadius="md" p="16px" bg="bw.cardBg" _hover={{ borderColor: 'bw.accent', boxShadow: 'sm' }} transition="border-color 0.15s ease">
                 <Heading as="h3" size="sm" mb="6px">{list.name}</Heading>
                 {list.description && (
                   <Text fontSize="sm" color="bw.textMuted" mb="10px" noOfLines={2}>{list.description}</Text>

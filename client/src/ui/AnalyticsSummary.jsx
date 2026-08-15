@@ -11,7 +11,7 @@ function Bar({ label, count, max }) {
     <Flex align="center" gap="10px" mb="6px">
       <Text fontSize="sm" flex="1" noOfLines={1} title={label}>{label}</Text>
       <Box flex="2" bg="bw.border" borderRadius="full" h="8px" overflow="hidden">
-        <Box bg="#4b5320" h="100%" width={`${Math.max(pct, 3)}%`} />
+        <Box bg="bw.accentSolid" h="100%" width={`${Math.max(pct, 3)}%`} />
       </Box>
       <Text fontSize="sm" color="bw.textMuted" minW="30px" textAlign="right">{count}</Text>
     </Flex>

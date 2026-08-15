@@ -36,7 +36,7 @@ export default function FeedPage({ user }) {
       <Center py="100px" flexDirection="column">
         <Text fontSize="xl" mb="20px">Войдите, чтобы видеть ленту подписок</Text>
         <NavLink to="/auth">
-          <Button backgroundColor="#334d00" color="white">Войти</Button>
+          <Button bg="bw.accentSolid" color="bw.accentSolidText">Войти</Button>
         </NavLink>
       </Center>
     );
@@ -102,7 +102,8 @@ export default function FeedPage({ user }) {
             size="sm"
             isDisabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            sx={{ backgroundColor: '#334d00', color: 'white' }}
+            bg="bw.accentSolid"
+            color="bw.accentSolidText"
           >
             ← Назад
           </Button>
@@ -113,7 +114,8 @@ export default function FeedPage({ user }) {
             size="sm"
             isDisabled={page >= data.totalPages}
             onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
-            sx={{ backgroundColor: '#334d00', color: 'white' }}
+            bg="bw.accentSolid"
+            color="bw.accentSolidText"
           >
             Вперёд →
           </Button>

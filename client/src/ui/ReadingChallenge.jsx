@@ -50,17 +50,17 @@ export default function ReadingChallenge() {
             Прочитано {data.completed} из {data.goal} книг
           </Text>
           <Box bg="bw.border" borderRadius="full" h="10px" overflow="hidden" mb="10px">
-            <Box bg="#4b5320" h="100%" width={`${Math.max(pct, data.completed > 0 ? 3 : 0)}%`} />
+            <Box bg="bw.accentSolid" h="100%" width={`${Math.max(pct, data.completed > 0 ? 3 : 0)}%`} />
           </Box>
           {editing ? (
             <form onSubmit={saveGoal}>
               <Flex gap="10px">
                 <Input size="sm" type="number" min="1" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} w="120px" />
-                <Button size="sm" type="submit" isLoading={busy} sx={{ backgroundColor: '#334d00', color: 'white' }}>Сохранить</Button>
+                <Button size="sm" type="submit" isLoading={busy} bg="bw.accentSolid" color="bw.accentSolidText">Сохранить</Button>
               </Flex>
             </form>
           ) : (
-            <Button size="xs" variant="link" sx={{ color: '#334d00' }} onClick={() => { setGoalInput(String(data.goal)); setEditing(true); }}>
+            <Button size="xs" variant="link" color="bw.accent" onClick={() => { setGoalInput(String(data.goal)); setEditing(true); }}>
               Изменить цель
             </Button>
           )}
@@ -69,11 +69,11 @@ export default function ReadingChallenge() {
         <form onSubmit={saveGoal}>
           <Flex gap="10px">
             <Input size="sm" type="number" min="1" placeholder="Сколько книг?" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} w="160px" />
-            <Button size="sm" type="submit" isLoading={busy} sx={{ backgroundColor: '#334d00', color: 'white' }}>Начать</Button>
+            <Button size="sm" type="submit" isLoading={busy} bg="bw.accentSolid" color="bw.accentSolidText">Начать</Button>
           </Flex>
         </form>
       ) : (
-        <Button size="sm" onClick={() => { setGoalInput('12'); setEditing(true); }} sx={{ backgroundColor: '#334d00', color: 'white' }}>
+        <Button size="sm" onClick={() => { setGoalInput('12'); setEditing(true); }} bg="bw.accentSolid" color="bw.accentSolidText">
           Поставить цель на год
         </Button>
       )}

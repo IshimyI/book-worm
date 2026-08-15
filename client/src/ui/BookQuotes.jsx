@@ -88,7 +88,7 @@ export default function BookQuotes({ bookId, user }) {
           <Text fontSize="xs" color="bw.textMuted" mb="10px" textAlign="right">{text.length}/1000</Text>
           <Flex gap="10px" mb="16px" align="center" flexWrap="wrap">
             <Input placeholder="Страница (необязательно)" type="number" min="1" value={page} onChange={(e) => setPage(e.target.value)} w="200px" size="sm" />
-            <Button type="submit" size="sm" isLoading={submitting} sx={{ backgroundColor: '#334d00', color: 'white' }}>
+            <Button type="submit" size="sm" isLoading={submitting} bg="bw.accentSolid" color="bw.accentSolidText">
               Сохранить цитату
             </Button>
           </Flex>
@@ -102,7 +102,7 @@ export default function BookQuotes({ bookId, user }) {
       ) : (
         <Stack spacing={3} mb="10px">
           {quotes.map((q) => (
-            <Box key={q.id} p="3" borderLeft="3px solid" borderColor="#334d00" bg="bw.cardBg" borderRadius="sm">
+            <Box key={q.id} p="3" borderLeft="3px solid" borderColor="bw.accent" bg="bw.cardBg" borderRadius="sm">
               <Flex justify="space-between" align="flex-start" gap="10px">
                 <Text fontStyle="italic">«{q.text}»</Text>
                 {user && user.id === q.author.id && (

@@ -46,7 +46,7 @@ export default function FollowSuggestions() {
             {followingIds.includes(s.id) ? (
               <Text fontSize="xs" color="bw.textMuted">✓ Подписаны</Text>
             ) : (
-              <Button size="xs" onClick={() => follow(s.id)} sx={{ backgroundColor: '#334d00', color: 'white' }}>
+              <Button size="xs" onClick={() => follow(s.id)} bg="bw.accentSolid" color="bw.accentSolidText">
                 Подписаться
               </Button>
             )}

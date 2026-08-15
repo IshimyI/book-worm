@@ -295,7 +295,7 @@ export default function BookPage({ user, setUser }) {
       <Center py="100px" flexDirection="column">
         <Text fontSize="xl" mb="20px">Книга не найдена</Text>
         <NavLink to="/">
-          <Button backgroundColor="#334d00" color="white">На главную</Button>
+          <Button bg="bw.accentSolid" color="bw.accentSolidText">На главную</Button>
         </NavLink>
       </Center>
     );
@@ -326,7 +326,7 @@ export default function BookPage({ user, setUser }) {
             </Stack>
             <Text mb="20px">{book.annotation}</Text>
             <Flex gap="12px" flexWrap="wrap">
-              <Button backgroundColor={isFavorite ? '#334d00' : '#6b7412'} color="white" onClick={handleFavorites}>
+              <Button bg={isFavorite ? 'bw.accentSolid' : 'bw.favoriteInactive'} color="bw.accentSolidText" onClick={handleFavorites}>
                 {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
               </Button>
               <AddToListMenu user={user} bookId={book.id} />
@@ -342,7 +342,8 @@ export default function BookPage({ user, setUser }) {
                 target="_blank"
                 rel="noreferrer"
                 variant="outline"
-                sx={{ color: '#334d00', borderColor: '#334d00' }}
+                color="bw.accent"
+                borderColor="bw.accent"
               >
                 Читать / найти книгу
               </Button>
@@ -389,16 +390,16 @@ export default function BookPage({ user, setUser }) {
                         <Box>
                           <Text fontWeight="bold">
                             <NavLink to={`/users/${review.user_id}`} style={{ textDecoration: 'none' }}>
-                              <Text as="span" _hover={{ textDecoration: 'underline', color: '#4b5320' }}>{review.userName}</Text>
+                              <Text as="span" _hover={{ textDecoration: 'underline', color: 'bw.accent' }}>{review.userName}</Text>
                             </NavLink>
                             {' '}
-                            {isMine && <Text as="span" fontSize="xs" color="#4b5320" fontWeight="bold">(ваш отзыв)</Text>}
+                            {isMine && <Text as="span" fontSize="xs" color="bw.accent" fontWeight="bold">(ваш отзыв)</Text>}
                           </Text>
                           <Text fontSize="xs" color="bw.textMuted">{relativeTime(review.createdAt)}</Text>
                         </Box>
                         {isMine ? (
                           <Flex gap="10px">
-                            <Button size="xs" variant="link" sx={{ color: '#4b5320' }} onClick={startEditing}>
+                            <Button size="xs" variant="link" color="bw.accent" onClick={startEditing}>
                               Редактировать
                             </Button>
                             <Button size="xs" variant="link" sx={{ color: '#a4522a' }} onClick={deleteReview}>
@@ -423,11 +424,9 @@ export default function BookPage({ user, setUser }) {
                           <Button
                             size="xs"
                             variant={review.helpfulByMe ? 'solid' : 'outline'}
-                            sx={
-                              review.helpfulByMe
-                                ? { backgroundColor: '#4b5320', color: 'white' }
-                                : { color: '#4b5320', borderColor: '#4b5320' }
-                            }
+                            bg={review.helpfulByMe ? 'bw.accentSolid' : undefined}
+                            color={review.helpfulByMe ? 'bw.accentSolidText' : 'bw.accent'}
+                            borderColor={review.helpfulByMe ? undefined : 'bw.accent'}
                             onClick={() => toggleHelpful(review)}
                           >
                             👍 Полезно {review.helpfulCount > 0 ? `(${review.helpfulCount})` : ''}
@@ -449,7 +448,7 @@ export default function BookPage({ user, setUser }) {
 
         <Box id="reviewForm">
           {isEditing && (
-            <Text fontSize="sm" color="#4b5320" fontWeight="bold" mb="6px">Вы редактируете свой отзыв</Text>
+            <Text fontSize="sm" color="bw.accent" fontWeight="bold" mb="6px">Вы редактируете свой отзыв</Text>
           )}
           <Textarea value={inputBody} onChange={(e) => setInputBody(e.target.value)} placeholder="Напиши свою рецензию" mb="6px" />
           <Text fontSize="xs" color="bw.textMuted" mb="10px">
@@ -462,7 +461,7 @@ export default function BookPage({ user, setUser }) {
           <Box mb="15px">
             <StarRatingInput rating={rating} onChange={setRating} />
           </Box>
-          <Button backgroundColor="#334d00" color="white" onClick={addReviewHandler}>
+          <Button bg="bw.accentSolid" color="bw.accentSolidText" onClick={addReviewHandler}>
             {isEditing ? 'Обновить рецензию' : 'Добавить рецензию'}
           </Button>
         </Box>

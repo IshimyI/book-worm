@@ -121,7 +121,7 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
         <ModalHeader fontSize={{ base: 'xl', md: '2xl' }} fontWeight="bold">
           {book.title}
           <NavLink to={`/books/${book.id}`}>
-            <Button size="xs" ml="12px" mt={{ base: '8px', md: 0 }} variant="outline" sx={{ color: '#334d00', borderColor: '#334d00' }}>
+            <Button size="xs" ml="12px" mt={{ base: '8px', md: 0 }} variant="outline" color="bw.accent" borderColor="bw.accent">
               <ExternalLinkIcon mr="6px" /> Открыть страницу книги
             </Button>
           </NavLink>
@@ -186,7 +186,8 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
                       <Box
                         key={index}
                         p="3"
-                        border={user && review.user_id === user.id ? '2px solid #4b5320' : '1px solid'}
+                        border={user && review.user_id === user.id ? '2px solid' : '1px solid'}
+                        sx={user && review.user_id === user.id ? { borderColor: 'var(--chakra-colors-bw-accent)' } : undefined}
                         borderColor={user && review.user_id === user.id ? undefined : 'bw.border'}
                         bg={user && review.user_id === user.id ? 'bw.reviewHighlight' : 'bw.cardBg'}
                         borderRadius="md"
@@ -200,7 +201,7 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
                               <Text fontWeight="bold">
                                 {review.userName}{' '}
                                 {user && review.user_id === user.id && (
-                                  <Text as="span" fontSize="xs" color="#4b5320" fontWeight="bold">(ваш отзыв)</Text>
+                                  <Text as="span" fontSize="xs" color="bw.accent" fontWeight="bold">(ваш отзыв)</Text>
                                 )}
                               </Text>
                             </Flex>
@@ -229,10 +230,10 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
           </Flex>
 
           <Flex className="bookActionsRow" mt={'30px'} gap="12px">
-            <Button backgroundColor={isFavorite ? '#334d00' : '#6b7412'} color="white" onClick={handleFavorites}>
+            <Button bg={isFavorite ? 'bw.accentSolid' : 'bw.favoriteInactive'} color="bw.accentSolidText" onClick={handleFavorites}>
               {isFavorite ? '✓ В избранном' : 'Добавить в избранное'}
             </Button>
-            <Button backgroundColor="#334d00" color="white" onClick={addReviewHandler}>
+            <Button bg="bw.accentSolid" color="bw.accentSolidText" onClick={addReviewHandler}>
               {myReview ? 'Обновить рецензию' : 'Добавить рецензию'}
             </Button>
             <Button
@@ -241,7 +242,8 @@ const BookModal = ({ book, isOpen, onClose, user, setUser }) => {
               target="_blank"
               rel="noreferrer"
               variant="outline"
-              sx={{ color: '#334d00', borderColor: '#334d00' }}
+              color="bw.accent"
+              borderColor="bw.accent"
             >
               Читать / найти книгу
             </Button>

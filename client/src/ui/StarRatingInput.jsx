@@ -31,7 +31,7 @@ export default function StarRatingInput({ rating, onChange, size = '25px' }) {
             border="none"
             p="2px"
             cursor="pointer"
-            _focusVisible={{ outline: '2px solid #4b5320', outlineOffset: '2px', borderRadius: '4px' }}
+            _focusVisible={{ outline: '2px solid', outlineColor: 'bw.accent', outlineOffset: '2px', borderRadius: '4px' }}
           >
             <StarIcon fontSize={size} color={filled ? 'gold' : 'gray.300'} />
           </Box>

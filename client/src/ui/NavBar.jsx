@@ -121,17 +121,17 @@ export default function NavBar({ user, handleLogout }) {
           <DrawerHeader>Меню</DrawerHeader>
           <DrawerBody>
             <Stack spacing="4" fontSize="md" fontWeight="600" onClick={onClose}>
-              <ChakraLink as={NavLink} to="/news" color="bw.text" _hover={{ color: "#4b5320" }}>Новости</ChakraLink>
-              <ChakraLink as={NavLink} to="/collections" color="bw.text" _hover={{ color: "#4b5320" }}>Подборки</ChakraLink>
-              <ChakraLink as={NavLink} to="/leaderboard" color="bw.text" _hover={{ color: "#4b5320" }}>Топ читателей</ChakraLink>
+              <ChakraLink as={NavLink} to="/news" color="bw.text" _hover={{ color: "bw.accent" }}>Новости</ChakraLink>
+              <ChakraLink as={NavLink} to="/collections" color="bw.text" _hover={{ color: "bw.accent" }}>Подборки</ChakraLink>
+              <ChakraLink as={NavLink} to="/leaderboard" color="bw.text" _hover={{ color: "bw.accent" }}>Топ читателей</ChakraLink>
               {user && user.isEmailConfirmed ? (
-                <ChakraLink as={NavLink} to="/feed" color="bw.text" _hover={{ color: "#4b5320" }}>Лента</ChakraLink>
+                <ChakraLink as={NavLink} to="/feed" color="bw.text" _hover={{ color: "bw.accent" }}>Лента</ChakraLink>
               ) : null}
               {user && user.isEmailConfirmed ? (
-                <ChakraLink as={NavLink} to="/lists" color="bw.text" _hover={{ color: "#4b5320" }}>Мои списки</ChakraLink>
+                <ChakraLink as={NavLink} to="/lists" color="bw.text" _hover={{ color: "bw.accent" }}>Мои списки</ChakraLink>
               ) : null}
               {user && user.isAdmin ? (
-                <ChakraLink as={NavLink} to="/admin" color="bw.text" _hover={{ color: "#4b5320" }}>Модерация</ChakraLink>
+                <ChakraLink as={NavLink} to="/admin" color="bw.text" _hover={{ color: "bw.accent" }}>Модерация</ChakraLink>
               ) : null}
 
               <Divider />
@@ -150,12 +150,12 @@ export default function NavBar({ user, handleLogout }) {
               <Divider />
 
               {user && user.isEmailConfirmed ? (
-                <ChakraLink as={NavLink} to="/office" color="bw.text" _hover={{ color: "#4b5320" }}>Кабинет</ChakraLink>
+                <ChakraLink as={NavLink} to="/office" color="bw.text" _hover={{ color: "bw.accent" }}>Кабинет</ChakraLink>
               ) : null}
               {user && user.isEmailConfirmed ? (
-                <ChakraLink as={NavLink} to="/auth" onClick={handleLogout} color="bw.text" _hover={{ color: "#4b5320" }}>Выйти</ChakraLink>
+                <ChakraLink as={NavLink} to="/auth" onClick={handleLogout} color="bw.text" _hover={{ color: "bw.accent" }}>Выйти</ChakraLink>
               ) : (
-                <ChakraLink as={NavLink} to="/auth" color="bw.text" _hover={{ color: "#4b5320" }}>Войти</ChakraLink>
+                <ChakraLink as={NavLink} to="/auth" color="bw.text" _hover={{ color: "bw.accent" }}>Войти</ChakraLink>
               )}
             </Stack>
           </DrawerBody>

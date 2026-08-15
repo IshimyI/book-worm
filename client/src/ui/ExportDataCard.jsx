@@ -31,7 +31,7 @@ export default function ExportDataCard() {
       <Text fontSize="sm" color="bw.textMuted" mb="14px">
         Скачайте архив своих рецензий, цитат, статусов чтения и профиля в формате JSON.
       </Text>
-      <Button size="sm" onClick={download} isLoading={busy} sx={{ backgroundColor: '#334d00', color: 'white' }}>
+      <Button size="sm" onClick={download} isLoading={busy} bg="bw.accentSolid" color="bw.accentSolidText">
         Экспортировать мои данные
       </Button>
     </Box>

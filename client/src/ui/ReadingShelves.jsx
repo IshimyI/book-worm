@@ -27,7 +27,7 @@ const ReadingShelves = ({ handleBookClick }) => {
   return (
     <Box>
       <Text fontSize="20px" marginBottom="20px">Мои книги по статусу</Text>
-      <Tabs colorScheme="green" sx={{ '[aria-selected=true]': { color: '#334d00' } }}>
+      <Tabs colorScheme="green" sx={{ '[aria-selected=true]': { color: 'var(--chakra-colors-bw-accent)' } }}>
         <TabList>
           {TABS.map(({ key, label }) => (
             <Tab key={key}>{label} ({shelves[key].length})</Tab>

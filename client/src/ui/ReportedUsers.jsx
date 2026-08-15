@@ -73,7 +73,7 @@ export default function ReportedUsers({ onCountChange }) {
                   </Text>
                 ))}
               </Stack>
-              <Button size="sm" backgroundColor="#334d00" color="white" onClick={() => dismiss(u.id)}>
+              <Button size="sm" bg="bw.accentSolid" color="bw.accentSolidText" onClick={() => dismiss(u.id)}>
                 Сбросить жалобы
               </Button>
             </Box>

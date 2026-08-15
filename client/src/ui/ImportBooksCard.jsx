@@ -64,7 +64,7 @@ export default function ImportBooksCard() {
         onChange={handleFileChange}
         style={{ display: 'none' }}
       />
-      <Button size="sm" onClick={openPicker} isLoading={busy} loadingText="Импортируем…" sx={{ backgroundColor: '#334d00', color: 'white' }}>
+      <Button size="sm" onClick={openPicker} isLoading={busy} loadingText="Импортируем…" bg="bw.accentSolid" color="bw.accentSolidText">
         Выбрать CSV-файл
       </Button>
     </Box>

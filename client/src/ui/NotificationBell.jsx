@@ -107,7 +107,7 @@ export default function NotificationBell({ user }) {
       <MenuList maxH="360px" overflowY="auto" minW="300px">
         {notifications.length > 0 && (
           <>
-            <Button size="xs" variant="link" ml="12px" mb="6px" sx={{ color: '#334d00' }} onClick={markAllRead}>
+            <Button size="xs" variant="link" ml="12px" mb="6px" color="bw.accent" onClick={markAllRead}>
               Прочитать все
             </Button>
             <MenuDivider />

@@ -59,7 +59,8 @@ export default function AddToListMenu({ user, bookId }) {
             toast({ title: 'Войдите, чтобы использовать списки чтения', status: 'info', duration: 2500, isClosable: true });
           }
         }}
-        sx={{ color: '#334d00', borderColor: '#334d00' }}
+        color="bw.accent"
+        borderColor="bw.accent"
       >
         + В список
       </MenuButton>
@@ -88,7 +89,7 @@ export default function AddToListMenu({ user, bookId }) {
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && createAndAdd()}
             />
-            <Button size="sm" isLoading={creating} onClick={createAndAdd} sx={{ backgroundColor: '#334d00', color: 'white' }}>
+            <Button size="sm" isLoading={creating} onClick={createAndAdd} bg="bw.accentSolid" color="bw.accentSolidText">
               +
             </Button>
           </Flex>

@@ -225,10 +225,8 @@ export default function MainPage({ user }) {
 
               <Flex mt={"20px"} mb={"10px"} justifyContent={"center"} columnGap={"15px"}>
                 <Button
-                  sx={{
-                    backgroundColor: "#334d00",
-                    color: "white",
-                  }}
+                  bg="bw.accentSolid"
+                  color="bw.accentSolidText"
                   size="sm"
                   onClick={resetFilters}
                 >
@@ -271,7 +269,8 @@ export default function MainPage({ user }) {
                 </Select>
                 <Button
                   variant="outline"
-                  sx={{ color: '#334d00', borderColor: '#334d00' }}
+                  color="bw.accent"
+                  borderColor="bw.accent"
                   isLoading={randomLoading}
                   onClick={goToRandomBook}
                 >
@@ -339,7 +338,7 @@ export default function MainPage({ user }) {
                       </NavLink>
                       <Box textAlign="left" p="4" mt={"10px"}>
                         <NavLink to={`/books/${book.id}`}>
-                          <Heading as="h3" size="md" mb={2} _hover={{ color: "#334d00" }}>
+                          <Heading as="h3" size="md" mb={2} _hover={{ color: "bw.accent" }}>
                             {book.title}
                           </Heading>
                         </NavLink>
@@ -363,11 +362,9 @@ export default function MainPage({ user }) {
                           <NavLink to={`/books/${book.id}`}>
                             <Button
                               size="sm"
-                              sx={{
-                                backgroundColor: "#4b5320",
-                                color: "white",
-                                boxShadow: "0 2px 6px rgba(75,83,32,0.4)",
-                              }}
+                              bg="bw.accentSolid"
+                              color="bw.accentSolidText"
+                              boxShadow="0 2px 6px rgba(75,83,32,0.4)"
                             >
                               Смотреть книгу →
                             </Button>
@@ -385,7 +382,8 @@ export default function MainPage({ user }) {
                     size="sm"
                     isDisabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    sx={{ backgroundColor: "#334d00", color: "white" }}
+                    bg="bw.accentSolid"
+                    color="bw.accentSolidText"
                   >
                     ← Назад
                   </Button>
@@ -396,7 +394,8 @@ export default function MainPage({ user }) {
                     size="sm"
                     isDisabled={page >= totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    sx={{ backgroundColor: "#334d00", color: "white" }}
+                    bg="bw.accentSolid"
+                    color="bw.accentSolidText"
                   >
                     Вперёд →
                   </Button>

@@ -34,7 +34,9 @@ export default function ReadingStatusSelect({ user, bookId, status, onChange }) 
       width="auto"
       minW="170px"
       bg="bw.cardBg"
-      sx={{ borderColor: '#334d00', color: '#334d00', fontWeight: 'bold' }}
+      borderColor="bw.accent"
+      color="bw.accent"
+      fontWeight="bold"
     >
       {Object.entries(LABELS).map(([value, label]) => (
         <option key={value} value={value}>{label}</option>

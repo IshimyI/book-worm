@@ -75,7 +75,7 @@ export default function ListDetailPage() {
       <Center py="100px" flexDirection="column">
         <Text fontSize="xl" mb="20px">Список не найден</Text>
         <NavLink to="/lists">
-          <Button backgroundColor="#334d00" color="white">К моим спискам</Button>
+          <Button bg="bw.accentSolid" color="bw.accentSolidText">К моим спискам</Button>
         </NavLink>
       </Center>
     );
@@ -98,7 +98,7 @@ export default function ListDetailPage() {
           {list.isCurated && (
             <Textarea value={descInput} onChange={(e) => setDescInput(e.target.value)} placeholder="Краткое описание подборки" rows={2} />
           )}
-          <Button onClick={saveName} sx={{ backgroundColor: '#334d00', color: 'white' }} alignSelf="flex-start">
+          <Button onClick={saveName} bg="bw.accentSolid" color="bw.accentSolidText" alignSelf="flex-start">
             Сохранить
           </Button>
         </Flex>
@@ -110,7 +110,7 @@ export default function ListDetailPage() {
             mb={list.description ? '6px' : '20px'}
             onClick={() => list.canManage && setEditingName(true)}
             cursor={list.canManage ? 'pointer' : 'default'}
-            _hover={list.canManage ? { color: '#4b5320' } : undefined}
+            _hover={list.canManage ? { color: 'bw.accent' } : undefined}
           >
             {list.name} {list.canManage && <Text as="span" fontSize="sm" color="bw.textMuted">(изменить)</Text>}
           </Heading>

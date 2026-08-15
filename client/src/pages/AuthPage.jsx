@@ -92,7 +92,8 @@ export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoF
               />
             </FormControl>
             <Button
-              sx={{ backgroundColor: "#334d00", color: "white" }}
+              bg="bw.accentSolid"
+              color="bw.accentSolidText"
               width="100%"
               mb={1}
               type="submit"
@@ -104,7 +105,7 @@ export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoF
             <Button
               m={"0 auto"}
               variant="link"
-              sx={{ color: "#334d00" }}
+              color="bw.accent"
               onClick={() => setChallengeToken(null)}
               size="sm"
             >
@@ -172,10 +173,8 @@ export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoF
             </FormControl>
 
             <Button
-              sx={{
-                backgroundColor: "#334d00",
-                color: "white",
-              }}
+              bg="bw.accentSolid"
+              color="bw.accentSolidText"
               width="100%"
               mb={1}
               type="submit"
@@ -187,9 +186,7 @@ export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoF
             <Button
               m={"0 auto"}
               variant="link"
-              sx={{
-                color: "#334d00",
-              }}
+              color="bw.accent"
               onClick={() => setBool(false)}
               size="sm"
             >
@@ -216,10 +213,8 @@ export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoF
             </FormControl>
 
             <Button
-              sx={{
-                backgroundColor: "#334d00",
-                color: "white",
-              }}
+              bg="bw.accentSolid"
+              color="bw.accentSolidText"
               width="100%"
               mb={1}
               type="submit"
@@ -239,9 +234,7 @@ export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoF
               >
                 <Button
                   variant="link"
-                  sx={{
-                    color: "#334d00",
-                  }}
+                  color="bw.accent"
                   size="sm"
                 >
                   Забыли пароль?
@@ -251,9 +244,7 @@ export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoF
               <Button
                 m={"0 auto"}
                 variant="link"
-                sx={{
-                  color: "#334d00",
-                }}
+                color="bw.accent"
                 size="sm"
                 onClick={() => setBool(true)}
               >

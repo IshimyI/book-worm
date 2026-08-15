@@ -28,7 +28,10 @@ export default function LeaderboardPage() {
   return (
     <PageCard maxW="700px">
       <Heading as="h1" size="lg" mb="6px">Топ читателей</Heading>
-      <Text color="bw.textMuted" mb="24px" textTransform="capitalize">{monthName}</Text>
+      <Text color="bw.textMuted" mb="24px">
+        По числу рецензий за{' '}
+        <Text as="span" textTransform="lowercase">{monthName}</Text> — рейтинг обновляется каждый месяц
+      </Text>
 
       {leaders === null ? (
         <Stack spacing="10px">
@@ -48,13 +51,15 @@ export default function LeaderboardPage() {
                 borderColor="bw.border"
                 borderRadius="md"
                 bg={i < 3 ? 'bw.reviewHighlight' : 'bw.cardBg'}
-                _hover={{ borderColor: '#4b5320' }}
+                _hover={{ borderColor: 'bw.accent' }}
               >
                 <Text fontSize="lg" w="32px" textAlign="center">{MEDALS[i] || `${i + 1}.`}</Text>
                 <Avatar name={leader.name} src={resolveAvatarUrl(leader.avatarUrl)} size="sm" />
                 <Box flex="1">
                   <Text fontWeight="bold">{leader.name}</Text>
-                  <Text fontSize="sm" color="bw.textMuted">{withCount(leader.reviewCount, ['рецензия', 'рецензии', 'рецензий'])}</Text>
+                  <Text fontSize="sm" color="bw.textMuted">
+                    {withCount(leader.reviewCount, ['рецензия', 'рецензии', 'рецензий'])} в этом месяце
+                  </Text>
                 </Box>
                 {leader.helpfulCount > 0 && (
                   <Badge colorScheme="green">👍 {leader.helpfulCount}</Badge>

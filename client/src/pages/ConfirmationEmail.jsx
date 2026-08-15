@@ -90,7 +90,8 @@ export default function ConfirmationEmail({ setUser }) {
   return (
     <>
       <Box
-        bg={"white"}
+        bg="bw.cardBg"
+        color="bw.text"
         width={"800px"}
         mx="auto"
         mt={8}
@@ -108,10 +109,8 @@ export default function ConfirmationEmail({ setUser }) {
             </Alert>
 
             <Button
-              sx={{
-                backgroundColor: "#334d00",
-                color: "white",
-              }}
+              bg="bw.accentSolid"
+              color="bw.accentSolidText"
               onClick={() => navigate("/")}
             >
               Перейти на главную
@@ -139,12 +138,13 @@ export default function ConfirmationEmail({ setUser }) {
                   onChange={(e) => setResendEmail(e.target.value)}
                   required
                   mb={3}
-                  bg="white"
+                  bg="bw.pageBg"
                 />
                 <Button
                   type="submit"
                   isLoading={resendState?.status === "loading"}
-                  sx={{ backgroundColor: "#334d00", color: "white" }}
+                  bg="bw.accentSolid"
+                  color="bw.accentSolidText"
                   width="100%"
                 >
                   Отправить письмо ещё раз
@@ -160,11 +160,8 @@ export default function ConfirmationEmail({ setUser }) {
 
             <Button
               variant={showResendForm ? "ghost" : "solid"}
-              sx={
-                showResendForm
-                  ? { color: "#334d00" }
-                  : { backgroundColor: "#334d00", color: "white" }
-              }
+              color={showResendForm ? "bw.accent" : "bw.accentSolidText"}
+              bg={showResendForm ? undefined : "bw.accentSolid"}
               onClick={() => navigate("/")}
             >
               Вернуться на главную

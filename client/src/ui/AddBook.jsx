@@ -146,10 +146,8 @@ export default function AddBook({ user }) {
     <>
       <Button
         onClick={onOpen}
-        sx={{
-          backgroundColor: '#334d00',
-          color: 'white',
-        }}
+        bg="bw.accentSolid"
+        color="bw.accentSolidText"
       >
         Добавить книгу
       </Button>
@@ -215,10 +213,8 @@ export default function AddBook({ user }) {
                             <Text>Не нашли подходящую книгу?</Text>
                             <Button
                               onClick={switchAdder}
-                              sx={{
-                                backgroundColor: '#334d00',
-                                color: 'white',
-                              }}
+                              bg="bw.accentSolid"
+                              color="bw.accentSolidText"
                             >
                               Добавить свою
                             </Button>
@@ -233,9 +229,7 @@ export default function AddBook({ user }) {
                           onClick={switchAdder}
                           mb="40px"
                           variant="link"
-                          sx={{
-                            color: '#334d00',
-                          }}
+                          color="bw.accent"
                         >
                           <ArrowBackIcon />
                           Вернуться к поиску
@@ -321,10 +315,8 @@ export default function AddBook({ user }) {
                     >
                       <Button
                         type="submit"
-                        sx={{
-                          backgroundColor: '#334d00',
-                          color: 'white',
-                        }}
+                        bg="bw.accentSolid"
+                        color="bw.accentSolidText"
                       >
                         Добавить рецензию
                       </Button>

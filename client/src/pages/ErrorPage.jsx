@@ -12,7 +12,7 @@ export default function ErrorPage() {
         Такой страницы не существует — возможно, ссылка устарела или в адресе опечатка.
       </Text>
       <NavLink to="/">
-        <Button backgroundColor="#334d00" color="white">
+        <Button bg="bw.accentSolid" color="bw.accentSolidText">
           <ArrowBackIcon mr="6px" /> На главную
         </Button>
       </NavLink>

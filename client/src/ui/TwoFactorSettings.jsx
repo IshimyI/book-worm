@@ -68,7 +68,7 @@ export default function TwoFactorSettings({ user, setUser }) {
             <Code key={rc} fontSize="sm">{rc}</Code>
           ))}
         </Stack>
-        <Button size="sm" sx={{ backgroundColor: '#334d00', color: 'white' }} onClick={() => setRecoveryCodes(null)}>
+        <Button size="sm" bg="bw.accentSolid" color="bw.accentSolidText" onClick={() => setRecoveryCodes(null)}>
           Я сохранил коды
         </Button>
       </Box>
@@ -93,7 +93,7 @@ export default function TwoFactorSettings({ user, setUser }) {
           onKeyDown={(e) => e.key === 'Enter' && confirmEnable()}
         />
         <Box>
-          <Button size="sm" isLoading={busy} onClick={confirmEnable} sx={{ backgroundColor: '#334d00', color: 'white' }} mr="10px">
+          <Button size="sm" isLoading={busy} onClick={confirmEnable} bg="bw.accentSolid" color="bw.accentSolidText" mr="10px">
             Подтвердить и включить
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setSetupData(null)}>Отмена</Button>
@@ -136,7 +136,7 @@ export default function TwoFactorSettings({ user, setUser }) {
           </Button>
         )
       ) : (
-        <Button size="sm" isLoading={busy} onClick={startSetup} sx={{ backgroundColor: '#334d00', color: 'white' }}>
+        <Button size="sm" isLoading={busy} onClick={startSetup} bg="bw.accentSolid" color="bw.accentSolidText">
           Включить 2FA
         </Button>
       )}

@@ -75,7 +75,7 @@ export default function PublicProfilePage({ user }) {
       <Center py="100px" flexDirection="column">
         <Text fontSize="xl" mb="20px">Пользователь не найден</Text>
         <NavLink to="/">
-          <Button backgroundColor="#334d00" color="white">На главную</Button>
+          <Button bg="bw.accentSolid" color="bw.accentSolidText">На главную</Button>
         </NavLink>
       </Center>
     );
@@ -170,11 +170,10 @@ export default function PublicProfilePage({ user }) {
               <Button
                 isLoading={followBusy}
                 onClick={toggleFollow}
-                sx={
-                  profile.isFollowedByMe
-                    ? { backgroundColor: 'transparent', color: '#334d00', border: '1px solid #334d00' }
-                    : { backgroundColor: '#334d00', color: 'white' }
-                }
+                bg={profile.isFollowedByMe ? 'transparent' : 'bw.accentSolid'}
+                color={profile.isFollowedByMe ? 'bw.accent' : 'bw.accentSolidText'}
+                border={profile.isFollowedByMe ? '1px solid' : undefined}
+                borderColor={profile.isFollowedByMe ? 'bw.accent' : undefined}
               >
                 {profile.isFollowedByMe ? '✓ Вы подписаны' : 'Подписаться'}
               </Button>
@@ -204,7 +203,7 @@ export default function PublicProfilePage({ user }) {
             mb="8px"
             size="sm"
           />
-          <Button size="sm" isLoading={reportBusy} onClick={submitReport} sx={{ backgroundColor: '#334d00', color: 'white' }} mr="8px">
+          <Button size="sm" isLoading={reportBusy} onClick={submitReport} bg="bw.accentSolid" color="bw.accentSolidText" mr="8px">
             Отправить жалобу
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setReporting(false)}>Отмена</Button>
@@ -222,7 +221,7 @@ export default function PublicProfilePage({ user }) {
             mb="4px"
           />
           <Text fontSize="xs" color="bw.textMuted" mb="8px" textAlign="right">{bioInput.length}/500</Text>
-          <Button size="sm" isLoading={savingBio} onClick={saveBio} sx={{ backgroundColor: '#334d00', color: 'white' }} mr="8px">
+          <Button size="sm" isLoading={savingBio} onClick={saveBio} bg="bw.accentSolid" color="bw.accentSolidText" mr="8px">
             Сохранить
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setEditingBio(false)}>Отмена</Button>
@@ -235,7 +234,7 @@ export default function PublicProfilePage({ user }) {
             isOwnProfile && <Text color="bw.textMuted" fontSize="sm">Расскажите о себе — нажмите «Изменить», чтобы добавить био.</Text>
           )}
           {isOwnProfile && (
-            <Button size="xs" variant="link" mt="4px" sx={{ color: '#334d00' }} onClick={startEditingBio}>
+            <Button size="xs" variant="link" mt="4px" color="bw.accent" onClick={startEditingBio}>
               Изменить
             </Button>
           )}
@@ -294,7 +293,7 @@ export default function PublicProfilePage({ user }) {
                 border="1px solid"
                 borderColor="bw.border"
                 borderRadius="md"
-                _hover={{ borderColor: '#4b5320', boxShadow: 'sm' }}
+                _hover={{ borderColor: 'bw.accent', boxShadow: 'sm' }}
                 transition="border-color 0.15s ease"
               >
                 <Image src={coverThumbUrl(review.bookImg) || './default.jpg'} fallbackSrc="./default.jpg" alt={review.bookTitle} loading="lazy" width="60px" height="84px" objectFit="cover" borderRadius="4px" />
@@ -315,7 +314,8 @@ export default function PublicProfilePage({ user }) {
             size="sm"
             isDisabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            sx={{ backgroundColor: '#334d00', color: 'white' }}
+            bg="bw.accentSolid"
+            color="bw.accentSolidText"
           >
             ← Назад
           </Button>
@@ -326,7 +326,8 @@ export default function PublicProfilePage({ user }) {
             size="sm"
             isDisabled={page >= profile.totalPages}
             onClick={() => setPage((p) => Math.min(profile.totalPages, p + 1))}
-            sx={{ backgroundColor: '#334d00', color: 'white' }}
+            bg="bw.accentSolid"
+            color="bw.accentSolidText"
           >
             Вперёд →
           </Button>
