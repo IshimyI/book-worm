@@ -69,7 +69,7 @@ export default function NavBar({ user, handleLogout }) {
                 color="#f5f0dc"
                 _hover={{ bg: "whiteAlpha.200" }}
               />
-              {user && user.isEmailConfirmed ? (
+              {user ? (
                 <NavLink to="/office">
                   <button className="btnMain" type="button">
                     <img src="/img/ic_Home.png" className="imgMainBTN" alt="" />
@@ -77,7 +77,7 @@ export default function NavBar({ user, handleLogout }) {
                   </button>
                 </NavLink>
               ) : null}
-              {user && user.isEmailConfirmed ? (
+              {user ? (
                 <NavLink to="/auth">
                   <button
                     className="btnMain"
@@ -149,10 +149,10 @@ export default function NavBar({ user, handleLogout }) {
 
               <Divider />
 
-              {user && user.isEmailConfirmed ? (
+              {user ? (
                 <ChakraLink as={NavLink} to="/office" color="bw.text" _hover={{ color: "bw.accent" }}>Кабинет</ChakraLink>
               ) : null}
-              {user && user.isEmailConfirmed ? (
+              {user ? (
                 <ChakraLink as={NavLink} to="/auth" onClick={handleLogout} color="bw.text" _hover={{ color: "bw.accent" }}>Выйти</ChakraLink>
               ) : (
                 <ChakraLink as={NavLink} to="/auth" color="bw.text" _hover={{ color: "bw.accent" }}>Войти</ChakraLink>
