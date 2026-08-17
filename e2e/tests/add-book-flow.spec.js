@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("sign up, add a book with a review, and find it in the catalog", async ({ page }) => {
+test("sign up, add a book with a review, and see it go to moderation", async ({ page }) => {
   const unique = Date.now();
   const email = `e2e-${unique}@example.com`;
   const bookTitle = `E2E Test Book ${unique}`;
@@ -32,14 +32,14 @@ test("sign up, add a book with a review, and find it in the catalog", async ({ p
   await page.getByRole("radio", { name: "Оценка 5 из 5" }).click();
 
   await page.getByRole("button", { name: "Добавить рецензию" }).click();
-  await expect(page.getByText("Книга успешно добавлена!")).toBeVisible();
+  // New submissions go to a moderation queue and aren't in the public
+  // catalog until an admin approves them (see server/src/routes/router.js
+  // POST /book/new) — the toast has to say so, not claim it's live.
+  await expect(page.getByText("Книга отправлена на модерацию")).toBeVisible();
 
+  // Confirm it's genuinely held back: searching the public catalog for the
+  // still-pending title finds nothing.
   await page.goto("/");
   await page.getByPlaceholder("Поиск по названию").fill(bookTitle);
-  const bookLink = page.getByRole("link", { name: bookTitle }).first();
-  await expect(bookLink).toBeVisible();
-  await bookLink.click();
-
-  await expect(page.getByRole("heading", { name: bookTitle })).toBeVisible();
-  await expect(page.getByRole("paragraph").filter({ hasText: reviewBody })).toBeVisible();
+  await expect(page.getByRole("link", { name: bookTitle })).toHaveCount(0);
 });

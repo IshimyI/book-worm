@@ -132,6 +132,8 @@ export default function AddBook({ user }) {
             200,
             res.data.possibleDuplicateOf
               ? `Похожая книга уже есть в каталоге («${res.data.possibleDuplicateOf.title}») — добавили вашу рецензию туда.`
+              : res.data.book?.status === 'pending'
+              ? 'Книга отправлена на модерацию. Она появится в каталоге после проверки.'
               : 'Книга успешно добавлена! Спасибо!'
           );
           setTimeout(()=>{onClose()}, 2000);

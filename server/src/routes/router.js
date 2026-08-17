@@ -18,6 +18,7 @@ const { findPossibleDuplicate } = require("../utils/bookDedup");
 const { extractMentionTokens } = require("../utils/extractMentions");
 const cache = require("../utils/simpleCache");
 const logSecurityEvent = require("../utils/securityLog");
+const sanitizeUser = require("../utils/sanitizeUser");
 const { getCachedCoverPath } = require("../utils/coverCache");
 
 const router = express.Router();
@@ -1243,8 +1244,13 @@ router.get("/recommendations", verifyAccessToken, async (req, res) => {
   }
 });
 
-router.get("/listUserBooks/:id", async (req, res) => {
+router.get("/listUserBooks/:id", verifyAccessToken, async (req, res) => {
   const { id } = req.params;
+
+  if (Number(id) !== req.userId) {
+    return res.status(403).json({ message: "Нельзя смотреть чужой список рецензий" });
+  }
+
   try {
     if (!id) {
       return res
@@ -1608,8 +1614,13 @@ router.post("/review/:id/report", verifyAccessToken, contentLimiter, async (req,
   }
 });
 
-router.get("/favourites/:id", async (req, res) => {
+router.get("/favourites/:id", verifyAccessToken, async (req, res) => {
   const { id } = req.params;
+
+  if (Number(id) !== req.userId) {
+    return res.status(403).json({ message: "Нельзя смотреть избранное другого пользователя" });
+  }
+
   try {
     const user = await User.findByPk(id);
     if (user) {
@@ -1619,7 +1630,7 @@ router.get("/favourites/:id", async (req, res) => {
         books.map(async (bookId) => await Book.findByPk(bookId))
       );
 
-      res.status(200).send(result);
+      res.status(200).send(result.filter(Boolean));
     } else {
       res.status(404).send("Пользователь не найден.");
     }
@@ -1655,7 +1666,7 @@ router.post("/updateFavourites/:id", verifyAccessToken, async (req, res) => {
     }
     user.favourites = favouriteBooks.join(" ");
     await user.save();
-    res.status(200).send(user);
+    res.status(200).send(sanitizeUser(user.get({ plain: true })));
   } catch (error) {
     console.log(error);
     res.status(500).send(error.message);
