@@ -1,6 +1,5 @@
 require("dotenv").config();
 
-// Must run before other requires so Sentry can auto-instrument them.
 const Sentry = require("@sentry/node");
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -87,8 +86,7 @@ app.use(cookieParser());
 // In production nginx serves this directory directly (see the /uploads
 // location block) and this line is never reached — it exists so local dev
 // (no nginx in front) can still resolve avatar URLs. helmet()'s default
-// Cross-Origin-Resource-Policy: same-origin blocks the client (a different
-// port in dev) from loading these images, so relax it just for this route.
+
 app.use(
   "/uploads",
   (req, res, next) => {
@@ -98,13 +96,6 @@ app.use(
   express.static(path.join(__dirname, "../uploads"))
 );
 
-// Regular users never reach these — nginx only proxies /books/:id,
-// /users/:id, and /lists/:id here for requests whose User-Agent matches a
-// known social-media link-unfurling bot (see /etc/nginx/conf.d/social-bots.conf
-// on the VPS), everyone else gets the normal static SPA straight from
-// nginx. Those bots don't execute JS, so the client-side useSeoMeta
-// og:image/title never reaches them — these are the server-rendered
-// responses standing in for that, just for these three paths.
 app.get("/books/:id", async (req, res, next) => {
   try {
     const book = await Book.findByPk(req.params.id, { attributes: ["id", "title", "author", "annotation"] });
@@ -144,7 +135,7 @@ app.get("/users/:id", async (req, res, next) => {
 app.get("/lists/:id", async (req, res, next) => {
   try {
     const list = await ReadingList.findByPk(req.params.id, { attributes: ["id", "name", "description", "isCurated", "userId"] });
-    // Personal (non-curated) lists are private — same rule as the API.
+
     if (!list || !list.isCurated) return next();
 
     renderBotHtml(res, {
@@ -191,11 +182,6 @@ app.get("/rss.xml", async (req, res, next) => {
   }
 });
 
-// /api/v1 is the canonical path; bare /api is kept as an alias to the same
-// routers so the currently-deployed client (still calling /api directly)
-// keeps working without a synchronized deploy. New clients/integrations
-// should target /api/v1 — it's the one that'll stick around if a v2 with
-// breaking changes is ever needed.
 for (const prefix of ["/api", "/api/v1"]) {
   app.use(prefix, router);
   app.use(`${prefix}/auth`, authRouter);
@@ -209,16 +195,12 @@ if (process.env.SENTRY_DSN) {
   Sentry.setupExpressErrorHandler(app);
 }
 
-// Fallback so a route error becomes a JSON 500 instead of Express's
-// default HTML error page, and (via the handler above) still reaches Sentry.
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ message: "Внутренняя ошибка сервера" });
 });
 
-// Don't bind a port when imported by tests (supertest drives the app
-// in-process) — only when run directly as the server entrypoint.
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server listening on port: ${PORT}!`);

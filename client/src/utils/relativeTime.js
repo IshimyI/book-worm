@@ -10,8 +10,6 @@ const UNITS = [
   ['minute', 60],
 ];
 
-// "2 часа назад" style — falls back to an absolute date once it's old
-// enough that "N months ago" stops being useful information.
 export function relativeTime(dateInput) {
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
   const diffSeconds = (date.getTime() - Date.now()) / 1000;

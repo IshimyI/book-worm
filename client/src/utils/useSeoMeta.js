@@ -10,9 +10,6 @@ function setMeta(name, content, attr = "name") {
   el.setAttribute("content", content);
 }
 
-// Sets document.title + description/og meta tags for as long as the
-// calling page is mounted, restoring the previous title on unmount so
-// navigating away doesn't leave a stale tab title behind.
 export default function useSeoMeta({ title, description, image, enabled = true }) {
   useEffect(() => {
     if (!enabled || !title) return undefined;

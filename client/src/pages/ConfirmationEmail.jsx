@@ -39,8 +39,7 @@ export default function ConfirmationEmail({ setUser }) {
         const message = error.response?.data?.message || "";
 
         // Same "already confirmed" outcome as a fresh confirmation — most
-        // often this is a second click on the same link (e.g. an email
-        // client's link-preview scanner already used it once).
+
         if (status === 400 && message.includes("Email")) {
           setRes("успех");
           setUser((prev) => ({ ...prev, isEmailConfirmed: true }));

@@ -25,9 +25,6 @@ function verifyToken(token, secret) {
   return speakeasy.totp.verify({ secret, encoding: "base32", token, window: 1 });
 }
 
-// Recovery codes are shown to the user exactly once at generation time —
-// only their bcrypt hashes are persisted, same treatment as a password,
-// since each one is a full authentication bypass if leaked.
 async function generateRecoveryCodes() {
   const plainCodes = Array.from({ length: RECOVERY_CODE_COUNT }, () =>
     crypto.randomBytes(5).toString("hex")

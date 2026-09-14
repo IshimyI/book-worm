@@ -32,9 +32,6 @@ function SpoilerSpan({ content }) {
   );
 }
 
-// Reviews can mark spoilers with ||double pipes||, Reddit/Discord-style.
-// Rendered as a blurred/hidden span that reveals on click, everywhere a
-// review body is shown.
 export default function SpoilerText({ text, ...textProps }) {
   if (!text) return null;
   const parts = text.split(/(\|\|[^|]+\|\|)/g);

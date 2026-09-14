@@ -1,15 +1,6 @@
 require("dotenv").config();
 const { sequelize, Book, User, Quote, Follow, ReadingList, ReadingListBook, ReadingStatus } = require("../db/models");
 
-// One-off, re-runnable — fills in the site's other activity surfaces
-// (quotes, follows, reading lists, reading shelves), which were sitting at
-// zero despite 700+ reviews: nothing to show on any book's "Цитаты"
-// section, an empty "Лента" for every user, no curated "Подборки", and
-// every "Мои книги по статусу" shelf empty. Real quotes only for books
-// this was confident are accurately remembered — no invented "quotes".
-// Everything else (follows, statuses) is generated, not fabricated prose,
-// so no accuracy risk there.
-
 const QUOTES = [
   { title: "Мастер и Маргарита", quotes: [
     { userId: 2, text: "Рукописи не горят.", page: 398 },
@@ -123,10 +114,8 @@ async function seedFollows() {
   let created = 0;
   for (const followerId of ids) {
     const others = ids.filter((id) => id !== followerId);
-    // Deterministic-ish spread (based on id) rather than true randomness,
-    // so re-running doesn't pile up different follows on top of previous
-    // runs beyond what findOrCreate already guards against.
-    const followCount = 3 + (followerId % 5); // 3-7
+
+    const followCount = 3 + (followerId % 5);
     const shuffled = [...others].sort((a, b) => ((a * 31 + followerId) % 97) - ((b * 31 + followerId) % 97));
     const toFollow = shuffled.slice(0, followCount);
     for (const followingId of toFollow) {
@@ -188,7 +177,7 @@ async function seedReadingStatuses() {
 
   let created = 0;
   for (const user of users) {
-    const count = 5 + (user.id % 8); // 5-12 books on this user's shelves
+    const count = 5 + (user.id % 8);
     const shuffled = [...bookIds].sort((a, b) => ((a * 17 + user.id) % 101) - ((b * 17 + user.id) % 101));
     const picked = shuffled.slice(0, count);
     for (let i = 0; i < picked.length; i += 1) {

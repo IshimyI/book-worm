@@ -3,9 +3,6 @@ import { useState } from 'react';
 import { Box } from '@chakra-ui/react';
 import { StarIcon } from '@chakra-ui/icons';
 
-// A row of 5 stars, each a real keyboard-focusable button with an aria-label
-// ("Оценка 3 из 5") — a plain <StarIcon onClick> is invisible to keyboard and
-// screen-reader users, since an SVG click handler has no button semantics.
 export default function StarRatingInput({ rating, onChange, size = '25px' }) {
   const [hover, setHover] = useState(0);
 

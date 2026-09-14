@@ -9,15 +9,6 @@ const sanitizeUser = require("../utils/sanitizeUser");
 
 const tokensRouter = express.Router();
 
-// Two near-simultaneous refresh calls carrying the same pre-rotation cookie
-// (React StrictMode's double-effect in dev, a network retry, two tabs open
-// at once) are a benign race, not theft. A naive fetch-then-save rotation
-// lets both requests read the row before either writes back, so both think
-// they're the legitimate first rotation and both write a fresh random jti —
-// whichever save loses is silently orphaned (the same class of bug the
-// reuse detection was meant to catch). The UPDATE below is conditioned on
-// currentRefreshTokenId still matching what was presented, so Postgres's
-// row-level locking serializes the two requests: only one can win.
 const REFRESH_GRACE_PERIOD_MS = 10_000;
 
 tokensRouter.get("/refresh", verifyRefreshToken, async (req, res) => {
@@ -46,10 +37,6 @@ tokensRouter.get("/refresh", verifyRefreshToken, async (req, res) => {
         .json({ accessToken, user: plainUser });
     }
 
-    // The conditional UPDATE didn't match — either this request lost the
-    // race above (another request already rotated past this exact jti, in
-    // which case a fresh read now shows it as previousRefreshTokenId) or
-    // it's a genuinely stale/stolen token from further back.
     const dbUser = await User.findByPk(user.id);
     if (!dbUser) {
       return res.clearCookie("refreshToken").sendStatus(401);

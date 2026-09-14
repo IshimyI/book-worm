@@ -4,11 +4,6 @@ import {
   AlertDialogContent, AlertDialogOverlay, Button,
 } from '@chakra-ui/react';
 
-// Promise-based replacement for window.confirm() that matches the site's
-// styling instead of a native browser dialog. Usage:
-//   const { confirm, ConfirmDialog } = useConfirm();
-//   if (!(await confirm('Удалить рецензию?'))) return;
-//   return <>{ConfirmDialog}...</>;
 export default function useConfirm() {
   const [state, setState] = useState(null);
   const cancelRef = useRef(null);

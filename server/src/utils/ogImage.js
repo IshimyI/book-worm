@@ -1,9 +1,5 @@
 const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
 
-// DejaVu Sans ships on virtually every Linux box (it's a core fontconfig
-// package) and covers Cyrillic, which the default canvas fallback font
-// often doesn't — without registering it explicitly, Cyrillic titles can
-// render as tofu boxes depending on what's installed on the host.
 const CANDIDATE_FONT_PATHS = [
   "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
   "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -12,7 +8,7 @@ for (const fontPath of CANDIDATE_FONT_PATHS) {
   try {
     GlobalFonts.registerFromPath(fontPath, "OgSans");
   } catch {
-    // Font not present on this host — canvas falls back to its default.
+
   }
 }
 
@@ -179,8 +175,6 @@ async function generateListOgImage(list) {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  // A small overlapping stack of covers stands in for "this is a
-  // collection", rather than trying to cram a full grid into the frame.
   const coverWidth = 200;
   const coverHeight = 290;
   const coverY = (HEIGHT - coverHeight) / 2 - 20;

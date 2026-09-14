@@ -13,10 +13,6 @@ async function isRequesterAdmin(userId) {
   return Boolean(user?.isAdmin);
 }
 
-// Curated lists are editorial content anyone can see; personal lists are
-// only visible to their owner. Editing either requires being the owner, or
-// (for curated lists specifically) being an admin — any admin can maintain
-// the site's curated collections, not just whoever happened to create one.
 async function loadManageableList(req, res) {
   const list = await ReadingList.findByPk(req.params.id);
   if (!list) {
@@ -50,9 +46,7 @@ listsRouter.get("/curated", async (req, res) => {
       order: [["createdAt", "DESC"]],
       include: [{ model: Book, attributes: ["id", "img"], through: { attributes: [] } }],
     });
-    // An empty curated collection reads as a broken/unfinished page to a
-    // visitor — hide it from the public list until an admin adds books;
-    // it's still visible (and editable) on the admin's own /lists page.
+
     res.status(200).json(lists.filter((list) => list.Books.length > 0).map(serializeListSummary));
   } catch (error) {
     console.error(error);
@@ -118,8 +112,7 @@ listsRouter.get("/:id/og-image.png", optionalAuth, async (req, res) => {
     if (!list) {
       return res.status(404).send({ message: "Список не найден" });
     }
-    // Same visibility rule as viewing the list itself: curated lists are
-    // public, personal lists only to their owner.
+
     if (!list.isCurated && list.userId !== req.userId) {
       return res.status(404).send({ message: "Список не найден" });
     }
@@ -208,8 +201,7 @@ listsRouter.post("/:id/books", verifyAccessToken, async (req, res) => {
     if (!book) {
       return res.status(404).json({ message: "Книга не найдена" });
     }
-    // Adding a book already on the list is a no-op, not an error — the
-    // unique(readingListId, bookId) index is what actually enforces this.
+
     await ReadingListBook.findOrCreate({ where: { readingListId: list.id, bookId } });
     res.status(200).json({ message: "Добавлено в список" });
   } catch (error) {

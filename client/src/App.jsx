@@ -8,7 +8,6 @@ import { Center, Spinner } from "@chakra-ui/react";
 import MainPage from "./pages/MainPage";
 import trackPageview from "./utils/trackPageview";
 
-// Lazily loaded: not needed for the first paint of the catalog homepage.
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const Office = lazy(() => import("./pages/Office"));
 const BookPage = lazy(() => import("./pages/BookPage"));
@@ -80,7 +79,7 @@ function App() {
     const data = Object.fromEntries(formData);
     const res = await axiosInstance.post("/auth/login", data);
     if (res.data.requiresTwoFactor) {
-      // Don't set the user/navigate yet — wait for the 2FA code.
+
       return res.data;
     }
     if (res.status === 200) {

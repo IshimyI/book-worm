@@ -62,8 +62,7 @@ export default function BookPage({ user, setUser }) {
     description: book?.annotation || (book ? `${book.title}, ${book.author}` : ''),
     // A branded card (cover + title + rating) generated server-side, not
     // the bare cover — social crawlers don't run this JS anyway (see the
-    // server-rendered /books/:id bot response for the path that reaches
-    // them), but anything that *does* execute JS here gets the nicer image.
+
     image: book ? `${import.meta.env.VITE_TARGET}/api/v1/book/${book.id}/og-image.png` : undefined,
   });
 
@@ -98,9 +97,6 @@ export default function BookPage({ user, setUser }) {
   const myReview = user ? reviews.find((r) => r.user_id === user.id) : null;
   const isEditing = Boolean(myReview);
 
-  // Prefill the form with the existing review as soon as it's known, so
-  // opening the form to "write a review" on a book you already reviewed
-  // shows what you wrote instead of a blank box.
   useEffect(() => {
     if (myReview) {
       setInputBody(myReview.user_rev);
@@ -117,17 +113,12 @@ export default function BookPage({ user, setUser }) {
 
   const draftKey = book ? `bw_draft_review_${book.id}` : null;
 
-  // Restore an unsaved draft once the book (and whether the user already
-  // has a review to edit instead) is known — only for the "write a new
-  // review" case, so it never clobbers the pre-filled edit form above.
   useEffect(() => {
     if (!draftKey || isEditing) return;
     const draft = localStorage.getItem(draftKey);
     if (draft) setInputBody(draft);
   }, [draftKey, isEditing]);
 
-  // ...and keep saving it as they type, so navigating away by accident
-  // doesn't lose a half-written review.
   useEffect(() => {
     if (!draftKey || isEditing) return;
     if (inputBody) {
@@ -255,7 +246,7 @@ export default function BookPage({ user, setUser }) {
     } else {
       list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     }
-    // Your own review always leads, regardless of sort order.
+
     if (user) {
       list.sort((a, b) => (b.user_id === user.id ? 1 : 0) - (a.user_id === user.id ? 1 : 0));
     }

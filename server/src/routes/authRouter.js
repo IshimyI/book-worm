@@ -20,7 +20,6 @@ const TWO_FACTOR_CHALLENGE_PURPOSE = "2fa_challenge";
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
-// Slow down credential-guessing / signup-spam without blocking normal use.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
@@ -38,9 +37,6 @@ authRouter.post("/signup", authLimiter, async (req, res) => {
   try {
     const { email, name, password, website, formRenderedAt } = req.body;
 
-    // Honeypot: a field real users never see or fill, styled off-screen in
-    // the form. Bots that auto-fill every input trip it. Also reject forms
-    // submitted implausibly fast (under 1.5s), another bot tell.
     if (website) {
       logSecurityEvent({ type: "signup_bot_blocked", email, ip: req.ip, detail: "honeypot" });
       return res.status(400).json({ message: "Не удалось зарегистрироваться" });
@@ -85,8 +81,6 @@ authRouter.post("/signup", authLimiter, async (req, res) => {
       html: confirmationEmailHtml(confirmationLink, name),
     });
 
-    // Письмо не ушло (например, исходящий SMTP заблокирован сетью) — не
-    // блокируем пользователя недоступным подтверждением, подтверждаем сразу.
     if (!emailSent) {
       newUser.isEmailConfirmed = true;
       await newUser.save();
@@ -169,8 +163,6 @@ authRouter.post("/resend-confirmation", authLimiter, async (req, res) => {
       return res.status(400).json({ message: "Email уже подтверждён." });
     }
 
-    // Same token shape/expiry as the one issued at signup — a stale link
-    // from an earlier email just stops working once this one is used.
     const emailConfirmationToken = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET,
@@ -318,7 +310,7 @@ authRouter.post("/logout", async (req, res) => {
       );
     }
   } catch (error) {
-    // Token already invalid/expired — nothing server-side to revoke.
+
   }
   res.clearCookie("refreshToken").sendStatus(200);
 });
@@ -329,8 +321,7 @@ authRouter.post("/2fa/setup", verifyAccessToken, async (req, res) => {
     if (user.twoFactorEnabled) {
       return res.status(400).json({ message: "Двухфакторная аутентификация уже включена" });
     }
-    // Not enabled yet — enable happens only after the user proves they can
-    // generate a valid code with it, in /2fa/enable below.
+
     const { secret, otpauthUrl } = twoFactor.generateSecret(user.email);
     user.twoFactorSecret = secret;
     await user.save();
@@ -444,7 +435,7 @@ authRouter.post("/2fa/verify-login", authLimiter, async (req, res) => {
 
     let authenticated = twoFactor.verifyToken(token, foundUser.twoFactorSecret);
     if (!authenticated) {
-      // Fall back to a recovery code — consuming it (one-time use) only if it matches.
+
       const { valid, remaining } = await twoFactor.consumeRecoveryCode(token, foundUser.twoFactorRecoveryCodes);
       if (valid) {
         authenticated = true;

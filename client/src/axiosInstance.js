@@ -11,7 +11,6 @@ export function setAccessToken(newToken) {
   accessToken = newToken;
 }
 
-// * Пишем перехватчик для приклеивания accessToken  к каждому запросу
 axiosInstance.interceptors.request.use((config) => {
   if (!config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${accessToken}`;
@@ -19,10 +18,6 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-// * Пишем перехватчик для перевыпуска accessToken при его истечении.
-// Несколько запросов могут словить 401 одновременно (например, при первой
-// загрузке страницы) — чтобы не слать по refresh-запросу на каждый из них,
-// делимся одним и тем же промисом обновления токена между всеми.
 let refreshPromise = null;
 
 axiosInstance.interceptors.response.use(

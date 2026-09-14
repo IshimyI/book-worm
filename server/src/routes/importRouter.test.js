@@ -80,9 +80,7 @@ describe("POST /api/import/goodreads", () => {
   });
 
   it("matches by ISBN even when the author name doesn't line up at all", async () => {
-    // Realistic case: Goodreads always stores the Latin author name, this
-    // catalog stores a Cyrillic transliteration — title+author matching
-    // alone would never catch this as the same book.
+
     const { userId, accessToken } = await signupAndLogin("importer3b@example.com");
     const book = await Book.create({
       title: "Дюна",

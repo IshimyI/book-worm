@@ -3,12 +3,6 @@ const { Op } = require("sequelize");
 const { sequelize, Book } = require("../db/models");
 const { searchOpenLibraryCover } = require("../src/utils/openLibrarySearch");
 
-// One-off backfill for books added before the isbn column existed (see
-// the add-book-isbn migration) — without an ISBN, a Goodreads import can
-// only ever match these by title+author string comparison, which misses
-// most real matches since Goodreads stores author names in Latin script
-// even for a book this catalog stores with a Cyrillic transliteration.
-// Re-runs safely: only touches books with an empty isbn array.
 async function backfillBookIsbn() {
   const books = await Book.findAll({ where: { isbn: { [Op.eq]: [] } } });
 

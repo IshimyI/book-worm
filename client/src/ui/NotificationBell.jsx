@@ -54,7 +54,7 @@ export default function NotificationBell({ user }) {
         setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, isRead: true } : x)));
         setUnreadCount((prev) => Math.max(0, prev - 1));
       } catch {
-        // non-critical — worst case it stays unread until next poll
+
       }
     }
     const link = linkFor(n);
@@ -68,7 +68,7 @@ export default function NotificationBell({ user }) {
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch {
-      // non-critical
+
     }
   };
 

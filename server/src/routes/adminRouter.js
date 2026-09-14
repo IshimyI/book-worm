@@ -294,10 +294,7 @@ adminRouter.delete("/books/:id", async (req, res) => {
     if (!book) {
       return res.status(404).json({ message: "Книга не найдена" });
     }
-    // Reviews are soft-deleted (paranoid) elsewhere, but a plain destroy()
-    // would leave the row (and its bookId FK) in place — force a real
-    // delete so the book itself can be removed. Votes/comments on those
-    // reviews cascade automatically.
+
     await Review.destroy({ where: { bookId: book.id }, force: true });
     await book.destroy();
     res.status(200).json({ message: "Книга отклонена и удалена" });

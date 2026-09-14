@@ -6,9 +6,6 @@ if (isConfigured) {
   webpush.setVapidDetails(process.env.VAPID_SUBJECT || "mailto:admin@example.com", process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
 }
 
-// Mirrors the notification copy in the client's NotificationBell.describe()
-// — the push payload has to carry its own text since the service worker
-// renders it directly, it can't call back into the running app for that.
 function describeForPush(type, data) {
   if (type === "new_follower") return { title: "Новый подписчик", body: `${data.name || "Кто-то"} подписался на вас` };
   if (type === "review_comment")
@@ -26,10 +23,6 @@ function linkForPush(type, data) {
   return "/";
 }
 
-// Fire-and-forget, same treatment as in-app notify() — a push failure
-// should never break the action that triggered it. A 404/410 from the push
-// service means the subscription is dead (browser uninstalled, permission
-// revoked, etc.) and gets cleaned up instead of retried forever.
 async function sendPushToUser(userId, type, data = {}) {
   if (!isConfigured) return;
   try {

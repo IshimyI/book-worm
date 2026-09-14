@@ -2,11 +2,6 @@ import { useToast, Flex, Text, Button } from '@chakra-ui/react';
 
 const DELAY_MS = 5000;
 
-// Optimistic delete-with-undo: the item disappears from the UI right away,
-// the actual API call is delayed behind a toast with an "Отменить" button —
-// clicking it cancels the pending call and restores the item. Works the
-// same whether the backend soft- or hard-deletes, since nothing is ever
-// sent to the server until the window closes.
 export default function useUndoableAction() {
   const toast = useToast();
 

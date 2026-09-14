@@ -1,7 +1,5 @@
-// Purely derived from existing counters — no dedicated table, nothing to
-// unlock/persist. Each category has three thresholds (bronze/silver/gold);
-// a badge shows whichever tier the current value has reached, plus the
-// count needed to reach the next one.
+
+
 const TIERS = [
   { key: "bronze", name: "Бронза", icon: "🥉" },
   { key: "silver", name: "Серебро", icon: "🥈" },

@@ -23,10 +23,6 @@ const upload = multer({
   },
 });
 
-// A whole import counts as one request against the general contentLimiter
-// no matter how many rows it processes, and each unmatched row triggers
-// its own outbound Open Library lookup — needs a much stricter limit of
-// its own so this can't be used to hammer that lookup or flood the DB.
 const importLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 5,
@@ -41,9 +37,6 @@ const importLimiter = rateLimit({
 
 const COVER_LOOKUP_CONCURRENCY = 4;
 
-// Runs `worker` over `items` with at most `limit` in flight at once —
-// plain Promise.all would fire every Open Library lookup simultaneously,
-// which is both unfriendly to that API and easy to mistake for abuse.
 async function withConcurrency(items, worker, limit) {
   const results = new Array(items.length);
   let nextIndex = 0;
@@ -89,10 +82,6 @@ importRouter.post(
       const existingBooks = await Book.findAll({ attributes: ["id", "title", "author", "isbn"] });
       const summary = { matched: 0, created: 0, skipped: 0, skippedTitles: [] };
 
-      // Resolve every row to a book (existing match, or an Open Library
-      // lookup for a new one) concurrently, then write reviews/reading
-      // statuses one at a time so two rows for the same new title can't
-      // both decide independently that it needs to be created.
       const resolved = await withConcurrency(
         rows,
         async (row) => {
@@ -118,9 +107,7 @@ importRouter.post(
 
         let bookId = item.bookId;
         if (item.isNew) {
-          // Same as manually adding a book that isn't in the catalog yet:
-          // starts pending, kept out of the public catalog/recommendations
-          // until an admin approves it.
+
           const isbnList = [...new Set([item.row.isbn, ...(item.lookup?.isbn || [])].filter(Boolean))];
           const created = await Book.create({
             title: item.row.title,

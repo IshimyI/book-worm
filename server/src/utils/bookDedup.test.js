@@ -18,8 +18,7 @@ describe("findPossibleDuplicate", () => {
   ];
 
   it("matches by ISBN even when title/author don't line up at all", () => {
-    // Simulates a Goodreads row: Latin author name, English title — would
-    // never match by string comparison against the Cyrillic catalog entry.
+
     const match = findPossibleDuplicate("Dune", "Frank Herbert", candidates, "978-0-441-01359-3");
     expect(match?.id).toBe(1);
   });

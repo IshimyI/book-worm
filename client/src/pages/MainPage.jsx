@@ -56,21 +56,17 @@ export default function MainPage({ user }) {
       const res = await axiosInstance.get('/book/random');
       navigate(`/books/${res.data.id}`);
     } catch {
-      // no-op — an empty catalog is the only realistic failure here
+
     } finally {
       setRandomLoading(false);
     }
   };
 
-  // Remember the reader's last sort choice between visits.
   useEffect(() => {
     localStorage.setItem("bw_catalog_sortBy", sortBy);
     localStorage.setItem("bw_catalog_sortDir", sortDir);
   }, [sortBy, sortDir]);
 
-  // "/" focuses the search box, like most search-heavy sites — skipped
-  // while the user is already typing in a field so it doesn't hijack
-  // other inputs.
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -83,7 +79,6 @@ export default function MainPage({ user }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Debounce the search box so every keystroke doesn't fire a request.
   useEffect(() => {
     const id = setTimeout(() => {
       setFilters((prev) => ({ ...prev, search: searchInput }));

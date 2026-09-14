@@ -30,10 +30,10 @@ describe("searchOpenLibraryCover", () => {
       ])
     );
     const result = await searchOpenLibraryCover("Дюна", "Фрэнк Герберт");
-    // Cover/genre/year still from the best (first) match...
+
     expect(result.img).toBe("https://covers.openlibrary.org/b/id/1-L.jpg");
     expect(result.genre).toBe("Roman");
-    // ...but the isbn comes from whichever result actually has one.
+
     expect(result.isbn).toEqual(["2222222222"]);
   });
 

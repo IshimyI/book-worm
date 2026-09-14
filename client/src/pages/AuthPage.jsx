@@ -121,10 +121,9 @@ export default function SignUpPage({ handleSignUp, handleLogin, handleVerifyTwoF
               Регистрация
             </Heading>
 
-            {/* Honeypot: hidden from real users, bots that auto-fill every
-                field trip it. Never remove the off-screen positioning —
-                display:none/visibility:hidden fields get skipped by some
-                bots and defeat the point. */}
+            {
+
+}
             <Box position="absolute" left="-9999px" aria-hidden="true">
               <Input name="website" tabIndex={-1} autoComplete="off" />
             </Box>

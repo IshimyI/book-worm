@@ -1,8 +1,5 @@
 const jwt = require("jsonwebtoken");
 
-// Reads the Bearer access token, verifies it, and exposes the authenticated
-// user's id as req.userId. Routes then compare req.userId against whatever
-// user id they were asked to act on, instead of trusting the request body.
 module.exports = function verifyAccessToken(req, res, next) {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;

@@ -76,7 +76,6 @@ describe("lists routes", () => {
     expect(detailRes.body.books).toHaveLength(1);
     expect(detailRes.body.books[0].id).toBe(book.id);
 
-    // Adding the same book twice is a no-op, not a duplicate/error.
     const addAgainRes = await request(app)
       .post(`/api/lists/${list.body.id}/books`)
       .set("Authorization", `Bearer ${accessToken}`)
@@ -231,8 +230,6 @@ describe("curated lists", () => {
       .set("Authorization", `Bearer ${admin.accessToken}`)
       .send({ name: "Личный список админа" });
 
-    // An empty curated collection reads as broken to a visitor, so it's
-    // held back from the public list until it actually has a book in it.
     const emptyRes = await request(app).get("/api/lists/curated");
     expect(emptyRes.status).toBe(200);
     expect(emptyRes.body).toHaveLength(0);

@@ -6,15 +6,8 @@ const SHELF_TO_STATUS = {
   "to-read": "want_to_read",
 };
 
-// Bounds worst-case import time — each unmatched row can trigger an
-// outbound Open Library lookup, and this all happens synchronously within
-// one HTTP request (see importRouter.js).
 const MAX_ROWS = 200;
 
-// Goodreads wraps ISBN/ISBN13 as ="0441013593" — an Excel formula that
-// forces the leading zero (and the value in general) to survive as text
-// instead of being reinterpreted as a number. Strip the ="…" wrapper to
-// get the bare value.
 function extractIsbn(raw) {
   const value = (raw || "").trim();
   const match = value.match(/^="?(.*?)"?$/);

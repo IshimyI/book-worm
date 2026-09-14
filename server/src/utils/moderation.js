@@ -1,6 +1,5 @@
-// Russian words decline/conjugate with suffixes ("хуйня", "охуенно"), so a
-// word-boundary filter tuned for English misses most of them. Match these
-// roots as plain substrings instead — this site's reviews are Russian.
+
+
 const BAD_ROOTS = [
   "хуй",
   "хуе",

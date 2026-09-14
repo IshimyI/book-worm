@@ -7,12 +7,8 @@ import { CacheableResponsePlugin } from "workbox-cacheable-response";
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
-// A live catalog, not offline-first content — API responses must always
-// hit the network, never be served stale from cache.
 registerRoute(({ url }) => url.pathname.startsWith("/api/"), new NetworkOnly());
 
-// A given cover URL is permanently the same image, so it's safe (and
-// worth it — these are the bulk of the page weight) to cache aggressively.
 registerRoute(
   ({ url }) => url.hostname === "covers.openlibrary.org" || url.hostname.endsWith("archive.org"),
   new CacheFirst({

@@ -6,11 +6,6 @@ const { sequelize, User } = require("../db/models");
 const { AVATAR_DIR } = require("../src/middlewares/uploadAvatar");
 const { processAvatar } = require("../src/utils/avatarImage");
 
-// One-off migration for avatars uploaded before the WebP resize pipeline
-// existed (see the "resize/re-encode uploaded avatars" change) — those
-// files are still whatever format/size the user originally uploaded.
-// Re-runs safely: only touches users whose avatarUrl doesn't already end
-// in .webp.
 async function backfillAvatarWebp() {
   const users = await User.findAll({
     where: { avatarUrl: { [Sequelize.Op.and]: [{ [Sequelize.Op.ne]: null }, { [Sequelize.Op.notLike]: "%.webp" }] } },

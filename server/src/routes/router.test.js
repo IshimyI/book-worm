@@ -7,7 +7,6 @@ const { AVATAR_DIR } = require("../middlewares/uploadAvatar");
 const { AVATAR_SIZE } = require("../utils/avatarImage");
 const { loadImage } = require("@napi-rs/canvas");
 
-// A minimal valid 1x1 PNG, just enough for multer/the fileFilter to accept it.
 const ONE_PIXEL_PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
   "base64"
@@ -199,7 +198,7 @@ describe("GET /api/trending", () => {
     }
     await request(app).post("/api/analytics/pageview").send({ path: `/books/${lessPopular.id}` });
     await request(app).post("/api/analytics/pageview").send({ path: `/books/${pending.id}` });
-    // An old view outside the 7-day window shouldn't count.
+
     const oldView = await PageView.create({ path: `/books/${lessPopular.id}` });
     await oldView.update({ createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) });
 
@@ -495,8 +494,6 @@ describe("DELETE /api/review/:id", () => {
         user_rating: 5,
       });
 
-    // The unique(bookId, userId) constraint must not see the soft-deleted
-    // row as a conflict — otherwise this would 500.
     expect(res.status).toBe(200);
     expect(res.body.review.id).not.toBe(reviewId);
     expect(res.body.review.body).toBe("Second try");
@@ -874,7 +871,6 @@ describe("blocking a user", () => {
       .set("Authorization", `Bearer ${blocker.accessToken}`);
     expect(commentsRes.body).toHaveLength(0);
 
-    // Someone else (not the blocker) still sees everything.
     const bookAsAnonymous = await request(app).get(`/api/book/${book.id}`);
     expect(bookAsAnonymous.body.reviews).toHaveLength(2);
 
@@ -1413,7 +1409,6 @@ describe("notifications", () => {
     expect(res.body.unreadCount).toBe(1);
     expect(res.body.notifications[0].type).toBe("new_follower");
 
-    // Unfollowing shouldn't add a second notification.
     await request(app).post(`/api/users/${target.userId}/follow`).set("Authorization", `Bearer ${follower.accessToken}`);
     const afterUnfollow = await request(app).get("/api/notifications").set("Authorization", `Bearer ${target.accessToken}`);
     expect(afterUnfollow.body.notifications).toHaveLength(1);
@@ -1435,7 +1430,6 @@ describe("notifications", () => {
     expect(res.body.notifications[0].type).toBe("review_comment");
     expect(res.body.notifications[0].bookTitle).toBe("Notified Book");
 
-    // Author commenting on their own review shouldn't self-notify.
     await request(app)
       .post(`/api/review/${review.id}/comments`)
       .set("Authorization", `Bearer ${author.accessToken}`)

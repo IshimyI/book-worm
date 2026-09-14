@@ -8,7 +8,7 @@ export function addRecentlyViewed(book) {
     const next = [{ id: book.id, title: book.title, img: book.img, rating: book.rating }, ...existing].slice(0, MAX_ITEMS);
     localStorage.setItem(KEY, JSON.stringify(next));
   } catch {
-    // localStorage unavailable (private mode, quota) — not worth surfacing.
+
   }
 }
 

@@ -4,8 +4,6 @@ export function isPushSupported() {
   return 'serviceWorker' in navigator && 'PushManager' in window;
 }
 
-// applicationServerKey needs to be a Uint8Array, but VAPID public keys are
-// handed out as URL-safe base64 — the Push API gives no other way in.
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');

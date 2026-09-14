@@ -124,11 +124,7 @@ describe("GET /api/auth/confirm-email", () => {
       password: "password123",
     });
     const user = await User.findByPk(signupRes.body.user.id);
-    // In this test env, sending the real confirmation email fails (no SMTP
-    // creds), which signup treats as "don't strand the user" and confirms
-    // them immediately as a fallback — that's a different code path than
-    // the one this test targets, so force the "real link, not yet clicked"
-    // starting state this endpoint actually needs to be exercised against.
+
     user.isEmailConfirmed = false;
     await user.save();
 
@@ -158,13 +154,6 @@ describe("GET /api/auth/confirm-email", () => {
     expect(res.body.message).toMatch(/уже подтверждён/);
   });
 
-  // This is the bug the user actually hit: a confirmation link clicked
-  // after its 1h expiry returns 401, which the client used to have no
-  // case for at all (only 400/500 were handled) — it fell through to
-  // whatever the empty default state rendered, a generic "please confirm
-  // your email" message with no indication anything had gone wrong or way
-  // to recover. Fixed client-side; this locks in the server contract it
-  // now relies on.
   it("401s with an expired-token message for a token past its 1h expiry", async () => {
     const signupRes = await request(app).post("/api/auth/signup").send({
       name: "Expired Token",
@@ -198,7 +187,7 @@ describe("POST /api/auth/resend-confirmation", () => {
       email: "needs-resend@example.com",
       password: "password123",
     });
-    // See the comment on the confirm-email test above — same test-env fallback.
+
     await User.update({ isEmailConfirmed: false }, { where: { id: signupRes.body.user.id } });
 
     const res = await request(app)
@@ -221,9 +210,6 @@ describe("POST /api/auth/resend-confirmation", () => {
       .post("/api/auth/resend-confirmation")
       .send({ email: "resend-then-confirm@example.com" });
 
-    // The resend path doesn't hand the token back over HTTP (it only goes
-    // out by email) — sign an equivalent one the same way to confirm the
-    // account is still in a confirmable state afterwards.
     const token = jwt.sign({ userId: signupRes.body.user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
     const confirmRes = await request(app).get("/api/auth/confirm-email").query({ token });
     expect(confirmRes.status).toBe(200);
@@ -452,7 +438,6 @@ describe("DELETE /api/auth/account", () => {
     expect(await Quote.count({ where: { userId } })).toBe(0);
     expect(await Follow.count({ where: { followingId: userId } })).toBe(0);
 
-    // The account no longer works for login.
     const loginRes = await request(app).post("/api/auth/login").send({ email: "delete-me@example.com", password });
     expect(loginRes.status).toBe(400);
   });

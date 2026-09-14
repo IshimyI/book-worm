@@ -12,9 +12,7 @@ const ALLOWED_MIME_TYPES = {
 };
 
 const uploadAvatar = multer({
-  // Uploaded files are processed (resized + re-encoded as WebP) before
-  // being written to disk, so multer only needs to hold the raw bytes
-  // in memory long enough to hand them to that pipeline.
+
   storage: multer.memoryStorage(),
   limits: { fileSize: 3 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {

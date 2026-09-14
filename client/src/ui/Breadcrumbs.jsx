@@ -2,8 +2,6 @@
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, Text } from '@chakra-ui/react';
 import { NavLink } from 'react-router-dom';
 
-// items: [{ label, to }, ...] — the last item is rendered as plain text
-// (the current page), everything before it as a link.
 export default function Breadcrumbs({ items }) {
   return (
     <Breadcrumb fontSize="sm" color="bw.textMuted" mb="16px">

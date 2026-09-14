@@ -43,8 +43,6 @@ describe("GET /api/tokens/refresh", () => {
       request(app).get("/api/tokens/refresh").set("Cookie", cookie),
     ]);
 
-    // Neither concurrent caller should be treated as a thief — both get a
-    // usable session, and it isn't torn down for either of them.
     expect(a.status).toBe(200);
     expect(b.status).toBe(200);
 
@@ -62,13 +60,9 @@ describe("GET /api/tokens/refresh", () => {
       await request(app).get("/api/tokens/refresh").set("Cookie", rotatedOnce)
     );
 
-    // `original` is now two generations behind — outside the grace period's
-    // single-generation tolerance, so this must be treated as reuse.
     const replay = await request(app).get("/api/tokens/refresh").set("Cookie", original);
     expect(replay.status).toBe(401);
 
-    // The whole session should be dead now, including the otherwise-valid
-    // latest cookie.
     const afterRevoke = await request(app).get("/api/tokens/refresh").set("Cookie", rotatedTwice);
     expect(afterRevoke.status).toBe(401);
   });

@@ -1,6 +1,5 @@
-// Run at deploy time against the live API and writes a static
-// sitemap.xml into public/ so `vite build` ships it as a plain file —
-// no server route or nginx changes needed for a catalog this size.
+
+
 import { writeFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
