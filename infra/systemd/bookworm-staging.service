@@ -1,0 +1,14 @@
+[Unit]
+Description=book-worm backend (staging)
+After=network.target postgresql.service
+
+[Service]
+WorkingDirectory=/var/www/mrbookworm-staging/server
+ExecStart=/usr/bin/node src/app.js
+Restart=always
+RestartSec=5
+User=www-data
+Environment=NODE_ENV=staging
+
+[Install]
+WantedBy=multi-user.target
